@@ -494,6 +494,40 @@ p  { color: var(--text-secondary); }
   border-color: var(--border-gold);
 }
 
+/* ─── Nutrients badge ────────────────────────────────────────────────────── */
+.nutrients-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--r-full);
+  background: rgba(212,175,55,0.08);
+  border: 1px solid var(--border-gold);
+  cursor: default;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.nutrients-badge__icon {
+  color: var(--gold);
+  font-size: 0.7rem;
+  line-height: 1;
+}
+.nutrients-badge__value {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--gold-light);
+  letter-spacing: 0.02em;
+}
+.nutrients-badge__label {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 /* ─── Home page ──────────────────────────────────────────────────────────── */
 .hero {
   text-align: center;
@@ -703,6 +737,10 @@ p  { color: var(--text-secondary); }
   .hero__cat { font-size: 3rem; }
   .card { padding: var(--sp-lg); }
   .result-section__header { flex-direction: column; align-items: flex-start; }
+  .nutrients-badge__label { display: none; }
+}
+@media (max-width: 480px) {
+  .nutrients-badge { display: none; }
 }
 
 /* ─── Scrollbar ──────────────────────────────────────────────────────────── */
