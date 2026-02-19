@@ -748,3 +748,506 @@ p  { color: var(--text-secondary); }
 ::-webkit-scrollbar-track { background: var(--bg-deep); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--violet-dim); }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   LOREKIT — LoreCraft page styles
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Shared helpers ─────────────────────────────────────────────────────── */
+.req { color: var(--rose); }
+.world-fields { margin-top: 0.25rem; }
+
+/* ─── Nutrients cost label (form) ────────────────────────────────────────── */
+.nutrients-cost-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+.nutrients-cost-label__icon { color: var(--gold-dim); font-size: 0.65rem; }
+
+/* ─── World Type radio cards ─────────────────────────────────────────────── */
+.radio-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+@media (max-width: 600px) { .radio-group { grid-template-columns: 1fr; } }
+
+.radio-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1rem 1rem 1.1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  user-select: none;
+}
+.radio-card input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+.radio-card:hover {
+  border-color: rgba(124,58,237,0.4);
+  background: var(--bg-card);
+}
+.radio-card--selected {
+  border-color: var(--violet);
+  background: rgba(124,58,237,0.07);
+  box-shadow: 0 0 0 1px var(--violet);
+}
+.radio-card__icon { font-size: 1.5rem; margin-bottom: 0.2rem; line-height: 1; }
+.radio-card__title {
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.radio-card__desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+/* pip dot bottom-right */
+.radio-card__pip {
+  position: absolute;
+  top: 0.75rem; right: 0.75rem;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  transition: all var(--dur) var(--ease);
+}
+.radio-card--selected .radio-card__pip {
+  border-color: var(--violet);
+  background: var(--violet);
+}
+
+/* ─── Hybrid fieldset sections ───────────────────────────────────────────── */
+.hybrid-section {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+.hybrid-section--optional { border-style: dashed; border-color: rgba(124,58,237,0.25); }
+.hybrid-section__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+}
+.hybrid-section__label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--violet);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  margin-top: 2px;
+}
+.hybrid-section__label--opt { background: rgba(124,58,237,0.25); color: var(--violet-light); }
+.hybrid-section__title {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.15rem;
+}
+
+/* ─── Deviation rows ─────────────────────────────────────────────────────── */
+.deviations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.deviation-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.deviation-row:hover { background: var(--bg-surface); }
+.deviation-row--selected {
+  background: rgba(124,58,237,0.05);
+  border-color: rgba(124,58,237,0.2);
+}
+.deviation-check-label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.deviation-checkbox { display: none; }
+.deviation-check-box {
+  width: 16px; height: 16px;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  flex-shrink: 0;
+  position: relative;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.deviation-checkbox:checked + .deviation-check-box {
+  background: var(--violet);
+  border-color: var(--violet);
+}
+.deviation-checkbox:checked + .deviation-check-box::after {
+  content: '';
+  position: absolute;
+  top: 1px; left: 4px;
+  width: 4px; height: 7px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+.deviation-name {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.deviation-desc {
+  font-size: 0.77rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+.deviation-level-select {
+  width: 110px !important;
+  flex-shrink: 0;
+  font-size: 0.78rem !important;
+  padding: 0.35rem 0.6rem !important;
+}
+@media (max-width: 600px) {
+  .deviation-row { grid-template-columns: auto 1fr; }
+  .deviation-level-select { grid-column: 1 / -1; width: 100% !important; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ReportView styles
+   ════════════════════════════════════════════════════════════════════════════ */
+.report-root { display: flex; flex-direction: column; gap: 1rem; }
+
+/* ─── Report banner ──────────────────────────────────────────────────────── */
+.report-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-raised));
+  border: 1px solid var(--border-gold);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md), var(--glow-gold);
+}
+.report-banner__name {
+  font-family: var(--font-logo);
+  font-size: 1.35rem;
+  color: var(--gold-light);
+  margin-bottom: 0.2rem;
+}
+.report-banner__type {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
+.report-banner__tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.report-banner__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+.report-actions-top { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end; }
+
+/* Nutrients consumed */
+.nutrients-consumed {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.nutrients-consumed__icon { color: var(--gold); font-size: 0.75rem; }
+.nutrients-consumed__value {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--gold-light);
+}
+.nutrients-consumed__label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
+
+/* ─── Generic report card ────────────────────────────────────────────────── */
+.report-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+}
+.report-card--verdict {
+  background: linear-gradient(135deg, var(--bg-card), rgba(124,58,237,0.06));
+  border-color: rgba(124,58,237,0.3);
+}
+.report-section-title {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1rem;
+}
+.report-prose { font-size: 0.91rem; color: var(--text-secondary); line-height: 1.75; }
+
+/* ─── Logic assessment two columns ──────────────────────────────────────── */
+.logic-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 600px) { .logic-columns { grid-template-columns: 1fr; } }
+
+.logic-col {
+  border-radius: var(--r-md);
+  padding: 0.9rem 1rem;
+}
+.logic-col--strengths {
+  background: rgba(16,185,129,0.05);
+  border: 1px solid rgba(16,185,129,0.15);
+}
+.logic-col--weaknesses {
+  background: rgba(245,158,11,0.05);
+  border: 1px solid rgba(245,158,11,0.15);
+}
+.logic-col__heading {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.6rem;
+}
+.logic-col--strengths .logic-col__heading { color: #34d399; }
+.logic-col--weaknesses .logic-col__heading { color: #fbbf24; }
+.logic-list {
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.logic-list li { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; }
+
+/* ─── World Laws table ───────────────────────────────────────────────────── */
+.table-scroll { overflow-x: auto; }
+.laws-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+.laws-table th {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.laws-table td {
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid rgba(45,36,80,0.6);
+  vertical-align: top;
+}
+.laws-table tbody tr:last-child td { border-bottom: none; }
+.laws-table tbody tr:hover td { background: rgba(124,58,237,0.04); }
+.laws-table__law { color: var(--text-primary); font-weight: 500; }
+.laws-table__note { color: var(--text-muted); font-size: 0.82rem; }
+
+/* Strength badges */
+.strength-badge {
+  display: inline-block;
+  padding: 0.18rem 0.55rem;
+  border-radius: var(--r-full);
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.strength-badge--strong   { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
+.strength-badge--moderate { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+.strength-badge--fragile  { background: rgba(239,68,68,0.1);   color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+
+/* ─── Tensions ───────────────────────────────────────────────────────────── */
+.tensions-list { display: flex; flex-direction: column; gap: 0.85rem; }
+.tension-item {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 1rem 1.1rem;
+  background: var(--bg-surface);
+}
+.tension-item__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.tension-item__name {
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.tension-item__issue {
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 0.6rem;
+}
+.tension-item__resolution {
+  background: rgba(124,58,237,0.05);
+  border-left: 2px solid var(--violet);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 0.5rem 0.75rem;
+}
+.tension-item__resolution-label {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--violet-light);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.tension-item__resolution p { font-size: 0.84rem; color: var(--text-secondary); line-height: 1.55; }
+
+/* Severity badges */
+.severity-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--r-full);
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.severity-badge--high   { background: rgba(239,68,68,0.12);   color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+.severity-badge--medium { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+.severity-badge--low    { background: rgba(16,185,129,0.1);  color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
+
+/* ─── Narrative opportunities ────────────────────────────────────────────── */
+.opportunity-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.opportunity-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+.opportunity-item__bullet { color: var(--gold-dim); font-size: 0.65rem; flex-shrink: 0; }
+
+/* ─── Checklist ──────────────────────────────────────────────────────────── */
+.checklist { display: flex; flex-direction: column; gap: 0.45rem; }
+.checklist-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: var(--r-sm);
+  transition: background var(--dur) var(--ease);
+}
+.checklist-item:hover { background: var(--bg-surface); }
+.checklist-item__checkbox {
+  width: 16px; height: 16px;
+  accent-color: var(--violet);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.checklist-item__label {
+  font-size: 0.87rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  line-height: 1.4;
+}
+.checklist-item__checkbox:checked ~ .checklist-item__label {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+/* Priority dots */
+.priority-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.priority-dot--high   { background: #f87171; }
+.priority-dot--medium { background: #fbbf24; }
+.priority-dot--low    { background: #6b7280; }
+
+.checklist-legend {
+  display: flex;
+  gap: 1.25rem;
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.checklist-legend span { display: flex; align-items: center; gap: 0.4rem; }
+
+/* ─── Verdict card ───────────────────────────────────────────────────────── */
+.verdict-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.verdict-cat { font-size: 2rem; line-height: 1; }
+.verdict-text {
+  font-size: 0.91rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  font-style: italic;
+  margin-bottom: 1.25rem;
+}
+.verdict-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+/* Star rating */
+.rating-stars { display: inline-flex; gap: 3px; margin-top: 0.2rem; }
+.star { font-size: 1rem; line-height: 1; }
+.star--filled  { color: var(--gold); }
+.star--empty   { color: var(--border); }
