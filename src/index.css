@@ -1251,3 +1251,399 @@ p  { color: var(--text-secondary); }
 .star { font-size: 1rem; line-height: 1; }
 .star--filled  { color: var(--gold); }
 .star--empty   { color: var(--border); }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   LOREKIT — LoreCheck page styles
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Main textarea ──────────────────────────────────────────────────────── */
+.lc-main-textarea {
+  min-height: 220px;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  resize: vertical;
+}
+
+/* Character count row */
+.lc-char-row {
+  display: flex;
+  align-items: center;
+  margin-top: 0.35rem;
+  min-height: 1.4em;
+}
+.lc-char-warn {
+  font-size: 0.78rem;
+  color: var(--rose);
+  font-style: italic;
+}
+.lc-char-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
+
+/* ─── Advanced toggle ────────────────────────────────────────────────────── */
+.lc-advanced-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  padding: 0.45rem 0;
+  margin-bottom: 0.25rem;
+  transition: color var(--dur) var(--ease);
+}
+.lc-advanced-toggle:hover { color: var(--text-primary); }
+.lc-advanced-toggle__chevron {
+  display: inline-block;
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: transform 0.25s var(--ease);
+  transform: rotate(0deg);
+}
+.lc-advanced-toggle__chevron--open { transform: rotate(90deg); }
+.lc-advanced-toggle__hint {
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 0.75rem;
+}
+
+/* ─── Collapsible advanced fields ────────────────────────────────────────── */
+.lc-advanced-fields {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s var(--ease), opacity 0.25s var(--ease);
+  opacity: 0;
+}
+.lc-advanced-fields--open {
+  max-height: 420px;
+  opacity: 1;
+}
+.lc-advanced-grid {
+  padding: 1rem 0 0.5rem;
+  border-top: 1px dashed var(--border);
+  margin-top: 0.25rem;
+}
+
+/* ─── Action row ─────────────────────────────────────────────────────────── */
+.lc-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+.lc-action-row__primary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Deep Audit "coming soon" button */
+.lc-deep-audit-btn {
+  position: relative;
+  opacity: 0.5;
+}
+.lc-coming-soon {
+  display: inline-block;
+  background: rgba(124,58,237,0.2);
+  border: 1px solid rgba(124,58,237,0.3);
+  color: var(--violet-light);
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--r-full);
+  margin-left: 0.25rem;
+  vertical-align: middle;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   LoreCheck report
+   ════════════════════════════════════════════════════════════════════════════ */
+.lc-report {
+  margin-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ─── Report header ──────────────────────────────────────────────────────── */
+.lc-report__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.25rem;
+}
+.lc-report__eyebrow {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.3rem;
+}
+.lc-report__title {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.lc-report__header-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+/* ─── Overall impression ─────────────────────────────────────────────────── */
+.lc-impression {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  padding: 1.25rem 1.5rem;
+}
+.lc-impression__label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.6rem;
+}
+.lc-impression__text {
+  font-size: 0.91rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ─── Tensions section ───────────────────────────────────────────────────── */
+.lc-tensions-section { display: flex; flex-direction: column; gap: 0.85rem; }
+.lc-tensions-section__heading {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.1rem;
+}
+
+/* ─── Individual tension card ────────────────────────────────────────────── */
+.lc-tension {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 1.25rem 1.5rem;
+  transition: border-color var(--dur) var(--ease);
+}
+.lc-tension:hover { border-color: rgba(124,58,237,0.25); }
+
+.lc-tension__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
+}
+.lc-tension__number {
+  font-family: var(--font-logo);
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  line-height: 1;
+}
+.lc-tension__title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
+}
+
+/* Category badges */
+.lc-tension__cat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.6rem;
+  border-radius: var(--r-full);
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.cat--probability { background: rgba(13,148,136,0.12); color: #2dd4bf; border: 1px solid rgba(13,148,136,0.25); }
+.cat--culture     { background: rgba(212,175,55,0.12);  color: #fcd34d; border: 1px solid rgba(212,175,55,0.25); }
+.cat--motivation  { background: rgba(124,58,237,0.12);  color: #a78bfa; border: 1px solid rgba(124,58,237,0.25); }
+.cat--economics   { background: rgba(16,185,129,0.1);   color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
+.cat--logistics   { background: rgba(239,68,68,0.1);    color: #fca5a5; border: 1px solid rgba(239,68,68,0.2); }
+
+.lc-tension__explanation {
+  font-size: 0.89rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin-bottom: 1rem;
+}
+
+/* Fix suggestions */
+.lc-tension__fixes {
+  background: rgba(124,58,237,0.04);
+  border: 1px solid rgba(124,58,237,0.12);
+  border-radius: var(--r-md);
+  padding: 0.9rem 1rem;
+}
+.lc-tension__fixes-label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--violet-light);
+  margin-bottom: 0.6rem;
+}
+.lc-tension__fix-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.lc-tension__fix-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+.lc-tension__fix-bullet {
+  color: var(--violet-light);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  font-weight: 600;
+}
+
+/* ─── Summary / meters ───────────────────────────────────────────────────── */
+.lc-summary {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 1.25rem 1.5rem;
+}
+.lc-summary__label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+.lc-summary__meters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+/* Meter row */
+.lc-meter {
+  display: grid;
+  grid-template-columns: 220px 1fr auto;
+  align-items: center;
+  gap: 1rem;
+}
+@media (max-width: 600px) {
+  .lc-meter { grid-template-columns: 1fr auto auto; }
+  .lc-meter__label { font-size: 0.78rem; }
+}
+.lc-meter__label {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.lc-meter__track {
+  display: flex;
+  gap: 4px;
+  height: 8px;
+}
+.lc-meter__seg {
+  flex: 1;
+  border-radius: 99px;
+  background: var(--bg-raised);
+  transition: background 0.3s var(--ease);
+}
+.lc-meter__seg--active { /* colour set inline */ }
+.lc-meter__value {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  min-width: 3.5rem;
+  text-align: right;
+}
+
+/* ─── Cat closing note ───────────────────────────────────────────────────── */
+.lc-catnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background: rgba(124,58,237,0.05);
+  border: 1px solid rgba(124,58,237,0.18);
+  border-radius: var(--r-lg);
+  padding: 1.25rem 1.5rem;
+}
+.lc-catnote__cat {
+  font-size: 1.75rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.lc-catnote__label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--violet-light);
+  margin-bottom: 0.5rem;
+}
+.lc-catnote__text {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ─── Report bottom CTA ──────────────────────────────────────────────────── */
+.lc-report__cta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+}
