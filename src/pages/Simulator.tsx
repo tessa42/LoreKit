@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import type { SimulatorCard, SimulatorForm, VibeType } from '../types/simulator';
+import { useLang, type TranslationKey } from '../i18n';
 
 // ─── World metadata lookup (matches the 12 preset worlds in the backend) ──────
 const WORLD_META: Record<string, { emoji: string; tagline: string }> = {
@@ -22,11 +23,11 @@ function getWorldMeta(name: string) {
 }
 
 // ─── Vibe config ──────────────────────────────────────────────────────────────
-const VIBES: Array<{ key: VibeType; label: string; icon: string; hint: string }> = [
-  { key: 'dark',      label: 'Dark',      icon: '🌑', hint: 'Shadow, secrets, cost' },
-  { key: 'cozy',      label: 'Cozy',      icon: '🕯',  hint: 'Warmth, belonging, slow magic' },
-  { key: 'tragic',    label: 'Tragic',    icon: '🥀',  hint: 'Loss, duty, last chances' },
-  { key: 'whimsical', label: 'Whimsical', icon: '✨',  hint: 'Chaos, wonder, unlikely heroes' },
+const VIBES: Array<{ key: VibeType; labelKey: TranslationKey; icon: string; hintKey: TranslationKey }> = [
+  { key: 'dark',      labelKey: 'vibe_dark_label',      icon: '🌑', hintKey: 'vibe_dark_hint' },
+  { key: 'cozy',      labelKey: 'vibe_cozy_label',      icon: '🕯',  hintKey: 'vibe_cozy_hint' },
+  { key: 'tragic',    labelKey: 'vibe_tragic_label',    icon: '🥀',  hintKey: 'vibe_tragic_hint' },
+  { key: 'whimsical', labelKey: 'vibe_whimsical_label', icon: '✨',  hintKey: 'vibe_whimsical_hint' },
 ];
 
 // ─── Character card component ─────────────────────────────────────────────────
@@ -39,6 +40,7 @@ function CharacterCard({
   imageDataUrl: string | null;
   onTryAgain:   () => void;
 }) {
+  const { t } = useLang();
   const [copied,          setCopied] = useState(false);
   const [showDownloadTip, setTip]    = useState(false);
 
@@ -125,7 +127,7 @@ function CharacterCard({
       <div className="sim-card-actions">
         <div className="sim-card-actions__left">
           <button className="btn btn-teal btn-sm" onClick={handleCopy}>
-            {copied ? '✅ Copied!' : '📋 Copy text'}
+            {copied ? t('sim_copied') : t('sim_copy')}
           </button>
 
           <div
@@ -137,21 +139,21 @@ function CharacterCard({
               type="button"
               className="btn btn-ghost btn-sm sim-download-btn"
               disabled
-              aria-label="Download card as image — coming soon"
+              aria-label={t('sim_download')}
             >
-              🖼 Download card
-              <span className="lc-coming-soon">soon</span>
+              {t('sim_download')}
+              <span className="lc-coming-soon">{t('coming_soon')}</span>
             </button>
             {showDownloadTip && (
               <div className="sim-tooltip">
-                Image export is coming in a future release.
+                {t('sim_download_tip')}
               </div>
             )}
           </div>
         </div>
 
         <button className="btn btn-ghost btn-sm" onClick={onTryAgain}>
-          ↺ Try again
+          {t('sim_try_again')}
         </button>
       </div>
 
@@ -169,23 +171,25 @@ function VibeChip({
   selected: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useLang();
   return (
     <button
       type="button"
       className={`sim-vibe-chip sim-vibe-chip--${vibe.key} ${selected ? 'sim-vibe-chip--selected' : ''}`}
       onClick={onToggle}
-      title={vibe.hint}
+      title={t(vibe.hintKey)}
       aria-pressed={selected}
     >
       <span className="sim-vibe-chip__icon">{vibe.icon}</span>
-      <span className="sim-vibe-chip__label">{vibe.label}</span>
+      <span className="sim-vibe-chip__label">{t(vibe.labelKey)}</span>
     </button>
   );
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Simulator() {
-  const fileRef = useRef<HTMLInputElement>(null);
+  const fileRef   = useRef<HTMLInputElement>(null);
+  const { lang, t } = useLang();
 
   const [form,    setForm]    = useState<SimulatorForm>({ name: '', vibe: '', imageDataUrl: null });
   const [card,    setCard]    = useState<SimulatorCard | null>(null);
@@ -217,26 +221,29 @@ export default function Simulator() {
     try {
       const res = await fetch('/api/simulator', {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
+        headers: {
+          'Content-Type':   'application/json',
+          'X-LoreKit-Lang': lang,
+        },
+        body: JSON.stringify({
           name: form.name.trim(),
           vibe: form.vibe || undefined,
+          lang,
         }),
       });
 
       const data = await res.json() as Record<string, unknown>;
 
       if (!res.ok) {
-        setError((data['error'] as string | undefined) ?? 'Something went wrong. Please try again.');
+        setError((data['error'] as string | undefined) ?? t('err_generic'));
       } else {
-        // Merge API response with client-side vibe for card styling
         setCard({ ...(data as Omit<SimulatorCard, 'vibe'>), vibe: form.vibe });
         setTimeout(() => {
           document.getElementById('sim-card-anchor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 80);
       }
     } catch {
-      setError('Could not reach the server. Check your connection and try again.');
+      setError(t('err_server'));
     } finally {
       setLoading(false);
     }
@@ -253,12 +260,9 @@ export default function Simulator() {
 
       {/* ── Page header ─────────────────────────────────────────────────── */}
       <section className="section-header animate-fade-up">
-        <span className="eyebrow">✨ Simulator</span>
-        <h1>Step Through the Portal</h1>
-        <p>
-          Enter your name, choose a vibe, add a portrait. LoreKit will summon your character
-          card from one of the ancient worlds. Free, instant, and made for sharing.
-        </p>
+        <span className="eyebrow">{t('sim_eyebrow')}</span>
+        <h1>{t('sim_title')}</h1>
+        <p>{t('sim_desc')}</p>
       </section>
 
       {/* ── Form ────────────────────────────────────────────────────────── */}
@@ -268,13 +272,13 @@ export default function Simulator() {
           {/* Name */}
           <div className="form-group" style={{ marginBottom: '1.5rem' }}>
             <label className="form-label" htmlFor="simName">
-              Your Name <span style={{ color: 'var(--rose)' }}>*</span>
+              {t('sim_name_label')} <span style={{ color: 'var(--rose)' }}>*</span>
             </label>
             <input
               id="simName"
               type="text"
               className="form-input sim-name-input"
-              placeholder="What shall we call you, wanderer?"
+              placeholder={t('sim_name_placeholder')}
               value={form.name}
               maxLength={60}
               onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
@@ -284,7 +288,7 @@ export default function Simulator() {
           {/* Vibe selector */}
           <div className="form-group" style={{ marginBottom: '1.5rem' }}>
             <p className="form-label" style={{ marginBottom: '0.6rem' }}>
-              Vibe <span className="optional">(optional — shapes your world)</span>
+              {t('sim_vibe_label')} <span className="optional">{t('sim_vibe_optional')}</span>
             </p>
             <div className="sim-vibe-group">
               {VIBES.map(v => (
@@ -298,7 +302,7 @@ export default function Simulator() {
             </div>
             {form.vibe && (
               <p className="form-hint sim-vibe-hint">
-                {VIBES.find(v => v.key === form.vibe)?.hint}
+                {t(VIBES.find(v => v.key === form.vibe)!.hintKey)}
               </p>
             )}
           </div>
@@ -306,7 +310,7 @@ export default function Simulator() {
           {/* Portrait upload */}
           <div className="form-group" style={{ marginBottom: '1.5rem' }}>
             <p className="form-label" style={{ marginBottom: '0.5rem' }}>
-              Portrait <span className="optional">(optional — client-side only, never uploaded)</span>
+              {t('sim_portrait_label')} <span className="optional">{t('sim_portrait_optional')}</span>
             </p>
             <div className="sim-upload-area">
               {form.imageDataUrl ? (
@@ -322,14 +326,14 @@ export default function Simulator() {
                       className="btn btn-ghost btn-sm"
                       onClick={() => fileRef.current?.click()}
                     >
-                      Change
+                      {t('sim_portrait_change')}
                     </button>
                     <button
                       type="button"
                       className="btn btn-ghost btn-sm"
                       onClick={() => setForm(p => ({ ...p, imageDataUrl: null }))}
                     >
-                      Remove
+                      {t('sim_portrait_remove')}
                     </button>
                   </div>
                 </div>
@@ -340,8 +344,8 @@ export default function Simulator() {
                   onClick={() => fileRef.current?.click()}
                 >
                   <span className="sim-upload-trigger__icon">🖼</span>
-                  <span className="sim-upload-trigger__label">Click to add a portrait</span>
-                  <span className="sim-upload-trigger__hint">JPG, PNG, WebP — displayed on card only</span>
+                  <span className="sim-upload-trigger__label">{t('sim_portrait_click')}</span>
+                  <span className="sim-upload-trigger__hint">{t('sim_portrait_hint')}</span>
                 </button>
               )}
               <input
@@ -362,10 +366,10 @@ export default function Simulator() {
               disabled={!canReveal || loading}
             >
               {loading
-                ? '🌀 The portal is opening…'
+                ? t('sim_revealing')
                 : card
-                ? '✨ Reveal again'
-                : '✨ Reveal my role'}
+                ? t('sim_reveal_again')
+                : t('sim_reveal')}
             </button>
           </div>
         </form>
@@ -375,7 +379,7 @@ export default function Simulator() {
       {loading && (
         <div className="spinner-wrap">
           <div className="spinner" />
-          <span>The portal is weaving your fate…</span>
+          <span>{t('sim_weaving')}</span>
         </div>
       )}
 

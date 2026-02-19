@@ -8,6 +8,7 @@ import type {
   LoreCraftReport,
 } from '../types/lorecraft';
 import ReportView from '../components/ReportView';
+import { useLang, type TranslationKey } from '../i18n';
 
 // Frontend worldType → API worldType
 const TYPE_MAP: Record<string, string> = {
@@ -17,11 +18,25 @@ const TYPE_MAP: Record<string, string> = {
 };
 
 // ─── Static data ──────────────────────────────────────────────────────────────
+// Values are kept in English (sent to backend). Display labels use t().
 const GENRES = [
   'Fantasy', 'Science Fiction', 'Horror', 'Gothic / Dark Romance',
   'Thriller / Mystery', 'Historical Fiction', 'Mythology / Folk',
   'Solarpunk', 'Space Opera', 'Custom…',
 ] as const;
+
+const GENRE_LABEL_KEYS: Record<typeof GENRES[number], TranslationKey> = {
+  'Fantasy':              'genre_fantasy',
+  'Science Fiction':      'genre_sci_fi',
+  'Horror':               'genre_horror',
+  'Gothic / Dark Romance': 'genre_gothic',
+  'Thriller / Mystery':   'genre_thriller',
+  'Historical Fiction':   'genre_historical_fiction',
+  'Mythology / Folk':     'genre_mythology',
+  'Solarpunk':            'genre_solarpunk',
+  'Space Opera':          'genre_space_opera',
+  'Custom…':              'genre_custom',
+};
 
 const TECH_LEVELS = [
   'Pre-Industrial (before 1750s)',
@@ -34,12 +49,27 @@ const TECH_LEVELS = [
   'Custom / Mixed',
 ] as const;
 
-const DEVIATIONS: { key: DeviationType; label: string; description: string }[] = [
-  { key: 'climate',      label: 'Climate',            description: 'Weather patterns, seasons, or geography differ' },
-  { key: 'supernatural', label: 'Supernatural',       description: 'Magic, spirits, or forces beyond natural law exist' },
-  { key: 'technology',   label: 'Technology',         description: 'Tech level diverges from the historical baseline' },
-  { key: 'political',    label: 'Political Structure', description: 'Governments, power structures, or laws differ' },
-  { key: 'social',       label: 'Social Norms',        description: 'Culture, class, gender roles, or values diverge' },
+const TECH_LEVEL_KEYS: Record<typeof TECH_LEVELS[number], TranslationKey> = {
+  'Pre-Industrial (before 1750s)':  'tech_pre_industrial',
+  'Industrial Age (1800s)':         'tech_industrial',
+  'Early Modern (1900–1950)':       'tech_early_modern',
+  'Post-WWII Contemporary':         'tech_post_wwii',
+  'Near Future (2025–2100)':        'tech_near_future',
+  'Far Future (2100+)':             'tech_far_future',
+  'Post-Apocalyptic Regression':    'tech_post_apocalyptic',
+  'Custom / Mixed':                 'tech_custom_mixed',
+};
+
+const DEVIATIONS: {
+  key:      DeviationType;
+  labelKey: TranslationKey;
+  descKey:  TranslationKey;
+}[] = [
+  { key: 'climate',      labelKey: 'deviation_climate_label',      descKey: 'deviation_climate_desc' },
+  { key: 'supernatural', labelKey: 'deviation_supernatural_label', descKey: 'deviation_supernatural_desc' },
+  { key: 'technology',   labelKey: 'deviation_technology_label',   descKey: 'deviation_technology_desc' },
+  { key: 'political',    labelKey: 'deviation_political_label',    descKey: 'deviation_political_desc' },
+  { key: 'social',       labelKey: 'deviation_social_label',       descKey: 'deviation_social_desc' },
 ];
 
 const NUTRIENTS_COST = 62;
@@ -52,23 +82,24 @@ function HistoricalFields({
   form: LoreCraftForm;
   set: (k: keyof LoreCraftForm) => (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
+  const { t } = useLang();
   return (
     <div className="world-fields animate-fade-in">
       <div className="form-grid">
         <div className="form-group">
           <label className="form-label" htmlFor="timePeriod">
-            Time Period <span className="req">*</span>
+            {t('lorecraft_time_period')} <span className="req">*</span>
           </label>
           <input id="timePeriod" type="text" className="form-input"
-            placeholder="e.g. 1880s Victorian England, Tang Dynasty China, Ancient Rome 44 BC"
+            placeholder={t('lorecraft_time_period_placeholder')}
             value={form.timePeriod} onChange={set('timePeriod')} />
         </div>
         <div className="form-group">
           <label className="form-label" htmlFor="location">
-            Location <span className="req">*</span>
+            {t('lorecraft_location')} <span className="req">*</span>
           </label>
           <input id="location" type="text" className="form-input"
-            placeholder="e.g. London, the Silk Road, the Mediterranean basin"
+            placeholder={t('lorecraft_location_placeholder')}
             value={form.location} onChange={set('location')} />
         </div>
       </div>
@@ -85,35 +116,40 @@ function FictionalFields({
   setField: (k: keyof LoreCraftForm) => (e: React.ChangeEvent<HTMLInputElement>) => void;
   setSelect: (k: keyof LoreCraftForm) => (e: React.ChangeEvent<HTMLSelectElement>) => void;
 }) {
+  const { t } = useLang();
   return (
     <div className="world-fields animate-fade-in">
       <div className="form-grid">
         <div className="form-group">
-          <label className="form-label" htmlFor="genre">Genre</label>
+          <label className="form-label" htmlFor="genre">{t('lorecraft_genre')}</label>
           <select id="genre" className="form-select" value={form.genre} onChange={setSelect('genre')}>
-            <option value="">Select a genre…</option>
-            {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+            <option value="">{t('lorecraft_genre_select')}</option>
+            {GENRES.map(g => (
+              <option key={g} value={g}>{t(GENRE_LABEL_KEYS[g])}</option>
+            ))}
           </select>
           {form.genre === 'Custom…' && (
             <input type="text" className="form-input" style={{ marginTop: '0.5rem' }}
-              placeholder="Describe your genre…"
+              placeholder={t('lorecraft_genre_placeholder')}
               value={form.customGenre} onChange={setField('customGenre')} />
           )}
         </div>
         <div className="form-group">
-          <label className="form-label" htmlFor="techLevel">Tech Level / Era</label>
+          <label className="form-label" htmlFor="techLevel">{t('lorecraft_tech_level')}</label>
           <select id="techLevel" className="form-select" value={form.techLevel} onChange={setSelect('techLevel')}>
-            <option value="">Select a tech level…</option>
-            {TECH_LEVELS.map(t => <option key={t} value={t}>{t}</option>)}
+            <option value="">{t('lorecraft_tech_level_select')}</option>
+            {TECH_LEVELS.map(tl => (
+              <option key={tl} value={tl}>{t(TECH_LEVEL_KEYS[tl])}</option>
+            ))}
           </select>
         </div>
         <div className="form-group form-col-full">
           <label className="form-label" htmlFor="environmentCondition">
-            Key Environment Condition
+            {t('lorecraft_environment')}
           </label>
-          <p className="form-hint">What defines the physical world — terrain, sky, climate, or geography?</p>
+          <p className="form-hint">{t('lorecraft_environment_hint')}</p>
           <input id="environmentCondition" type="text" className="form-input"
-            placeholder="e.g. floating islands, endless ocean, two suns, permanent winter"
+            placeholder={t('lorecraft_environment_placeholder')}
             value={form.environmentCondition} onChange={setField('environmentCondition')} />
         </div>
       </div>
@@ -122,14 +158,17 @@ function FictionalFields({
 }
 
 function DeviationRow({
-  item, selected, level, onToggle, onLevel,
+  item, label, description, selected, level, onToggle, onLevel,
 }: {
-  item: typeof DEVIATIONS[number];
-  selected: boolean;
-  level: DeviationLevel | undefined;
-  onToggle: () => void;
-  onLevel: (l: DeviationLevel) => void;
+  item:        typeof DEVIATIONS[number];
+  label:       string;
+  description: string;
+  selected:    boolean;
+  level:       DeviationLevel | undefined;
+  onToggle:    () => void;
+  onLevel:     (l: DeviationLevel) => void;
 }) {
+  const { t } = useLang();
   return (
     <div className={`deviation-row ${selected ? 'deviation-row--selected' : ''}`}>
       <label className="deviation-check-label">
@@ -140,18 +179,18 @@ function DeviationRow({
           onChange={onToggle}
         />
         <span className="deviation-check-box" />
-        <span className="deviation-name">{item.label}</span>
+        <span className="deviation-name">{label}</span>
       </label>
-      <span className="deviation-desc">{item.description}</span>
+      <span className="deviation-desc">{description}</span>
       {selected && (
         <select
           className="form-select deviation-level-select"
           value={level ?? 'minor'}
           onChange={e => onLevel(e.target.value as DeviationLevel)}
         >
-          <option value="minor">Minor</option>
-          <option value="moderate">Moderate</option>
-          <option value="major">Major</option>
+          <option value="minor">{t('deviation_level_minor')}</option>
+          <option value="moderate">{t('deviation_level_moderate')}</option>
+          <option value="major">{t('deviation_level_major')}</option>
         </select>
       )}
     </div>
@@ -169,6 +208,7 @@ function HybridFields({
   setDeviation: (key: DeviationType, active: boolean) => void;
   setDeviationLevel: (key: DeviationType, level: DeviationLevel) => void;
 }) {
+  const { t } = useLang();
   return (
     <div className="world-fields animate-fade-in">
 
@@ -177,21 +217,25 @@ function HybridFields({
         <div className="hybrid-section__header">
           <span className="hybrid-section__label">A</span>
           <div>
-            <h4 className="hybrid-section__title">Reality Anchor</h4>
-            <p className="form-hint">The historical base your world grows from.</p>
+            <h4 className="hybrid-section__title">{t('lorecraft_reality_anchor_title')}</h4>
+            <p className="form-hint">{t('lorecraft_reality_anchor_hint')}</p>
           </div>
         </div>
         <div className="form-grid" style={{ marginTop: '1rem' }}>
           <div className="form-group">
-            <label className="form-label" htmlFor="baseTimePeriod">Base Time Period <span className="req">*</span></label>
+            <label className="form-label" htmlFor="baseTimePeriod">
+              {t('lorecraft_base_time_period')} <span className="req">*</span>
+            </label>
             <input id="baseTimePeriod" type="text" className="form-input"
-              placeholder="e.g. 1880s, Song Dynasty, post-WWI Europe"
+              placeholder={t('lorecraft_base_time_period_placeholder')}
               value={form.baseTimePeriod} onChange={setField('baseTimePeriod')} />
           </div>
           <div className="form-group">
-            <label className="form-label" htmlFor="baseLocation">Base Location <span className="req">*</span></label>
+            <label className="form-label" htmlFor="baseLocation">
+              {t('lorecraft_base_location')} <span className="req">*</span>
+            </label>
             <input id="baseLocation" type="text" className="form-input"
-              placeholder="e.g. London, East Asia, the Mediterranean"
+              placeholder={t('lorecraft_base_location_placeholder')}
               value={form.baseLocation} onChange={setField('baseLocation')} />
           </div>
         </div>
@@ -202,23 +246,27 @@ function HybridFields({
         <div className="hybrid-section__header">
           <span className="hybrid-section__label">B</span>
           <div>
-            <h4 className="hybrid-section__title">Fictional Divergence</h4>
-            <p className="form-hint">Where reality bends. Select every deviation that applies and set its scale.</p>
+            <h4 className="hybrid-section__title">{t('lorecraft_fictional_divergence_title')}</h4>
+            <p className="form-hint">{t('lorecraft_fictional_divergence_hint')}</p>
           </div>
         </div>
         <div className="form-group" style={{ marginTop: '1rem', marginBottom: '1rem' }}>
-          <label className="form-label" htmlFor="genreLayer">Genre Layer <span className="req">*</span></label>
+          <label className="form-label" htmlFor="genreLayer">
+            {t('lorecraft_genre_layer')} <span className="req">*</span>
+          </label>
           <input id="genreLayer" type="text" className="form-input"
-            placeholder="e.g. Gothic mystery, biopunk, cosmic horror, silkpunk"
+            placeholder={t('lorecraft_genre_layer_placeholder')}
             value={form.genreLayer} onChange={setField('genreLayer')} />
         </div>
         <div className="form-group">
-          <p className="form-label">Allowed Deviations</p>
+          <p className="form-label">{t('lorecraft_allowed_deviations')}</p>
           <div className="deviations-list">
             {DEVIATIONS.map(item => (
               <DeviationRow
                 key={item.key}
                 item={item}
+                label={t(item.labelKey)}
+                description={t(item.descKey)}
                 selected={item.key in form.deviations}
                 level={form.deviations[item.key]}
                 onToggle={() => setDeviation(item.key, !(item.key in form.deviations))}
@@ -235,13 +283,14 @@ function HybridFields({
           <span className="hybrid-section__label hybrid-section__label--opt">C</span>
           <div>
             <h4 className="hybrid-section__title">
-              Motif / Inspiration <span className="optional">(optional)</span>
+              {t('lorecraft_motif_title')}{' '}
+              <span className="optional">{t('optional')}</span>
             </h4>
-            <p className="form-hint">A recurring theme, symbol, or creative touchstone.</p>
+            <p className="form-hint">{t('lorecraft_motif_hint')}</p>
           </div>
         </div>
         <input type="text" className="form-input" style={{ marginTop: '1rem' }}
-          placeholder="e.g. the cost of forbidden knowledge, memory vs. identity, industrialisation's toll"
+          placeholder={t('lorecraft_motif_placeholder')}
           value={form.motif} onChange={setField('motif')} />
       </div>
 
@@ -251,12 +300,12 @@ function HybridFields({
 
 // ─── World Type radio card ────────────────────────────────────────────────────
 interface RadioCardProps {
-  value: WorldType;
-  selected: boolean;
-  icon: string;
-  title: string;
+  value:       WorldType;
+  selected:    boolean;
+  icon:        string;
+  title:       string;
   description: string;
-  onSelect: () => void;
+  onSelect:    () => void;
 }
 function WorldTypeCard({ value, selected, icon, title, description, onSelect }: RadioCardProps) {
   return (
@@ -285,8 +334,9 @@ const EMPTY_FORM: LoreCraftForm = {
 };
 
 export default function LoreCraft() {
-  const location = useLocation();
-  const state = location.state as LocationState | null;
+  const location    = useLocation();
+  const state       = location.state as LocationState | null;
+  const { lang, t } = useLang();
 
   const [form, setForm] = useState<LoreCraftForm>({
     ...EMPTY_FORM,
@@ -296,13 +346,11 @@ export default function LoreCraft() {
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState<string | null>(null);
 
-  // Generic text/textarea setter
   const setField =
     (k: keyof LoreCraftForm) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm(prev => ({ ...prev, [k]: e.target.value }));
 
-  // Select setter
   const setSelect =
     (k: keyof LoreCraftForm) =>
     (e: React.ChangeEvent<HTMLSelectElement>) =>
@@ -324,11 +372,9 @@ export default function LoreCraft() {
     }));
   }
 
-  // Derived genre value — 'Custom…' defers to the free-text field
   const effectiveGenre =
     form.genre === 'Custom…' ? form.customGenre.trim() : form.genre;
 
-  // Validation mirrors backend requirements
   const canSubmit =
     form.worldType === 'historical'
       ? form.timePeriod.trim() !== '' && form.location.trim() !== ''
@@ -347,7 +393,6 @@ export default function LoreCraft() {
     setReport(null);
     setError(null);
 
-    // Build type-specific fields object
     let fields: Record<string, unknown>;
     if (form.worldType === 'historical') {
       fields = { timePeriod: form.timePeriod, location: form.location };
@@ -370,18 +415,22 @@ export default function LoreCraft() {
     try {
       const res = await fetch('/api/lorecraft', {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type':   'application/json',
+          'X-LoreKit-Lang': lang,
+        },
         body:    JSON.stringify({
           worldType:    TYPE_MAP[form.worldType],
           fields,
           extraContext: form.extraContext.trim() || undefined,
+          lang,
         }),
       });
 
       const data = await res.json() as Record<string, unknown>;
 
       if (!res.ok) {
-        setError((data['error'] as string | undefined) ?? 'Something went wrong. Please try again.');
+        setError((data['error'] as string | undefined) ?? t('err_generic'));
       } else {
         setReport(data as unknown as LoreCraftReport);
         setTimeout(() => {
@@ -389,7 +438,7 @@ export default function LoreCraft() {
         }, 100);
       }
     } catch {
-      setError('Could not reach the server. Check your connection and try again.');
+      setError(t('err_server'));
     } finally {
       setLoading(false);
     }
@@ -405,12 +454,9 @@ export default function LoreCraft() {
 
       {/* ── Page header ─────────────────────────────────────────────────── */}
       <section className="section-header animate-fade-up">
-        <span className="eyebrow">🔮 LoreCraft</span>
-        <h1>Create Your World</h1>
-        <p>
-          Define the bones of your world — its laws, its cracks, and its soul. LoreKit will
-          return a structured verification report to guide your creation.
-        </p>
+        <span className="eyebrow">{t('lorecraft_eyebrow')}</span>
+        <h1>{t('lorecraft_title')}</h1>
+        <p>{t('lorecraft_desc')}</p>
       </section>
 
       {/* ── Form card ───────────────────────────────────────────────────── */}
@@ -420,31 +466,31 @@ export default function LoreCraft() {
           {/* World Type radios */}
           <div className="form-group" style={{ marginBottom: '1.5rem' }}>
             <p className="form-label" style={{ marginBottom: '0.75rem' }}>
-              World Type <span className="req">*</span>
+              {t('lorecraft_world_type_label')} <span className="req">*</span>
             </p>
             <div className="radio-group">
               <WorldTypeCard
                 value="historical"
                 selected={form.worldType === 'historical'}
                 icon="🏛"
-                title="Historical Reality"
-                description="A real time period and place, faithful to history."
+                title={t('lorecraft_historical_title')}
+                description={t('lorecraft_historical_desc')}
                 onSelect={() => setForm(p => ({ ...p, worldType: 'historical' }))}
               />
               <WorldTypeCard
                 value="fictional"
                 selected={form.worldType === 'fictional'}
                 icon="🌌"
-                title="Fictional World"
-                description="A fully invented world with its own rules and geography."
+                title={t('lorecraft_fictional_title')}
+                description={t('lorecraft_fictional_desc')}
                 onSelect={() => setForm(p => ({ ...p, worldType: 'fictional' }))}
               />
               <WorldTypeCard
                 value="hybrid"
                 selected={form.worldType === 'hybrid'}
                 icon="⚗️"
-                title="Hybrid"
-                description="Real history as a foundation with fictional deviations layered on top."
+                title={t('lorecraft_hybrid_title')}
+                description={t('lorecraft_hybrid_desc')}
                 onSelect={() => setForm(p => ({ ...p, worldType: 'hybrid' }))}
               />
             </div>
@@ -470,16 +516,15 @@ export default function LoreCraft() {
           {form.worldType !== '' && (
             <div className="form-group" style={{ marginTop: '1.25rem' }}>
               <label className="form-label" htmlFor="extraContext">
-                Additional Context <span className="optional">(optional)</span>
+                {t('lorecraft_extra_context')}{' '}
+                <span className="optional">{t('optional')}</span>
               </label>
-              <p className="form-hint">
-                Paste an excerpt, note specific questions, or add anything else you want LoreKit to consider.
-              </p>
+              <p className="form-hint">{t('lorecraft_extra_context_hint')}</p>
               <textarea
                 id="extraContext"
                 className="form-textarea"
                 rows={4}
-                placeholder="Extra notes, story excerpt, or specific questions for LoreKit…"
+                placeholder={t('lorecraft_extra_context_placeholder')}
                 value={form.extraContext}
                 onChange={setField('extraContext')}
               />
@@ -494,15 +539,15 @@ export default function LoreCraft() {
                 className="btn btn-primary btn-lg"
                 disabled={!canSubmit || loading}
               >
-                {loading ? '🐱 Consulting the ancient tomes…' : '🔮 Generate Deep Report'}
+                {loading ? t('lorecraft_generating') : t('lorecraft_generate')}
               </button>
               <span className="nutrients-cost-label">
                 <span className="nutrients-cost-label__icon">✦</span>
-                ~{NUTRIENTS_COST} Nutrients
+                {t('lorecraft_nutrients_cost', { n: NUTRIENTS_COST })}
               </span>
               {report && (
                 <button type="button" className="btn btn-ghost btn-sm" onClick={handleClear}>
-                  Clear
+                  {t('lorecraft_clear')}
                 </button>
               )}
             </div>
@@ -515,7 +560,7 @@ export default function LoreCraft() {
       {loading && (
         <div className="spinner-wrap">
           <div className="spinner" />
-          <span>LoreKit is weaving the report…</span>
+          <span>{t('lorecraft_weaving')}</span>
         </div>
       )}
 

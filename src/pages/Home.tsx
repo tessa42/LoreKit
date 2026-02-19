@@ -1,52 +1,55 @@
 import { useNavigate } from 'react-router-dom';
-
-const features = [
-  {
-    key: 'lorecraft',
-    icon: '🔮',
-    title: 'LoreCraft',
-    subtitle: 'Create Your World',
-    desc: "Feed your world's DNA — type, rules, deviations, motifs — and receive a deep verification report. Find the cracks before your readers do.",
-    cta: 'Craft a world →',
-    path: '/lorecraft',
-  },
-  {
-    key: 'lorecheck',
-    icon: '📜',
-    title: 'LoreCheck',
-    subtitle: 'Validate Your World',
-    desc: 'Paste any lore, scene, or worldbuilding passage. LoreKit scans for plausibility tensions and serves up crisp, actionable insights.',
-    cta: 'Check your lore →',
-    path: '/lorecheck',
-  },
-  {
-    key: 'simulator',
-    icon: '✨',
-    title: 'Simulator',
-    subtitle: 'Preview Your Story',
-    desc: 'Drop your name and a vibe. Receive a character-story card pulled from the ancient worlds. Free, fast, and made for sharing.',
-    cta: 'Enter the portal →',
-    path: '/simulator',
-  },
-] as const;
+import { useLang } from '../i18n';
 
 export default function Home() {
   const navigate = useNavigate();
+  const { t }    = useLang();
+
+  const features = [
+    {
+      key:      'lorecraft',
+      icon:     '🔮',
+      title:    'LoreCraft',
+      subtitle: t('home_lorecraft_subtitle'),
+      desc:     t('home_lorecraft_desc'),
+      cta:      t('home_lorecraft_cta'),
+      path:     '/lorecraft',
+      badge:    'badge-violet',
+    },
+    {
+      key:      'lorecheck',
+      icon:     '📜',
+      title:    'LoreCheck',
+      subtitle: t('home_lorecheck_subtitle'),
+      desc:     t('home_lorecheck_desc'),
+      cta:      t('home_lorecheck_cta'),
+      path:     '/lorecheck',
+      badge:    'badge-gold',
+    },
+    {
+      key:      'simulator',
+      icon:     '✨',
+      title:    'Simulator',
+      subtitle: t('home_simulator_subtitle'),
+      desc:     t('home_simulator_desc'),
+      cta:      t('home_simulator_cta'),
+      path:     '/simulator',
+      badge:    'badge-teal',
+    },
+  ];
 
   return (
     <div className="page-wrapper--wide">
       <section className="hero animate-fade-in">
         <span className="hero__cat">🐱</span>
         <h1 className="hero__title">LoreKit</h1>
-        <p className="hero__subtitle">
-          Your enchanted companion for worldbuilding — craft, verify, and explore fictional worlds with a wise cat at your side.
-        </p>
+        <p className="hero__subtitle">{t('home_subtitle')}</p>
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button className="btn btn-primary btn-lg" onClick={() => navigate('/lorecraft')}>
-            Start Building
+            {t('home_start_building')}
           </button>
           <button className="btn btn-ghost btn-lg" onClick={() => navigate('/simulator')}>
-            Try the Simulator
+            {t('home_try_simulator')}
           </button>
         </div>
       </section>
@@ -63,9 +66,7 @@ export default function Home() {
             <span className="feature-card__icon">{f.icon}</span>
             <div className="feature-card__title">{f.title}</div>
             <div style={{ marginBottom: '0.5rem' }}>
-              <span className={`badge badge-${f.key === 'lorecraft' ? 'violet' : f.key === 'lorecheck' ? 'gold' : 'teal'}`}>
-                {f.subtitle}
-              </span>
+              <span className={`badge ${f.badge}`}>{f.subtitle}</span>
             </div>
             <p className="feature-card__desc">{f.desc}</p>
             <span className="feature-card__cta">{f.cta}</span>
@@ -75,7 +76,7 @@ export default function Home() {
 
       <div style={{ textAlign: 'center', marginTop: '4rem', paddingBottom: '2rem' }}>
         <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
-          🐱 &nbsp; "Every world has a logic. My job is to find where yours bends." — LoreKit
+          🐱 &nbsp; {t('home_cat_quote')}
         </p>
       </div>
     </div>

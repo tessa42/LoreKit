@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { LoreCheckForm, LoreCheckReport, RiskLevel, TensionPoint } from '../types/lorecheck';
+import { useLang } from '../i18n';
 
 // ─── Stability meter ──────────────────────────────────────────────────────────
 function StabilityMeter({
@@ -14,8 +15,6 @@ function StabilityMeter({
 }) {
   const levels: RiskLevel[] = ['low', 'medium', 'high'];
   const idx = levels.indexOf(value);
-  // stability: Low=bad(red) → High=good(green)
-  // risk:      Low=good(green) → High=bad(red)
   const colors = invert
     ? ['#34d399', '#fbbf24', '#f87171']
     : ['#f87171', '#fbbf24', '#34d399'];
@@ -41,7 +40,7 @@ function StabilityMeter({
   );
 }
 
-// ─── Risk badge reuses existing severity-badge CSS ────────────────────────────
+// ─── Risk badge ───────────────────────────────────────────────────────────────
 function RiskBadge({ riskLevel }: { riskLevel: RiskLevel }) {
   const cls =
     riskLevel === 'high'   ? 'severity-badge--high'
@@ -53,6 +52,7 @@ function RiskBadge({ riskLevel }: { riskLevel: RiskLevel }) {
 
 // ─── Single tension card ──────────────────────────────────────────────────────
 function TensionCard({ tension, index }: { tension: TensionPoint; index: number }) {
+  const { t } = useLang();
   return (
     <div className="lc-tension animate-fade-up" style={{ animationDelay: `${index * 60}ms` }}>
       <div className="lc-tension__header">
@@ -66,7 +66,7 @@ function TensionCard({ tension, index }: { tension: TensionPoint; index: number 
       <p className="lc-tension__explanation">{tension.why}</p>
 
       <div className="lc-tension__fixes">
-        <span className="lc-tension__fixes-label">Suggested fixes</span>
+        <span className="lc-tension__fixes-label">{t('lorecheck_suggested_fixes')}</span>
         <ul className="lc-tension__fix-list">
           {tension.fixes.map((fix, i) => (
             <li key={i} className="lc-tension__fix-item">
@@ -93,15 +93,11 @@ const EMPTY_FORM: LoreCheckForm = {
   characterOccupation: '',
 };
 
-const PLACEHOLDER = `Paste your setting, plot, or synopsis here…
-
-Example:
-"Elara is 22, unmarried, and works as an independent crime investigator in 1883 London. She reads case files at Scotland Yard and consults with the coroner on forensic details. Her particular skill is reconstructing crimes from physical evidence — a method she developed after her father's unsolved murder when she was twelve. She funds her work through a small inheritance and occasional commissions from wealthy families who prefer to keep their scandals quiet."`;
-
 export default function LoreCheck() {
-  const navigate  = useNavigate();
-  const location  = useLocation();
-  const initState = location.state as LocationState | null;
+  const navigate    = useNavigate();
+  const location    = useLocation();
+  const initState   = location.state as LocationState | null;
+  const { lang, t } = useLang();
 
   const [form, setForm] = useState<LoreCheckForm>({
     ...EMPTY_FORM,
@@ -130,7 +126,10 @@ export default function LoreCheck() {
     try {
       const res = await fetch('/api/lorecheck', {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type':   'application/json',
+          'X-LoreKit-Lang': lang,
+        },
         body:    JSON.stringify({
           text: form.worldText.trim(),
           optionalMeta: {
@@ -139,13 +138,14 @@ export default function LoreCheck() {
             ageRange:   form.characterAgeRange    || undefined,
             occupation: form.characterOccupation  || undefined,
           },
+          lang,
         }),
       });
 
       const data = await res.json() as Record<string, unknown>;
 
       if (!res.ok) {
-        setError((data['error'] as string | undefined) ?? 'Something went wrong. Please try again.');
+        setError((data['error'] as string | undefined) ?? t('err_generic'));
       } else {
         setReport(data as unknown as LoreCheckReport);
         setTimeout(() => {
@@ -153,7 +153,7 @@ export default function LoreCheck() {
         }, 100);
       }
     } catch {
-      setError('Could not reach the server. Check your connection and try again.');
+      setError(t('err_server'));
     } finally {
       setLoading(false);
     }
@@ -168,8 +168,8 @@ export default function LoreCheck() {
       '',
       '### Key tensions to address:',
       ...report.tensionPoints.map(
-        (t, i) =>
-          `${i + 1}. **${t.title}** (${t.riskLevel} risk) — ${t.why.slice(0, 120)}…`,
+        (tp, i) =>
+          `${i + 1}. **${tp.title}** (${tp.riskLevel} risk) — ${tp.why.slice(0, 120)}…`,
       ),
       '',
       '### Overall impression:',
@@ -187,27 +187,26 @@ export default function LoreCheck() {
 
   function buildCopyText(r: LoreCheckReport): string {
     return [
-      'LORECHECK REPORT\n',
-      `Overall: ${r.overallImpression}\n`,
+      t('lorecheck_copy_title') + '\n',
+      `${t('lorecheck_copy_overall')}: ${r.overallImpression}\n`,
       ...r.tensionPoints.map(
-        (t, i) =>
-          `${i + 1}. ${t.title} [${t.riskLevel} risk]\n${t.why}\n\nFixes:\n${t.fixes.map(f => `• ${f}`).join('\n')}`,
+        (tp, i) =>
+          `${i + 1}. ${tp.title} [${tp.riskLevel} risk]\n${tp.why}\n\n${t('lorecheck_copy_fixes')}:\n${tp.fixes.map(f => `• ${f}`).join('\n')}`,
       ),
-      `\nStability: ${r.stability} | Eyebrow risk: ${r.eyebrowRaiseRisk}`,
+      `\n${t('lorecheck_copy_stability')}: ${r.stability} | ${t('lorecheck_copy_eyebrow_risk')}: ${r.eyebrowRaiseRisk}`,
     ].join('\n\n');
   }
+
+  const count = report?.tensionPoints.length ?? 0;
 
   return (
     <div className="page-wrapper">
 
       {/* ── Page header ─────────────────────────────────────────────────── */}
       <section className="section-header animate-fade-up">
-        <span className="eyebrow">📜 LoreCheck</span>
-        <h1>Validate Your World</h1>
-        <p>
-          Paste a setting, plot, or synopsis. LoreKit will surface the plausibility tensions
-          your readers will feel before they can name them.
-        </p>
+        <span className="eyebrow">{t('lorecheck_eyebrow')}</span>
+        <h1>{t('lorecheck_title')}</h1>
+        <p>{t('lorecheck_desc')}</p>
       </section>
 
       {/* ── Input card ──────────────────────────────────────────────────── */}
@@ -217,26 +216,26 @@ export default function LoreCheck() {
           {/* Main textarea */}
           <div className="form-group" style={{ marginBottom: '1.25rem' }}>
             <label className="form-label" htmlFor="worldText">
-              Setting / Plot / Synopsis{' '}
+              {t('lorecheck_text_label')}{' '}
               <span style={{ color: 'var(--rose)' }}>*</span>
             </label>
             <textarea
               id="worldText"
               className="form-textarea lc-main-textarea"
               rows={10}
-              placeholder={PLACEHOLDER}
+              placeholder={t('lorecheck_text_placeholder')}
               value={form.worldText}
               onChange={setField('worldText')}
             />
             <div className="lc-char-row">
               {charCount > 0 && charCount < 30 && (
                 <span className="lc-char-warn">
-                  Add a bit more — LoreKit needs at least 30 characters to work with.
+                  {t('lorecheck_char_warn_min')}
                 </span>
               )}
               {charCount > 4_000 && (
                 <span className="lc-char-warn">
-                  Over 4 000 characters — please trim or split into sections.
+                  {t('lorecheck_char_warn_max')}
                 </span>
               )}
               <span className="lc-char-count" style={{ marginLeft: 'auto' }}>
@@ -255,9 +254,9 @@ export default function LoreCheck() {
             <span className={`lc-advanced-toggle__chevron ${showAdvanced ? 'lc-advanced-toggle__chevron--open' : ''}`}>
               ›
             </span>
-            Advanced context{' '}
+            {t('lorecheck_advanced_toggle')}{' '}
             <span className="lc-advanced-toggle__hint">
-              (helps LoreKit calibrate)
+              {t('lorecheck_advanced_hint')}
             </span>
           </button>
 
@@ -266,13 +265,13 @@ export default function LoreCheck() {
             <div className="form-grid lc-advanced-grid">
               <div className="form-group">
                 <label className="form-label" htmlFor="timePeriod">
-                  Time Period <span className="optional">(optional)</span>
+                  {t('lorecheck_time_period')} <span className="optional">{t('optional')}</span>
                 </label>
                 <input
                   id="timePeriod"
                   type="text"
                   className="form-input"
-                  placeholder="e.g. 1880s, Tang Dynasty, near future 2080"
+                  placeholder={t('lorecheck_time_period_placeholder')}
                   value={form.timePeriod}
                   onChange={setField('timePeriod')}
                 />
@@ -280,13 +279,13 @@ export default function LoreCheck() {
 
               <div className="form-group">
                 <label className="form-label" htmlFor="countryRegion">
-                  Country / Region <span className="optional">(optional)</span>
+                  {t('lorecheck_region')} <span className="optional">{t('optional')}</span>
                 </label>
                 <input
                   id="countryRegion"
                   type="text"
                   className="form-input"
-                  placeholder="e.g. London, rural Appalachia, fictional Aethermoor"
+                  placeholder={t('lorecheck_region_placeholder')}
                   value={form.countryRegion}
                   onChange={setField('countryRegion')}
                 />
@@ -294,13 +293,13 @@ export default function LoreCheck() {
 
               <div className="form-group">
                 <label className="form-label" htmlFor="charAge">
-                  Main Character Age Range <span className="optional">(optional)</span>
+                  {t('lorecheck_age_range')} <span className="optional">{t('optional')}</span>
                 </label>
                 <input
                   id="charAge"
                   type="text"
                   className="form-input"
-                  placeholder="e.g. early 20s, mid-40s, teenager"
+                  placeholder={t('lorecheck_age_range_placeholder')}
                   value={form.characterAgeRange}
                   onChange={setField('characterAgeRange')}
                 />
@@ -308,13 +307,13 @@ export default function LoreCheck() {
 
               <div className="form-group">
                 <label className="form-label" htmlFor="charOccupation">
-                  Main Character Occupation <span className="optional">(optional)</span>
+                  {t('lorecheck_occupation')} <span className="optional">{t('optional')}</span>
                 </label>
                 <input
                   id="charOccupation"
                   type="text"
                   className="form-input"
-                  placeholder="e.g. private investigator, healer-monk, street archivist"
+                  placeholder={t('lorecheck_occupation_placeholder')}
                   value={form.characterOccupation}
                   onChange={setField('characterOccupation')}
                 />
@@ -330,23 +329,23 @@ export default function LoreCheck() {
                 className="btn btn-gold btn-lg"
                 disabled={!canScan || loading}
               >
-                {loading ? '🐱 Reading every line…' : '📜 Quick Scan'}
+                {loading ? t('lorecheck_scanning') : t('lorecheck_scan')}
               </button>
 
               <button
                 type="button"
                 className="btn btn-ghost btn-lg lc-deep-audit-btn"
                 disabled
-                title="Coming in a future release"
+                title={t('coming_soon')}
               >
-                🔬 Deep Audit
-                <span className="lc-coming-soon">soon</span>
+                {t('lorecheck_deep_audit')}
+                <span className="lc-coming-soon">{t('coming_soon')}</span>
               </button>
             </div>
 
             {report && (
               <button type="button" className="btn btn-ghost btn-sm" onClick={handleClear}>
-                Clear results
+                {t('lorecheck_clear_results')}
               </button>
             )}
           </div>
@@ -358,7 +357,7 @@ export default function LoreCheck() {
       {loading && (
         <div className="spinner-wrap">
           <div className="spinner" />
-          <span>LoreKit is reading between the lines…</span>
+          <span>{t('lorecheck_reading')}</span>
         </div>
       )}
 
@@ -376,35 +375,38 @@ export default function LoreCheck() {
           {/* Report header */}
           <div className="lc-report__header">
             <div>
-              <span className="eyebrow lc-report__eyebrow">🐱 LoreKit's Notes</span>
-              <h2 className="lc-report__title">Quick Scan Results</h2>
+              <span className="eyebrow lc-report__eyebrow">{t('lorecheck_notes_eyebrow')}</span>
+              <h2 className="lc-report__title">{t('lorecheck_results_title')}</h2>
             </div>
             <div className="lc-report__header-actions">
               <button className="btn btn-primary btn-sm" onClick={handleRefineLoreCraft}>
-                🔮 Refine with LoreCraft
+                {t('lorecheck_refine')}
               </button>
               <button
                 className="btn btn-ghost btn-sm"
                 onClick={() => navigator.clipboard.writeText(buildCopyText(report))}
               >
-                Copy
+                {t('lorecheck_copy')}
               </button>
             </div>
           </div>
 
           {/* Overall impression */}
           <div className="lc-impression">
-            <span className="lc-impression__label">Overall Impression</span>
+            <span className="lc-impression__label">{t('lorecheck_overall_impression')}</span>
             <p className="lc-impression__text">{report.overallImpression}</p>
           </div>
 
           {/* Tension points */}
           <div className="lc-tensions-section">
             <p className="lc-tensions-section__heading">
-              {report.tensionPoints.length} Tension{report.tensionPoints.length !== 1 ? 's' : ''} Found
+              {t('lorecheck_tensions_found', {
+                n: String(count),
+                s: count !== 1 ? 's' : '',
+              })}
             </p>
-            {report.tensionPoints.map((t, i) => (
-              <TensionCard key={i} tension={t} index={i} />
+            {report.tensionPoints.map((tp, i) => (
+              <TensionCard key={i} tension={tp} index={i} />
             ))}
           </div>
 
@@ -420,7 +422,7 @@ export default function LoreCheck() {
           {/* Extracted assumptions */}
           {report.extractedAssumptions.length > 0 && (
             <div className="lc-impression" style={{ marginTop: '1rem' }}>
-              <span className="lc-impression__label">Assumptions LoreKit Made</span>
+              <span className="lc-impression__label">{t('lorecheck_assumptions_label')}</span>
               <ul className="logic-list" style={{ marginTop: '0.5rem' }}>
                 {report.extractedAssumptions.map((a, i) => <li key={i}>{a}</li>)}
               </ul>
@@ -432,7 +434,7 @@ export default function LoreCheck() {
             <div className="lc-catnote" style={{ marginTop: '1rem' }}>
               <span className="lc-catnote__cat">💬</span>
               <div>
-                <span className="lc-catnote__label">LoreKit Is Curious About</span>
+                <span className="lc-catnote__label">{t('lorecheck_curious_label')}</span>
                 <ul className="logic-list" style={{ marginTop: '0.5rem' }}>
                   {report.missingInfoQuestions.map((q, i) => <li key={i}>{q}</li>)}
                 </ul>
@@ -443,10 +445,10 @@ export default function LoreCheck() {
           {/* Bottom CTA */}
           <div className="lc-report__cta">
             <button className="btn btn-primary" onClick={handleRefineLoreCraft}>
-              🔮 Refine with LoreCraft
+              {t('lorecheck_refine')}
             </button>
             <button className="btn btn-ghost btn-sm" onClick={handleClear}>
-              Run another scan
+              {t('lorecheck_run_another')}
             </button>
           </div>
 

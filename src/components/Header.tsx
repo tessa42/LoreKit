@@ -1,6 +1,9 @@
 import { NavLink } from 'react-router-dom';
+import { useLang } from '../i18n';
 
 export default function Header() {
+  const { lang, setLang, t } = useLang();
+
   return (
     <header className="site-header">
       <div className="site-header__inner">
@@ -14,27 +17,49 @@ export default function Header() {
             to="/lorecraft"
             className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
           >
-            LoreCraft
+            {t('nav_lorecraft')}
           </NavLink>
           <NavLink
             to="/lorecheck"
             className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
           >
-            LoreCheck
+            {t('nav_lorecheck')}
           </NavLink>
           <NavLink
             to="/simulator"
             className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
           >
-            Simulator
+            {t('nav_simulator')}
           </NavLink>
         </nav>
 
-        {/* Nutrients balance — static placeholder */}
-        <div className="nutrients-badge" title="Nutrients — your worldbuilding credits">
-          <span className="nutrients-badge__icon">✦</span>
-          <span className="nutrients-badge__value">250</span>
-          <span className="nutrients-badge__label">Nutrients</span>
+        <div className="site-header__right">
+          {/* Language toggle */}
+          <div className="lang-toggle" aria-label="Language selector">
+            <button
+              type="button"
+              className={`lang-toggle__btn ${lang === 'en-US' ? 'lang-toggle__btn--active' : ''}`}
+              onClick={() => setLang('en-US')}
+              aria-pressed={lang === 'en-US'}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              className={`lang-toggle__btn ${lang === 'ko-KR' ? 'lang-toggle__btn--active' : ''}`}
+              onClick={() => setLang('ko-KR')}
+              aria-pressed={lang === 'ko-KR'}
+            >
+              한국어
+            </button>
+          </div>
+
+          {/* Nutrients balance — static placeholder */}
+          <div className="nutrients-badge" title={t('nutrients_title')}>
+            <span className="nutrients-badge__icon">✦</span>
+            <span className="nutrients-badge__value">250</span>
+            <span className="nutrients-badge__label">{t('nutrients_label')}</span>
+          </div>
         </div>
       </div>
     </header>

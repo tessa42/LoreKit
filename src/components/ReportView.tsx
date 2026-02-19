@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { LoreCraftReport, ReportSection } from '../types/lorecraft';
+import { useLang } from '../i18n';
 
 // ─── Badge helpers ────────────────────────────────────────────────────────────
 function StrengthBadge({ value }: { value: string }) {
@@ -23,6 +24,7 @@ function SeverityBadge({ value }: { value: string }) {
 
 // ─── Internal Logic — two-column strengths / fragilities ──────────────────────
 function LogicSection({ section }: { section: ReportSection }) {
+  const { t }       = useLang();
   const bullets     = section.bullets ?? [];
   const strengths   = bullets.filter(b => /^strength/i.test(b));
   const fragilities = bullets.filter(b => /^fragil/i.test(b));
@@ -38,7 +40,7 @@ function LogicSection({ section }: { section: ReportSection }) {
         <div className="logic-columns">
           {strengths.length > 0 && (
             <div className="logic-col logic-col--strengths">
-              <h4 className="logic-col__heading">✓ Strengths</h4>
+              <h4 className="logic-col__heading">{t('report_strengths')}</h4>
               <ul className="logic-list">
                 {strengths.map((b, i) => (
                   <li key={i}>{b.replace(/^Strength:\s*/i, '')}</li>
@@ -48,7 +50,7 @@ function LogicSection({ section }: { section: ReportSection }) {
           )}
           {fragilities.length > 0 && (
             <div className="logic-col logic-col--weaknesses">
-              <h4 className="logic-col__heading">⚠ Pressure Points</h4>
+              <h4 className="logic-col__heading">{t('report_pressure_points')}</h4>
               <ul className="logic-list">
                 {fragilities.map((b, i) => (
                   <li key={i}>{b.replace(/^Fragility:\s*/i, '')}</li>
@@ -145,7 +147,6 @@ function ChecklistSection({ section }: { section: ReportSection }) {
               onChange={() => toggle(i)}
             />
             <label htmlFor={`chk-${i}`} className="checklist-item__label">
-              {/* Strip any markdown checkbox prefix the LLM may have included */}
               {item.replace(/^\[?\s*x?\s*\]?\s*/i, '')}
             </label>
           </div>
@@ -165,6 +166,7 @@ function VerdictSection({
   onCheckWorld: () => void;
   onCopyReport: () => void;
 }) {
+  const { t } = useLang();
   return (
     <div className="report-card report-card--verdict">
       <div className="verdict-header">
@@ -175,7 +177,6 @@ function VerdictSection({
       </div>
 
       {section.paragraphs.map((p, i) => {
-        // The last paragraph is typically the star-rating line (starts with ✦ or ★)
         const isRating = /^[✦☆★]/.test(p.trim());
         return (
           <p
@@ -194,10 +195,10 @@ function VerdictSection({
 
       <div className="verdict-actions">
         <button className="btn btn-gold" onClick={onCheckWorld}>
-          📜 Check this world
+          {t('report_check_world')}
         </button>
         <button className="btn btn-ghost btn-sm" onClick={onCopyReport}>
-          Copy report
+          {t('report_copy')}
         </button>
       </div>
     </div>
@@ -214,6 +215,7 @@ function MetadataCard({
   uncertaintyFlags:    string[];
   suggestedNextChecks: string[];
 }) {
+  const { t } = useLang();
   const [open, setOpen] = useState(false);
 
   return (
@@ -227,15 +229,15 @@ function MetadataCard({
         <span className={`lc-advanced-toggle__chevron ${open ? 'lc-advanced-toggle__chevron--open' : ''}`}>
           ›
         </span>
-        Assumptions &amp; Flags
-        <span className="lc-advanced-toggle__hint">(what LoreKit inferred or flagged)</span>
+        {t('report_assumptions_toggle')}
+        <span className="lc-advanced-toggle__hint">{t('report_assumptions_hint')}</span>
       </button>
 
       {open && (
         <div style={{ marginTop: '1.25rem' }}>
           {assumptions.length > 0 && (
             <div style={{ marginBottom: '1.25rem' }}>
-              <h4 className="logic-col__heading">Assumptions Made</h4>
+              <h4 className="logic-col__heading">{t('report_assumptions_made')}</h4>
               <ul className="logic-list">
                 {assumptions.map((a, i) => <li key={i}>{a}</li>)}
               </ul>
@@ -243,7 +245,7 @@ function MetadataCard({
           )}
           {uncertaintyFlags.length > 0 && (
             <div style={{ marginBottom: '1.25rem' }}>
-              <h4 className="logic-col__heading">⚠ Uncertainty Flags</h4>
+              <h4 className="logic-col__heading">{t('report_uncertainty_flags')}</h4>
               <ul className="logic-list">
                 {uncertaintyFlags.map((f, i) => <li key={i}>{f}</li>)}
               </ul>
@@ -251,7 +253,7 @@ function MetadataCard({
           )}
           {suggestedNextChecks.length > 0 && (
             <div>
-              <h4 className="logic-col__heading">Suggested Next Checks</h4>
+              <h4 className="logic-col__heading">{t('report_suggested_checks')}</h4>
               <ul className="opportunity-list">
                 {suggestedNextChecks.map((s, i) => (
                   <li key={i} className="opportunity-item">
@@ -275,17 +277,17 @@ interface Props {
 }
 
 export default function ReportView({ report, onClear }: Props) {
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
+  const { t }     = useLang();
 
-  // Look up sections by their stable IDs
   const byId = (id: string) => report.sections.find(s => s.id === id);
 
-  const logicSection    = byId('internal-logic');
-  const lawsSection     = byId('world-laws');
-  const tensionsSection = byId('tensions');
-  const hooksSection    = byId('narrative-hooks');
+  const logicSection     = byId('internal-logic');
+  const lawsSection      = byId('world-laws');
+  const tensionsSection  = byId('tensions');
+  const hooksSection     = byId('narrative-hooks');
   const checklistSection = byId('checklist');
-  const verdictSection  = byId('verdict');
+  const verdictSection   = byId('verdict');
 
   const hasMetadata =
     report.assumptions.length > 0 ||
@@ -327,10 +329,10 @@ export default function ReportView({ report, onClear }: Props) {
         <div className="report-banner__right">
           <div className="report-actions-top">
             <button className="btn btn-gold btn-sm" onClick={handleCheckWorld}>
-              📜 Check this world
+              {t('report_check_world')}
             </button>
             <button className="btn btn-ghost btn-sm" onClick={onClear}>
-              ✕ Clear
+              {t('report_clear')}
             </button>
           </div>
         </div>
@@ -338,7 +340,7 @@ export default function ReportView({ report, onClear }: Props) {
 
       {/* ── World Overview ─────────────────────────────────────────────── */}
       <div className="report-card">
-        <h3 className="report-section-title">World Overview</h3>
+        <h3 className="report-section-title">{t('report_world_overview')}</h3>
         <p className="report-prose">{report.overview}</p>
       </div>
 
