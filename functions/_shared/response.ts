@@ -90,3 +90,30 @@ export function requireApiKey(key: string | undefined): Response | null {
   }
   return null;
 }
+
+// ─── Rate-limit response ───────────────────────────────────────────────────────
+/**
+ * Returns a `429 Too Many Requests` response with a `Retry-After` header.
+ *
+ * @param resetInMs - Milliseconds until the current rate-limit window resets.
+ *
+ * @example
+ *   const rl = checkRateLimit(ip);
+ *   if (!rl.allowed) return rateLimitResponse(rl.resetIn);
+ */
+export function rateLimitResponse(resetInMs: number): Response {
+  const retryAfterSec = Math.ceil(resetInMs / 1_000);
+  return new Response(
+    JSON.stringify({
+      error:    'Too many requests. Please wait before trying again.',
+      retryAfterSeconds: retryAfterSec,
+    }),
+    {
+      status:  429,
+      headers: {
+        ...CORS_HEADERS,
+        'Retry-After': String(retryAfterSec),
+      },
+    },
+  );
+}

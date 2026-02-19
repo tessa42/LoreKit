@@ -1,83 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import type {
-  LoreCheckForm,
-  LoreCheckReport,
-  TensionCategory,
-  StabilityLevel,
-  EyebrowRisk,
-} from '../types/lorecheck';
-
-// ─── Mock report (Victorian female detective, 1880s London) ───────────────────
-const MOCK_REPORT: LoreCheckReport = {
-  overallImpression:
-    "Your setting has strong atmospheric bones — the fog, the social rigidity, the gaslit streets all ring true. Where the prose starts to creak is in the spaces between your protagonist and the world around her: the mechanisms by which a woman of her station moves, investigates, and is taken seriously in 1880s London need more deliberate scaffolding. None of these tensions are fatal. Most are fixable with a clause or two — the kind of small institutional detail that makes a reader nod rather than squint.",
-
-  tensions: [
-    {
-      title: 'Unsanctioned Female Authority',
-      category: 'culture',
-      explanation:
-        "An unmarried woman independently solving crimes in 1880s London would not simply be unusual — she would be actively obstructed. The police, the press, and the public would question her credibility, her sanity, and her morality simultaneously. Your narrative currently treats her investigative authority as an ambient given rather than something she had to earn or circumvent.",
-      fixes: [
-        "Give her a male intermediary — a retired inspector or solicitor uncle — who fronts her conclusions publicly while she does the actual intellectual work",
-        "Reframe her as a 'private inquiry agent' hired exclusively by families who distrust the police, limiting her to channels where personal trust already exists",
-        "Acknowledge the obstruction explicitly and make navigating institutional skepticism part of the dramatic texture of every scene",
-      ],
-    },
-    {
-      title: 'Access to Evidence and Records',
-      category: 'probability',
-      explanation:
-        "Your protagonist reviews Metropolitan Police case files, coroner's notes, and witness depositions with a fluency that implies institutional access she has no established reason to possess. Police records in 1880 were not public documents, and a private citizen — regardless of intelligence or charm — could not simply walk in and read them.",
-      fixes: [
-        "Establish a sympathetic officer who leaks documents for personal reasons (unpaid debt, shared history, quiet admiration)",
-        "Restrict her to what a private citizen could legitimately access: newspapers, published court transcripts, paid street informants, and the testimony of people directly involved",
-        "Have her reconstruct official knowledge through human sources rather than paperwork — this is also more dramatically interesting",
-      ],
-    },
-    {
-      title: 'Twenty-Two and Already Expert',
-      category: 'motivation',
-      explanation:
-        "Your protagonist is 22 with what reads as a seasoned investigator's skillset: reading crime scenes, navigating social networks across class lines, understanding early forensic indicators. The expertise feels assumed rather than earned. A reader will quietly ask: where did she learn this, and when?",
-      fixes: [
-        "Age her up to 28–32, where a decade of informal self-study and unusual experience is more plausible without changing much else",
-        "Add a formative backstory that explains specific knowledge: a murdered sibling she investigated herself, years assisting a physician father, access to a relative's legal library",
-        "Let her be genuinely wrong or out of her depth in early scenes — expertise built on the page feels more earned than expertise assumed from page one",
-      ],
-    },
-    {
-      title: 'Economic Independence',
-      category: 'economics',
-      explanation:
-        "A woman of the social station implied by her education and ease across class lines would typically be financially dependent on a father, brother, or husband. How she funds her lodgings, travel, informant payments, and the leisure time to investigate is currently left implicit — and implicit in 1880s London usually means implausible.",
-      fixes: [
-        "Establish a specific inheritance that explains both her money and her freedom: a grandmother's direct bequest, a deceased fiancé's settlement, a small legacy from an eccentric aunt",
-        "Make financial precarity a live plot element — she takes cases partly because she needs the fee, which also creates stakes",
-        "Give her a secondary income (medical transcription, governess on call, indexing legal documents) that explains both the free hours and the relevant knowledge base",
-      ],
-    },
-  ],
-
-  stability:   'Medium',
-  eyebrowRisk: 'High',
-
-  catNote:
-    "The skeleton is solid and the atmosphere is genuinely good. What you're missing is connective tissue — the small institutional and social mechanics that explain how your protagonist exists in this world rather than floating above it. Patch the access points and her authority becomes earned rather than asserted. I would start with the economic independence thread; it's the one that will quietly unravel everything else if left loose.",
-};
-
-// ─── Category config ──────────────────────────────────────────────────────────
-const CATEGORY_META: Record<
-  TensionCategory,
-  { label: string; cssClass: string; icon: string }
-> = {
-  probability: { label: 'Probability',  cssClass: 'cat--probability', icon: '📊' },
-  culture:     { label: 'Culture',      cssClass: 'cat--culture',     icon: '🏛' },
-  motivation:  { label: 'Motivation',   cssClass: 'cat--motivation',  icon: '🧠' },
-  economics:   { label: 'Economics',    cssClass: 'cat--economics',   icon: '⚖️' },
-  logistics:   { label: 'Logistics',    cssClass: 'cat--logistics',   icon: '🗺' },
-};
+import type { LoreCheckForm, LoreCheckReport, RiskLevel, TensionPoint } from '../types/lorecheck';
 
 // ─── Stability meter ──────────────────────────────────────────────────────────
 function StabilityMeter({
@@ -85,62 +8,62 @@ function StabilityMeter({
   value,
   invert = false,
 }: {
-  label: string;
-  value: StabilityLevel | EyebrowRisk;
+  label:   string;
+  value:   RiskLevel;
   invert?: boolean;
 }) {
-  const levels: Array<StabilityLevel> = ['Low', 'Medium', 'High'];
-  const idx = levels.indexOf(value as StabilityLevel);
-  // For "risk" meters, High is bad (red). For stability, High is good (green).
+  const levels: RiskLevel[] = ['low', 'medium', 'high'];
+  const idx = levels.indexOf(value);
+  // stability: Low=bad(red) → High=good(green)
+  // risk:      Low=good(green) → High=bad(red)
   const colors = invert
-    ? ['#34d399', '#fbbf24', '#f87171']   // Low=green, High=red  (risk)
-    : ['#f87171', '#fbbf24', '#34d399'];  // Low=red,   High=green (stability)
+    ? ['#34d399', '#fbbf24', '#f87171']
+    : ['#f87171', '#fbbf24', '#34d399'];
+
+  const display = value.charAt(0).toUpperCase() + value.slice(1);
 
   return (
     <div className="lc-meter">
       <span className="lc-meter__label">{label}</span>
       <div className="lc-meter__track">
-        {levels.map((lvl, i) => (
+        {levels.map((_, i) => (
           <div
-            key={lvl}
+            key={i}
             className={`lc-meter__seg ${i <= idx ? 'lc-meter__seg--active' : ''}`}
             style={i <= idx ? { background: colors[idx] } : undefined}
           />
         ))}
       </div>
-      <span
-        className="lc-meter__value"
-        style={{ color: colors[idx] }}
-      >
-        {value}
+      <span className="lc-meter__value" style={{ color: colors[idx] }}>
+        {display}
       </span>
     </div>
   );
 }
 
-// ─── Single tension card ──────────────────────────────────────────────────────
-function TensionCard({
-  tension,
-  index,
-}: {
-  tension: LoreCheckReport['tensions'][number];
-  index: number;
-}) {
-  const meta = CATEGORY_META[tension.category];
+// ─── Risk badge reuses existing severity-badge CSS ────────────────────────────
+function RiskBadge({ riskLevel }: { riskLevel: RiskLevel }) {
+  const cls =
+    riskLevel === 'high'   ? 'severity-badge--high'
+    : riskLevel === 'medium' ? 'severity-badge--medium'
+    : 'severity-badge--low';
+  const label = riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1) + ' Risk';
+  return <span className={`severity-badge ${cls}`}>{label}</span>;
+}
 
+// ─── Single tension card ──────────────────────────────────────────────────────
+function TensionCard({ tension, index }: { tension: TensionPoint; index: number }) {
   return (
     <div className="lc-tension animate-fade-up" style={{ animationDelay: `${index * 60}ms` }}>
       <div className="lc-tension__header">
         <span className="lc-tension__number">
           {String(index + 1).padStart(2, '0')}
         </span>
-        <span className={`lc-tension__cat ${meta.cssClass}`}>
-          {meta.icon} {meta.label}
-        </span>
+        <RiskBadge riskLevel={tension.riskLevel} />
         <h3 className="lc-tension__title">{tension.title}</h3>
       </div>
 
-      <p className="lc-tension__explanation">{tension.explanation}</p>
+      <p className="lc-tension__explanation">{tension.why}</p>
 
       <div className="lc-tension__fixes">
         <span className="lc-tension__fixes-label">Suggested fixes</span>
@@ -180,16 +103,17 @@ export default function LoreCheck() {
   const location  = useLocation();
   const initState = location.state as LocationState | null;
 
-  const [form, setForm]         = useState<LoreCheckForm>({
+  const [form, setForm] = useState<LoreCheckForm>({
     ...EMPTY_FORM,
     worldText: initState?.prefill?.worldText ?? '',
   });
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [report, setReport]     = useState<LoreCheckReport | null>(null);
-  const [loading, setLoading]   = useState(false);
+  const [report,  setReport]  = useState<LoreCheckReport | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState<string | null>(null);
 
-  const charCount  = form.worldText.trim().length;
-  const canScan    = charCount >= 30;
+  const charCount = form.worldText.trim().length;
+  const canScan   = charCount >= 30 && charCount <= 4_000;
 
   const setField =
     (k: keyof LoreCheckForm) =>
@@ -198,47 +122,79 @@ export default function LoreCheck() {
 
   async function handleQuickScan(e: React.FormEvent) {
     e.preventDefault();
-    if (!canScan) return;
+    if (!canScan || loading) return;
     setLoading(true);
     setReport(null);
+    setError(null);
 
-    // Simulated latency — replace with fetch('/api/lorecheck', …) when ready
-    await new Promise(r => setTimeout(r, 1000));
+    try {
+      const res = await fetch('/api/lorecheck', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          text: form.worldText.trim(),
+          optionalMeta: {
+            timePeriod: form.timePeriod          || undefined,
+            region:     form.countryRegion        || undefined,
+            ageRange:   form.characterAgeRange    || undefined,
+            occupation: form.characterOccupation  || undefined,
+          },
+        }),
+      });
 
-    setReport(MOCK_REPORT);
-    setLoading(false);
+      const data = await res.json() as Record<string, unknown>;
 
-    setTimeout(() => {
-      document.getElementById('lc-report')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+      if (!res.ok) {
+        setError((data['error'] as string | undefined) ?? 'Something went wrong. Please try again.');
+      } else {
+        setReport(data as unknown as LoreCheckReport);
+        setTimeout(() => {
+          document.getElementById('lc-report')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    } catch {
+      setError('Could not reach the server. Check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleRefineLoreCraft() {
     if (!report) return;
-
     const payload = [
       '## Issues flagged by LoreCheck',
       '',
-      `Stability: ${report.stability} | Reader eyebrow-raise risk: ${report.eyebrowRisk}`,
+      `Stability: ${report.stability} | Reader eyebrow-raise risk: ${report.eyebrowRaiseRisk}`,
       '',
       '### Key tensions to address:',
-      ...report.tensions.map(
+      ...report.tensionPoints.map(
         (t, i) =>
-          `${i + 1}. **${t.title}** [${CATEGORY_META[t.category].label}] — ${t.explanation.slice(0, 120)}…`,
+          `${i + 1}. **${t.title}** (${t.riskLevel} risk) — ${t.why.slice(0, 120)}…`,
       ),
       '',
-      '### LoreKit notes:',
-      report.catNote,
+      '### Overall impression:',
+      report.overallImpression,
     ].join('\n');
 
-    navigate('/lorecraft', {
-      state: { prefill: { extraContext: payload } },
-    });
+    navigate('/lorecraft', { state: { prefill: { extraContext: payload } } });
   }
 
   function handleClear() {
     setReport(null);
+    setError(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function buildCopyText(r: LoreCheckReport): string {
+    return [
+      'LORECHECK REPORT\n',
+      `Overall: ${r.overallImpression}\n`,
+      ...r.tensionPoints.map(
+        (t, i) =>
+          `${i + 1}. ${t.title} [${t.riskLevel} risk]\n${t.why}\n\nFixes:\n${t.fixes.map(f => `• ${f}`).join('\n')}`,
+      ),
+      `\nStability: ${r.stability} | Eyebrow risk: ${r.eyebrowRaiseRisk}`,
+    ].join('\n\n');
   }
 
   return (
@@ -278,8 +234,13 @@ export default function LoreCheck() {
                   Add a bit more — LoreKit needs at least 30 characters to work with.
                 </span>
               )}
+              {charCount > 4_000 && (
+                <span className="lc-char-warn">
+                  Over 4 000 characters — please trim or split into sections.
+                </span>
+              )}
               <span className="lc-char-count" style={{ marginLeft: 'auto' }}>
-                {charCount.toLocaleString()} chars
+                {charCount.toLocaleString()} / 4 000
               </span>
             </div>
           </div>
@@ -384,11 +345,7 @@ export default function LoreCheck() {
             </div>
 
             {report && (
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm"
-                onClick={handleClear}
-              >
+              <button type="button" className="btn btn-ghost btn-sm" onClick={handleClear}>
                 Clear results
               </button>
             )}
@@ -405,6 +362,13 @@ export default function LoreCheck() {
         </div>
       )}
 
+      {/* ── Error ────────────────────────────────────────────────────────── */}
+      {error && !loading && (
+        <div className="card animate-fade-up" style={{ marginTop: '1.5rem', borderColor: 'var(--rose)' }}>
+          <p style={{ color: 'var(--rose)', margin: 0 }}>🐱 {error}</p>
+        </div>
+      )}
+
       {/* ── Report ───────────────────────────────────────────────────────── */}
       {report && !loading && (
         <section id="lc-report" className="lc-report animate-fade-up">
@@ -416,28 +380,12 @@ export default function LoreCheck() {
               <h2 className="lc-report__title">Quick Scan Results</h2>
             </div>
             <div className="lc-report__header-actions">
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={handleRefineLoreCraft}
-              >
+              <button className="btn btn-primary btn-sm" onClick={handleRefineLoreCraft}>
                 🔮 Refine with LoreCraft
               </button>
               <button
                 className="btn btn-ghost btn-sm"
-                onClick={() =>
-                  navigator.clipboard.writeText(
-                    [
-                      `LORECHECK REPORT\n`,
-                      `Overall: ${report.overallImpression}\n`,
-                      ...report.tensions.map(
-                        (t, i) =>
-                          `${i + 1}. ${t.title}\n${t.explanation}\n\nFixes:\n${t.fixes.map(f => `• ${f}`).join('\n')}`,
-                      ),
-                      `\nStability: ${report.stability} | Eyebrow risk: ${report.eyebrowRisk}`,
-                      `\nLoreKit: ${report.catNote}`,
-                    ].join('\n\n'),
-                  )
-                }
+                onClick={() => navigator.clipboard.writeText(buildCopyText(report))}
               >
                 Copy
               </button>
@@ -453,9 +401,9 @@ export default function LoreCheck() {
           {/* Tension points */}
           <div className="lc-tensions-section">
             <p className="lc-tensions-section__heading">
-              {report.tensions.length} Tension{report.tensions.length !== 1 ? 's' : ''} Found
+              {report.tensionPoints.length} Tension{report.tensionPoints.length !== 1 ? 's' : ''} Found
             </p>
-            {report.tensions.map((t, i) => (
+            {report.tensionPoints.map((t, i) => (
               <TensionCard key={i} tension={t} index={i} />
             ))}
           </div>
@@ -464,19 +412,33 @@ export default function LoreCheck() {
           <div className="lc-summary">
             <span className="lc-summary__label">Summary</span>
             <div className="lc-summary__meters">
-              <StabilityMeter label="Stability"              value={report.stability}   invert={false} />
-              <StabilityMeter label="Reader eyebrow-raise risk" value={report.eyebrowRisk} invert={true}  />
+              <StabilityMeter label="Stability"                 value={report.stability}        invert={false} />
+              <StabilityMeter label="Reader eyebrow-raise risk" value={report.eyebrowRaiseRisk} invert={true}  />
             </div>
           </div>
 
-          {/* Cat note */}
-          <div className="lc-catnote">
-            <span className="lc-catnote__cat">🐱</span>
-            <div>
-              <span className="lc-catnote__label">LoreKit's Closing Note</span>
-              <p className="lc-catnote__text">{report.catNote}</p>
+          {/* Extracted assumptions */}
+          {report.extractedAssumptions.length > 0 && (
+            <div className="lc-impression" style={{ marginTop: '1rem' }}>
+              <span className="lc-impression__label">Assumptions LoreKit Made</span>
+              <ul className="logic-list" style={{ marginTop: '0.5rem' }}>
+                {report.extractedAssumptions.map((a, i) => <li key={i}>{a}</li>)}
+              </ul>
             </div>
-          </div>
+          )}
+
+          {/* Clarifying questions */}
+          {report.missingInfoQuestions.length > 0 && (
+            <div className="lc-catnote" style={{ marginTop: '1rem' }}>
+              <span className="lc-catnote__cat">💬</span>
+              <div>
+                <span className="lc-catnote__label">LoreKit Is Curious About</span>
+                <ul className="logic-list" style={{ marginTop: '0.5rem' }}>
+                  {report.missingInfoQuestions.map((q, i) => <li key={i}>{q}</li>)}
+                </ul>
+              </div>
+            </div>
+          )}
 
           {/* Bottom CTA */}
           <div className="lc-report__cta">

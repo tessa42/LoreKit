@@ -1,33 +1,25 @@
-// ─── Category of tension ─────────────────────────────────────────────────────
-export type TensionCategory =
-  | 'probability'   // Could this realistically happen?
-  | 'culture'       // Does this fit the time / place / society?
-  | 'motivation'    // Do characters have believable reasons?
-  | 'economics'     // Does money / resource logic hold up?
-  | 'logistics';    // Do the mechanics / timelines / access paths work?
+// ─── Risk levels — lowercase to match API output ─────────────────────────────
+export type RiskLevel = 'low' | 'medium' | 'high';
 
-// ─── Rating levels ────────────────────────────────────────────────────────────
-export type StabilityLevel = 'Low' | 'Medium' | 'High';
-export type EyebrowRisk    = 'Low' | 'Medium' | 'High';
-
-// ─── A single tension point ───────────────────────────────────────────────────
+// ─── A single tension point — matches /api/lorecheck tensionPoints item ───────
 export interface TensionPoint {
-  title:       string;
-  category:    TensionCategory;
-  explanation: string;          // why it may feel unrealistic
-  fixes:       string[];        // 2–3 suggested solutions
+  title:     string;
+  why:       string;       // the explanation
+  riskLevel: RiskLevel;
+  fixes:     string[];
 }
 
-// ─── Full LoreCheck report ────────────────────────────────────────────────────
+// ─── Full LoreCheck report — matches /api/lorecheck output ───────────────────
 export interface LoreCheckReport {
-  overallImpression: string;
-  tensions:          TensionPoint[];
-  stability:         StabilityLevel;
-  eyebrowRisk:       EyebrowRisk;
-  catNote:           string;  // closing remark from LoreKit
+  overallImpression:    string;
+  tensionPoints:        TensionPoint[];
+  stability:            RiskLevel;
+  eyebrowRaiseRisk:     RiskLevel;
+  extractedAssumptions: string[];
+  missingInfoQuestions: string[];
 }
 
-// ─── Input form ───────────────────────────────────────────────────────────────
+// ─── Input form state (frontend only) ────────────────────────────────────────
 export interface LoreCheckForm {
   worldText:           string;
   timePeriod:          string;

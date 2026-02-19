@@ -1,92 +1,330 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type {
-  LoreCraftReport,
-  LawStrength,
-  TensionSeverity,
-  ChecklistPriority,
-} from '../types/lorecraft';
+import type { LoreCraftReport, ReportSection } from '../types/lorecraft';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function StarRating({ rating }: { rating: number }) {
+// ─── Badge helpers ────────────────────────────────────────────────────────────
+function StrengthBadge({ value }: { value: string }) {
+  const v = value.trim();
+  const cls =
+    v === 'Strong'   ? 'strength-badge--strong'
+    : v === 'Moderate' ? 'strength-badge--moderate'
+    : 'strength-badge--fragile';
+  return <span className={`strength-badge ${cls}`}>{v}</span>;
+}
+
+function SeverityBadge({ value }: { value: string }) {
+  const lower = value.trim().toLowerCase();
+  const cls =
+    lower === 'high'   ? 'severity-badge--high'
+    : lower === 'medium' ? 'severity-badge--medium'
+    : 'severity-badge--low';
+  return <span className={`severity-badge ${cls}`}>{value}</span>;
+}
+
+// ─── Internal Logic — two-column strengths / fragilities ──────────────────────
+function LogicSection({ section }: { section: ReportSection }) {
+  const bullets     = section.bullets ?? [];
+  const strengths   = bullets.filter(b => /^strength/i.test(b));
+  const fragilities = bullets.filter(b => /^fragil/i.test(b));
+  const rest        = bullets.filter(b => !/^(strength|fragil)/i.test(b));
+
   return (
-    <span className="rating-stars" aria-label={`${rating} out of 5 stars`}>
-      {Array.from({ length: 5 }, (_, i) => (
-        <span key={i} className={i < rating ? 'star star--filled' : 'star star--empty'}>
-          ✦
-        </span>
+    <div className="report-card">
+      <h3 className="report-section-title">{section.title}</h3>
+      {section.paragraphs.map((p, i) => (
+        <p key={i} className="report-prose" style={{ marginBottom: '1rem' }}>{p}</p>
       ))}
-    </span>
+      {(strengths.length > 0 || fragilities.length > 0) && (
+        <div className="logic-columns">
+          {strengths.length > 0 && (
+            <div className="logic-col logic-col--strengths">
+              <h4 className="logic-col__heading">✓ Strengths</h4>
+              <ul className="logic-list">
+                {strengths.map((b, i) => (
+                  <li key={i}>{b.replace(/^Strength:\s*/i, '')}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {fragilities.length > 0 && (
+            <div className="logic-col logic-col--weaknesses">
+              <h4 className="logic-col__heading">⚠ Pressure Points</h4>
+              <ul className="logic-list">
+                {fragilities.map((b, i) => (
+                  <li key={i}>{b.replace(/^Fragility:\s*/i, '')}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+      {rest.length > 0 && (
+        <ul className="logic-list" style={{ marginTop: '0.75rem' }}>
+          {rest.map((b, i) => <li key={i}>{b}</li>)}
+        </ul>
+      )}
+    </div>
   );
 }
 
-function StrengthBadge({ strength }: { strength: LawStrength }) {
-  const cls =
-    strength === 'Strong' ? 'strength-badge--strong'
-    : strength === 'Moderate' ? 'strength-badge--moderate'
-    : 'strength-badge--fragile';
-  return <span className={`strength-badge ${cls}`}>{strength}</span>;
+// ─── Table section (World Laws, Tensions) ────────────────────────────────────
+function TableSection({ section }: { section: ReportSection }) {
+  if (!section.table) return null;
+  const { headers, rows } = section.table;
+
+  return (
+    <div className="report-card">
+      <h3 className="report-section-title">{section.title}</h3>
+      <div className="table-scroll">
+        <table className="laws-table">
+          <thead>
+            <tr>{headers.map((h, i) => <th key={i}>{h}</th>)}</tr>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <tr key={i}>
+                {row.map((cell, j) => {
+                  const h = headers[j]?.toLowerCase() ?? '';
+                  if (h === 'strength') return <td key={j}><StrengthBadge value={cell} /></td>;
+                  if (h === 'severity') return <td key={j}><SeverityBadge value={cell} /></td>;
+                  return (
+                    <td
+                      key={j}
+                      className={j === 0 ? 'laws-table__law' : 'laws-table__note'}
+                    >
+                      {cell}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
 
-function SeverityBadge({ severity }: { severity: TensionSeverity }) {
-  const cls =
-    severity === 'High' ? 'severity-badge--high'
-    : severity === 'Medium' ? 'severity-badge--medium'
-    : 'severity-badge--low';
-  return <span className={`severity-badge ${cls}`}>{severity}</span>;
+// ─── Narrative hooks — ✦ bulleted list ───────────────────────────────────────
+function HooksSection({ section }: { section: ReportSection }) {
+  return (
+    <div className="report-card">
+      <h3 className="report-section-title">{section.title}</h3>
+      <ul className="opportunity-list">
+        {(section.bullets ?? []).map((b, i) => (
+          <li key={i} className="opportunity-item">
+            <span className="opportunity-item__bullet">✦</span>
+            <span>{b}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
-function PriorityDot({ priority }: { priority: ChecklistPriority }) {
-  const cls =
-    priority === 'high' ? 'priority-dot--high'
-    : priority === 'medium' ? 'priority-dot--medium'
-    : 'priority-dot--low';
-  return <span className={`priority-dot ${cls}`} title={`${priority} priority`} />;
+// ─── Checklist — interactive checkboxes ───────────────────────────────────────
+function ChecklistSection({ section }: { section: ReportSection }) {
+  const items = section.bullets ?? [];
+  const [checked, setChecked] = useState(() => items.map(() => false));
+
+  function toggle(i: number) {
+    setChecked(prev => prev.map((v, j) => (j === i ? !v : v)));
+  }
+
+  return (
+    <div className="report-card">
+      <h3 className="report-section-title">{section.title}</h3>
+      <div className="checklist">
+        {items.map((item, i) => (
+          <div key={i} className="checklist-item">
+            <input
+              type="checkbox"
+              id={`chk-${i}`}
+              className="checklist-item__checkbox"
+              checked={checked[i]}
+              onChange={() => toggle(i)}
+            />
+            <label htmlFor={`chk-${i}`} className="checklist-item__label">
+              {/* Strip any markdown checkbox prefix the LLM may have included */}
+              {item.replace(/^\[?\s*x?\s*\]?\s*/i, '')}
+            </label>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Verdict — cat header + rating line detection ────────────────────────────
+function VerdictSection({
+  section,
+  onCheckWorld,
+  onCopyReport,
+}: {
+  section:      ReportSection;
+  onCheckWorld: () => void;
+  onCopyReport: () => void;
+}) {
+  return (
+    <div className="report-card report-card--verdict">
+      <div className="verdict-header">
+        <span className="verdict-cat">🐱</span>
+        <h3 className="report-section-title" style={{ margin: 0 }}>
+          {section.title}
+        </h3>
+      </div>
+
+      {section.paragraphs.map((p, i) => {
+        // The last paragraph is typically the star-rating line (starts with ✦ or ★)
+        const isRating = /^[✦☆★]/.test(p.trim());
+        return (
+          <p
+            key={i}
+            className="verdict-text"
+            style={
+              isRating
+                ? { color: 'var(--gold)', fontFamily: 'var(--font-display)', marginTop: '0.75rem' }
+                : undefined
+            }
+          >
+            {p}
+          </p>
+        );
+      })}
+
+      <div className="verdict-actions">
+        <button className="btn btn-gold" onClick={onCheckWorld}>
+          📜 Check this world
+        </button>
+        <button className="btn btn-ghost btn-sm" onClick={onCopyReport}>
+          Copy report
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Assumptions / flags / next checks — collapsible ─────────────────────────
+function MetadataCard({
+  assumptions,
+  uncertaintyFlags,
+  suggestedNextChecks,
+}: {
+  assumptions:         string[];
+  uncertaintyFlags:    string[];
+  suggestedNextChecks: string[];
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="report-card">
+      <button
+        type="button"
+        className="lc-advanced-toggle"
+        onClick={() => setOpen(v => !v)}
+        aria-expanded={open}
+      >
+        <span className={`lc-advanced-toggle__chevron ${open ? 'lc-advanced-toggle__chevron--open' : ''}`}>
+          ›
+        </span>
+        Assumptions &amp; Flags
+        <span className="lc-advanced-toggle__hint">(what LoreKit inferred or flagged)</span>
+      </button>
+
+      {open && (
+        <div style={{ marginTop: '1.25rem' }}>
+          {assumptions.length > 0 && (
+            <div style={{ marginBottom: '1.25rem' }}>
+              <h4 className="logic-col__heading">Assumptions Made</h4>
+              <ul className="logic-list">
+                {assumptions.map((a, i) => <li key={i}>{a}</li>)}
+              </ul>
+            </div>
+          )}
+          {uncertaintyFlags.length > 0 && (
+            <div style={{ marginBottom: '1.25rem' }}>
+              <h4 className="logic-col__heading">⚠ Uncertainty Flags</h4>
+              <ul className="logic-list">
+                {uncertaintyFlags.map((f, i) => <li key={i}>{f}</li>)}
+              </ul>
+            </div>
+          )}
+          {suggestedNextChecks.length > 0 && (
+            <div>
+              <h4 className="logic-col__heading">Suggested Next Checks</h4>
+              <ul className="opportunity-list">
+                {suggestedNextChecks.map((s, i) => (
+                  <li key={i} className="opportunity-item">
+                    <span className="opportunity-item__bullet">→</span>
+                    <span>{s}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 interface Props {
-  report: LoreCraftReport;
+  report:  LoreCraftReport;
   onClear: () => void;
 }
 
 export default function ReportView({ report, onClear }: Props) {
   const navigate = useNavigate();
 
+  // Look up sections by their stable IDs
+  const byId = (id: string) => report.sections.find(s => s.id === id);
+
+  const logicSection    = byId('internal-logic');
+  const lawsSection     = byId('world-laws');
+  const tensionsSection = byId('tensions');
+  const hooksSection    = byId('narrative-hooks');
+  const checklistSection = byId('checklist');
+  const verdictSection  = byId('verdict');
+
+  const hasMetadata =
+    report.assumptions.length > 0 ||
+    report.uncertaintyFlags.length > 0 ||
+    report.suggestedNextChecks.length > 0;
+
   function handleCheckWorld() {
+    const rows = tensionsSection?.table?.rows ?? [];
     const summary = [
-      `## From LoreCraft — ${report.worldSummary.name}`,
-      `**World Type:** ${report.worldSummary.worldType}`,
-      `**Tags:** ${report.worldSummary.tags.join(', ')}`,
-      ``,
-      `### Overview`,
-      report.overview,
-      ``,
-      `### Key Tensions`,
-      ...report.tensions.map(t => `- **${t.name}** (${t.severity}): ${t.issue}`),
+      `## From LoreCraft — ${report.title}`,
+      '',
+      report.overview.slice(0, 400) + (report.overview.length > 400 ? '…' : ''),
+      ...(rows.length > 0
+        ? ['', '### Key Tensions', ...rows.map(r => `- **${r[0]}** (${r[1]}): ${r[2]}`)]
+        : []),
     ].join('\n');
     navigate('/lorecheck', { state: { prefill: { worldText: summary } } });
+  }
+
+  function handleCopyReport() {
+    const lines = [
+      `LORECRAFT REPORT — ${report.title}`,
+      '',
+      report.overview,
+      '',
+      ...(lawsSection?.table?.rows.map(r => `• ${r[0]} [${r[1]}]`) ?? []),
+    ].filter(Boolean).join('\n');
+    navigator.clipboard.writeText(lines);
   }
 
   return (
     <section className="report-root animate-fade-up">
 
-      {/* ── Summary banner ─────────────────────────────────────────────── */}
+      {/* ── Banner ────────────────────────────────────────────────────── */}
       <div className="report-banner">
         <div className="report-banner__left">
-          <h2 className="report-banner__name">{report.worldSummary.name}</h2>
-          <p className="report-banner__type">{report.worldSummary.worldType}</p>
-          <div className="report-banner__tags">
-            {report.worldSummary.tags.map(tag => (
-              <span key={tag} className="badge badge-violet">{tag}</span>
-            ))}
-          </div>
+          <h2 className="report-banner__name">{report.title}</h2>
         </div>
         <div className="report-banner__right">
-          <div className="nutrients-consumed">
-            <span className="nutrients-consumed__icon">✦</span>
-            <span className="nutrients-consumed__value">{report.worldSummary.nutrientsConsumed}</span>
-            <span className="nutrients-consumed__label">Nutrients consumed</span>
-          </div>
           <div className="report-actions-top">
             <button className="btn btn-gold btn-sm" onClick={handleCheckWorld}>
               📜 Check this world
@@ -104,145 +342,30 @@ export default function ReportView({ report, onClear }: Props) {
         <p className="report-prose">{report.overview}</p>
       </div>
 
-      {/* ── Logic Assessment ───────────────────────────────────────────── */}
-      <div className="report-card">
-        <h3 className="report-section-title">Internal Logic Assessment</h3>
-        <p className="report-prose" style={{ marginBottom: '1.25rem' }}>{report.logicAssessment.summary}</p>
-        <div className="logic-columns">
-          <div className="logic-col logic-col--strengths">
-            <h4 className="logic-col__heading">✓ Strengths</h4>
-            <ul className="logic-list">
-              {report.logicAssessment.strengths.map((s, i) => (
-                <li key={i}>{s}</li>
-              ))}
-            </ul>
-          </div>
-          <div className="logic-col logic-col--weaknesses">
-            <h4 className="logic-col__heading">⚠ Pressure Points</h4>
-            <ul className="logic-list">
-              {report.logicAssessment.weaknesses.map((w, i) => (
-                <li key={i}>{w}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* ── World Laws table ───────────────────────────────────────────── */}
-      <div className="report-card">
-        <h3 className="report-section-title">Key World Laws</h3>
-        <div className="table-scroll">
-          <table className="laws-table">
-            <thead>
-              <tr>
-                <th>Law</th>
-                <th style={{ width: '110px' }}>Strength</th>
-                <th>Note</th>
-              </tr>
-            </thead>
-            <tbody>
-              {report.worldLaws.map((law, i) => (
-                <tr key={i}>
-                  <td className="laws-table__law">{law.law}</td>
-                  <td><StrengthBadge strength={law.strength} /></td>
-                  <td className="laws-table__note">{law.note}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* ── Tensions ───────────────────────────────────────────────────── */}
-      <div className="report-card">
-        <h3 className="report-section-title">Potential Tensions & Paradoxes</h3>
-        <div className="tensions-list">
-          {report.tensions.map((t, i) => (
-            <div key={i} className="tension-item">
-              <div className="tension-item__header">
-                <span className="tension-item__name">{t.name}</span>
-                <SeverityBadge severity={t.severity} />
-              </div>
-              <p className="tension-item__issue">{t.issue}</p>
-              <div className="tension-item__resolution">
-                <span className="tension-item__resolution-label">Suggested resolution</span>
-                <p>{t.resolution}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Narrative Opportunities ────────────────────────────────────── */}
-      <div className="report-card">
-        <h3 className="report-section-title">Narrative Opportunities</h3>
-        <ul className="opportunity-list">
-          {report.narrativeOpportunities.map((opp, i) => (
-            <li key={i} className="opportunity-item">
-              <span className="opportunity-item__bullet">✦</span>
-              <span>{opp}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* ── Checklist ──────────────────────────────────────────────────── */}
-      <div className="report-card">
-        <h3 className="report-section-title">Worldbuilder's Checklist</h3>
-        <div className="checklist">
-          {report.checklist.map((item, i) => (
-            <div key={i} className="checklist-item">
-              <input
-                type="checkbox"
-                id={`check-${i}`}
-                className="checklist-item__checkbox"
-              />
-              <label htmlFor={`check-${i}`} className="checklist-item__label">
-                {item.item}
-              </label>
-              <PriorityDot priority={item.priority} />
-            </div>
-          ))}
-        </div>
-        <div className="checklist-legend">
-          <span><span className="priority-dot priority-dot--high" /> High priority</span>
-          <span><span className="priority-dot priority-dot--medium" /> Medium</span>
-          <span><span className="priority-dot priority-dot--low" /> Low</span>
-        </div>
-      </div>
+      {/* ── Dynamic sections ───────────────────────────────────────────── */}
+      {logicSection    && <LogicSection     section={logicSection} />}
+      {lawsSection     && <TableSection     section={lawsSection} />}
+      {tensionsSection && <TableSection     section={tensionsSection} />}
+      {hooksSection    && <HooksSection     section={hooksSection} />}
+      {checklistSection && <ChecklistSection section={checklistSection} />}
 
       {/* ── Verdict ────────────────────────────────────────────────────── */}
-      <div className="report-card report-card--verdict">
-        <div className="verdict-header">
-          <span className="verdict-cat">🐱</span>
-          <div>
-            <h3 className="report-section-title" style={{ margin: 0 }}>LoreKit's Verdict</h3>
-            <StarRating rating={report.verdict.rating} />
-          </div>
-        </div>
-        <p className="verdict-text">{report.verdict.text}</p>
-        <div className="verdict-actions">
-          <button className="btn btn-gold" onClick={handleCheckWorld}>
-            📜 Check this world
-          </button>
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={() => {
-              const text = [
-                report.worldSummary.name,
-                report.worldSummary.worldType,
-                '',
-                report.overview,
-                '',
-                ...report.worldLaws.map(l => `• ${l.law} [${l.strength}]`),
-              ].join('\n');
-              navigator.clipboard.writeText(text);
-            }}
-          >
-            Copy report
-          </button>
-        </div>
-      </div>
+      {verdictSection && (
+        <VerdictSection
+          section={verdictSection}
+          onCheckWorld={handleCheckWorld}
+          onCopyReport={handleCopyReport}
+        />
+      )}
+
+      {/* ── Metadata (collapsible) ─────────────────────────────────────── */}
+      {hasMetadata && (
+        <MetadataCard
+          assumptions={report.assumptions}
+          uncertaintyFlags={report.uncertaintyFlags}
+          suggestedNextChecks={report.suggestedNextChecks}
+        />
+      )}
 
     </section>
   );

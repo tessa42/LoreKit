@@ -1,83 +1,25 @@
 import { useState, useRef } from 'react';
-import type { SimulatorCard, SimulatorForm, VibeType, PresetWorld } from '../types/simulator';
+import type { SimulatorCard, SimulatorForm, VibeType } from '../types/simulator';
 
-// ─── Preset worlds ────────────────────────────────────────────────────────────
-const WORLDS: Record<string, PresetWorld> = {
-  archives: { id: 'archives', name: 'The Forgotten Archives', emoji: '📚', tagline: 'Where memory becomes glass' },
-  neon:     { id: 'neon',     name: 'The Neon Depths',        emoji: '⚡', tagline: 'Light that breathes underwater' },
-  ember:    { id: 'ember',    name: 'The Emberfall Kingdom',  emoji: '🔥', tagline: 'A warmth that refuses to die' },
-  drift:    { id: 'drift',    name: 'The Drift Between Stars', emoji: '✦',  tagline: 'Destination is a direction' },
-  verdant:  { id: 'verdant',  name: 'The Verdant Labyrinth',  emoji: '🌿', tagline: 'The roots remember everything' },
+// ─── World metadata lookup (matches the 12 preset worlds in the backend) ──────
+const WORLD_META: Record<string, { emoji: string; tagline: string }> = {
+  'The Hollow Crown':        { emoji: '👑', tagline: 'A kingdom whose king died and left only his expectations behind.' },
+  'The Neon Depths':         { emoji: '⚡', tagline: 'A bioluminescent city beneath a toxic sea where survival is commerce.' },
+  'The Ashborne Wastes':     { emoji: '🏜️', tagline: 'A post-collapse desert civilisation where memory is contraband.' },
+  'The Saltwater Sanctum':   { emoji: '🌊', tagline: 'A hidden island community of retired spellweavers who swore to rest.' },
+  'The Verdant Labyrinth':   { emoji: '🌿', tagline: 'A living forest-maze that rearranges itself to guide — or to mislead.' },
+  'The Moonlit Carnival':    { emoji: '🌙', tagline: 'An eternal travelling carnival that exists slightly outside of time.' },
+  'The Emberfall Kingdom':   { emoji: '🔥', tagline: 'A realm where the sun set permanently and warmth is slowly running out.' },
+  'The Drift Between Stars': { emoji: '✦',  tagline: 'A nomadic fleet culture in deep space where everyone is the last of something.' },
+  'The Forgotten Archives':  { emoji: '📚', tagline: 'An interdimensional library where lost memories and unwritten books go to die.' },
+  'The Gossamer Veil':       { emoji: '🕸️', tagline: 'The shimmering border between dreams and waking, inhabited by both.' },
+  'The Clockwork Wilds':     { emoji: '⚙️', tagline: 'A forest of mechanical animals and organic machines in fragile coexistence.' },
+  'The Upside Market':       { emoji: '🪄', tagline: 'A floating bazaar where impossible goods are bought, sold, and occasionally stolen back.' },
 };
 
-// ─── Mock cards per vibe ──────────────────────────────────────────────────────
-const MOCK_CARDS: Record<VibeType | 'default', Omit<SimulatorCard, 'name' | 'vibe'>> = {
-  dark: {
-    world:         WORLDS.archives,
-    roleArchetype: 'The Hollow Archivist',
-    storyHook: [
-      'In the stacks of the Forgotten Archives — where memory crystallises into glass and can be shattered by the wrong voice — you arrived with nothing but a name carved into your palm.',
-      'Your own.',
-      'The librarians call your kind Hollows: those who surrendered their past for the ability to read the memories locked inside objects, documents, and bones.',
-      'You do not remember why you made the trade. That knowledge was the price.',
-      'Last week, a sealed wing reopened — one locked before the Archives were founded. The catalogue lists a file under your name, dated forty years from now.',
-    ],
-    fateQuote: 'She will remember what the world chose to forget — and it will cost her everything she has left.',
-  },
-
-  cozy: {
-    world:         WORLDS.verdant,
-    roleArchetype: 'The Root-Speaker',
-    storyHook: [
-      'The Verdant Labyrinth does not let most people in. It pulled you through a gap in a hedgerow on a Tuesday afternoon when you were simply trying to find your way back to the road.',
-      'Plants have been talking to you since you were small — you thought it was imagination, or loneliness, or too many hours reading in gardens.',
-      'Here, it is simply called a gift.',
-      'The Labyrinth has been waiting for someone who could hear its roots asking for help. There is a sickness moving through the deep bark, slow and quiet, and the great trees have chosen you as their interpreter.',
-      'There is a cottage. There is always tea. The Labyrinth takes care of its own.',
-    ],
-    fateQuote: 'The roots chose well — and they are patient enough to help her find her footing.',
-  },
-
-  tragic: {
-    world:         WORLDS.ember,
-    roleArchetype: 'The Last Ember-Keeper',
-    storyHook: [
-      'The Emberfall Kingdom once held a thousand Ember-Keepers — tenders of the sacred fires that kept the long winter at bay.',
-      'There is one left now.',
-      'You.',
-      'You did not ask to survive. You were simply the one standing farthest from the door when the cold came in.',
-      'The last flame burns in a lantern you carry everywhere, because to set it down is to let the dark inherit everything your order died to protect.',
-      'Someone is hunting the light. And you are the only thing left between them and permanent winter.',
-    ],
-    fateQuote: 'She will keep the flame until her hands cannot hold it — and then she will find a way to carry it further still.',
-  },
-
-  whimsical: {
-    world:         WORLDS.neon,
-    roleArchetype: 'The Lucky Paradox',
-    storyHook: [
-      'The Neon Depths exist only when the light hits the water at exactly the wrong angle, which means they exist at least seventeen times a day.',
-      'You fell in on a Tuesday, which is statistically the most common day for accidents involving places that should not exist.',
-      'The inhabitants — fish who speak only in questions, architects of temporary buildings, a postmaster who delivers messages backwards through time — have decided you are the Paradox their prophecy mentioned.',
-      'The prophecy is seventeen pages long, written by someone who was clearly guessing, and refers to the Paradox as someone who "arrives confused and leaves having caused at least one small miracle."',
-      'You have no idea what miracle you are supposed to cause. Neither does anyone else. This seems fine to everyone except you.',
-    ],
-    fateQuote: 'The Paradox will solve nothing and fix everything — probably by accident, definitely by Thursday.',
-  },
-
-  default: {
-    world:         WORLDS.drift,
-    roleArchetype: 'The Unnamed Navigator',
-    storyHook: [
-      'The Drift Between Stars is not a place you travel to. It is a place that finds you when you have been moving long enough that home has become a direction rather than a destination.',
-      'You arrived the way most do: suddenly, with the distinct feeling that you had been heading here your entire life without knowing it.',
-      'The ship was waiting. The log shows a name in the captain\'s chair — yours — dated three years from now.',
-      'The crew has not asked questions. They seem to know you already, or know who you will become, which may be the same thing.',
-      'The Drift navigates by the stories people carry. Yours, it turns out, is bright enough to steer by.',
-    ],
-    fateQuote: 'Some are born knowing their destination. She was born knowing how to move — the rest is just details.',
-  },
-};
+function getWorldMeta(name: string) {
+  return WORLD_META[name] ?? { emoji: '🌌', tagline: 'A world between worlds.' };
+}
 
 // ─── Vibe config ──────────────────────────────────────────────────────────────
 const VIBES: Array<{ key: VibeType; label: string; icon: string; hint: string }> = [
@@ -97,16 +39,18 @@ function CharacterCard({
   imageDataUrl: string | null;
   onTryAgain:   () => void;
 }) {
-  const [copied, setCopied]         = useState(false);
-  const [showDownloadTip, setTip]   = useState(false);
+  const [copied,          setCopied] = useState(false);
+  const [showDownloadTip, setTip]    = useState(false);
+
+  const worldMeta = getWorldMeta(card.assignedWorld);
 
   const plainText = [
-    `— ${card.world.name} —`,
+    `— ${card.assignedWorld} —`,
     '',
     card.name.toUpperCase(),
     card.roleArchetype,
     '',
-    card.storyHook.join(' '),
+    card.storyHookLines.join(' '),
     '',
     `"${card.fateQuote}"`,
     '',
@@ -123,14 +67,16 @@ function CharacterCard({
     <div className="sim-result animate-fade-up">
 
       {/* The shareable card */}
-      <div className={`sim-card sim-card--${card.vibe || 'default'}`} data-vibe={card.vibe || 'default'}>
-
+      <div
+        className={`sim-card sim-card--${card.vibe || 'default'}`}
+        data-vibe={card.vibe || 'default'}
+      >
         {/* World header strip */}
         <div className="sim-card__world">
-          <span className="sim-card__world-emoji">{card.world.emoji}</span>
+          <span className="sim-card__world-emoji">{worldMeta.emoji}</span>
           <div>
-            <span className="sim-card__world-name">{card.world.name}</span>
-            <span className="sim-card__world-tagline">{card.world.tagline}</span>
+            <span className="sim-card__world-name">{card.assignedWorld}</span>
+            <span className="sim-card__world-tagline">{worldMeta.tagline}</span>
           </div>
         </div>
 
@@ -146,7 +92,7 @@ function CharacterCard({
             />
           ) : (
             <div className="sim-card__portrait-placeholder">
-              <span>{card.world.emoji}</span>
+              <span>{worldMeta.emoji}</span>
             </div>
           )}
           <div className="sim-card__identity-text">
@@ -159,7 +105,7 @@ function CharacterCard({
 
         {/* Story hook */}
         <p className="sim-card__story">
-          {card.storyHook.join(' ')}
+          {card.storyHookLines.join(' ')}
         </p>
 
         {/* Fate quote */}
@@ -173,7 +119,6 @@ function CharacterCard({
 
         {/* LoreKit credit */}
         <p className="sim-card__credit">🐱 LoreKit</p>
-
       </div>
 
       {/* Actions below card */}
@@ -242,11 +187,12 @@ function VibeChip({
 export default function Simulator() {
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm]   = useState<SimulatorForm>({ name: '', vibe: '', imageDataUrl: null });
-  const [card, setCard]   = useState<SimulatorCard | null>(null);
+  const [form,    setForm]    = useState<SimulatorForm>({ name: '', vibe: '', imageDataUrl: null });
+  const [card,    setCard]    = useState<SimulatorCard | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState<string | null>(null);
 
-  const canReveal = form.name.trim().length > 0;
+  const canReveal = form.name.trim().length > 0 && form.name.trim().length <= 60;
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -263,25 +209,42 @@ export default function Simulator() {
 
   async function handleReveal(e: React.FormEvent) {
     e.preventDefault();
-    if (!canReveal) return;
+    if (!canReveal || loading) return;
     setLoading(true);
     setCard(null);
+    setError(null);
 
-    // Simulated latency — replace with fetch('/api/simulator', …) when ready
-    await new Promise(r => setTimeout(r, 850));
+    try {
+      const res = await fetch('/api/simulator', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          name: form.name.trim(),
+          vibe: form.vibe || undefined,
+        }),
+      });
 
-    const key   = form.vibe || 'default';
-    const proto = MOCK_CARDS[key];
-    setCard({ ...proto, name: form.name.trim(), vibe: form.vibe });
+      const data = await res.json() as Record<string, unknown>;
 
-    setLoading(false);
-    setTimeout(() => {
-      document.getElementById('sim-card-anchor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 80);
+      if (!res.ok) {
+        setError((data['error'] as string | undefined) ?? 'Something went wrong. Please try again.');
+      } else {
+        // Merge API response with client-side vibe for card styling
+        setCard({ ...(data as Omit<SimulatorCard, 'vibe'>), vibe: form.vibe });
+        setTimeout(() => {
+          document.getElementById('sim-card-anchor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 80);
+      }
+    } catch {
+      setError('Could not reach the server. Check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleTryAgain() {
     setCard(null);
+    setError(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -313,7 +276,7 @@ export default function Simulator() {
               className="form-input sim-name-input"
               placeholder="What shall we call you, wanderer?"
               value={form.name}
-              maxLength={80}
+              maxLength={60}
               onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
             />
           </div>
@@ -413,6 +376,13 @@ export default function Simulator() {
         <div className="spinner-wrap">
           <div className="spinner" />
           <span>The portal is weaving your fate…</span>
+        </div>
+      )}
+
+      {/* ── Error ────────────────────────────────────────────────────────── */}
+      {error && !loading && (
+        <div className="card animate-fade-up" style={{ marginTop: '1.5rem', borderColor: 'var(--rose)' }}>
+          <p style={{ color: 'var(--rose)', margin: 0 }}>🐱 {error}</p>
         </div>
       )}
 
