@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import type { SimulatorCard, SimulatorForm, VibeType } from '../types/simulator';
-import { useLang, type TranslationKey } from '../i18n';
+import { useLang } from '../i18n';
+import type { TranslationKey } from '../i18n';
 
 // ─── World metadata lookup (matches the 12 preset worlds in the backend) ──────
 const WORLD_META: Record<string, { emoji: string; tagline: string }> = {
@@ -188,8 +189,8 @@ function VibeChip({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Simulator() {
-  const fileRef   = useRef<HTMLInputElement>(null);
-  const { lang, t } = useLang();
+  const { t, lang } = useLang();
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const [form,    setForm]    = useState<SimulatorForm>({ name: '', vibe: '', imageDataUrl: null });
   const [card,    setCard]    = useState<SimulatorCard | null>(null);
@@ -260,7 +261,7 @@ export default function Simulator() {
 
       {/* ── Page header ─────────────────────────────────────────────────── */}
       <section className="section-header animate-fade-up">
-        <span className="eyebrow">{t('sim_eyebrow')}</span>
+        <span className="eyebrow">✨ Simulator</span>
         <h1>{t('sim_title')}</h1>
         <p>{t('sim_desc')}</p>
       </section>

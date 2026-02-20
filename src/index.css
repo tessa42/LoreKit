@@ -481,6 +481,7 @@ p  { color: var(--text-secondary); }
   border-radius: var(--r-full);
   border: 1px solid transparent;
   transition: all var(--dur) var(--ease);
+  white-space: nowrap;
 }
 .nav-link:hover {
   color: var(--text-primary);
@@ -1331,6 +1332,7 @@ p  { color: var(--text-secondary); }
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  white-space: nowrap;
   background: none;
   border: none;
   color: var(--text-secondary);

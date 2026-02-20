@@ -29,7 +29,7 @@ export default function Header() {
             to="/simulator"
             className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
           >
-            {t('nav_simulator')}
+            Simulator
           </NavLink>
         </nav>
 

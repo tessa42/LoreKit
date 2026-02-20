@@ -122,7 +122,7 @@ function isValidReport(obj: unknown): obj is LoreCheckReport {
   );
 }
 
-// ─── Shared: meta context block ───────────────────────────────────────────────
+// ─── Meta context blocks (one per language) ───────────────────────────────────
 function metaBlock(meta: OptionalMeta | undefined): string {
   if (!meta) return '';
   const lines: string[] = [];
@@ -132,6 +132,17 @@ function metaBlock(meta: OptionalMeta | undefined): string {
   if (meta.occupation) lines.push(`- **Character Occupation:** ${meta.occupation}`);
   if (lines.length === 0) return '';
   return '\n### Contextual Metadata (provided by the creator):\n' + lines.join('\n');
+}
+
+function metaBlockKO(meta: OptionalMeta | undefined): string {
+  if (!meta) return '';
+  const lines: string[] = [];
+  if (meta.timePeriod) lines.push(`- **시대:** ${meta.timePeriod}`);
+  if (meta.region)     lines.push(`- **지역 / 배경:** ${meta.region}`);
+  if (meta.ageRange)   lines.push(`- **주요 인물 나이대:** ${meta.ageRange}`);
+  if (meta.occupation) lines.push(`- **주요 인물 직업:** ${meta.occupation}`);
+  if (lines.length === 0) return '';
+  return '\n### 창작자가 제공한 참고 정보:\n' + lines.join('\n');
 }
 
 // ─── English prompt ───────────────────────────────────────────────────────────
@@ -157,7 +168,7 @@ ${metaBlock(body.optionalMeta)}
 
 2. **Behavioral Probability** — Are character decisions and reactions believable given the pressures they face? Flag choices that feel unmotivated, conveniently timed, or psychologically implausible.
 
-3. **Cultural Alignment** — Do the norms, values, and social dynamics match the stated time period, region, and cultural context? Flag anachronisms, cultural contradictions, or mismatched social logic. Use the metadata (if provided) to sharpen this layer.
+3. **Cultural Alignment** — Do the norms, values, and social dynamics match the stated time period, region, and cultural context? Consider what is realistic for the relevant age cohort, cultural norms, and role expectations given the setting. Flag anachronisms, cultural contradictions, or mismatched social logic. Use the metadata (if provided) to sharpen this layer.
 
 4. **Occupational Logic** — Are skills, access, and knowledge consistent with the characters' stated roles and experience? Flag when characters know too much, too little, or act outside their plausible competence.
 
@@ -206,9 +217,10 @@ Return a single JSON object matching EXACTLY this structure (raw JSON only, no m
 
 // ─── Korean prompt ────────────────────────────────────────────────────────────
 const SYSTEM_KO =
-  '당신은 LoreKit입니다. 내러티브 및 세계관 개연성 분석을 전문으로 하는 예리하고 약간 장난스러운 고양이 조수입니다. ' +
-  '날카로운 편집자와 문화 역사가처럼 글을 읽어 독자보다 먼저 신뢰성을 해치는 부분을 잡아냅니다. ' +
-  '따뜻하고 건설적이며 정확합니다. 창의적 선택을 결코 무시하지 않고 위험을 조명하며 나아갈 방향을 제시합니다. ' +
+  '당신은 로어킷(LoreKit)입니다. 내러티브 및 세계관 개연성 분석을 전문으로 하는 예리하고 약간 장난스러운 고양이 조수입니다. ' +
+  '날카로운 편집자와 문화 역사학자처럼 글을 읽어, 독자가 알아채기 전에 신뢰성을 해치는 부분을 잡아냅니다. ' +
+  '따뜻하고 건설적이며 정밀합니다. 창의적 선택을 결코 무시하지 않고, 그 위험을 조명하며 나아갈 방향을 제시합니다. ' +
+  'JSON 내 산문은 반드시 존댓말(공손한 제안형)로 통일하며, 반말과 존댓말을 섞지 않습니다. ' +
   '반드시 유효한 JSON 객체만 응답합니다 — 앞뒤 산문이나 마크다운 코드 펜스 없이.';
 
 function buildPromptKO(body: LoreCheckRequest): string {
@@ -219,7 +231,7 @@ function buildPromptKO(body: LoreCheckRequest): string {
 ---
 ${body.text}
 ---
-${metaBlock(body.optionalMeta)}
+${metaBlockKO(body.optionalMeta)}
 
 ### 평가 레이어 (모두 자동으로 평가한 후 결과 보고):
 
@@ -227,7 +239,7 @@ ${metaBlock(body.optionalMeta)}
 
 2. **행동 확률** — 캐릭터의 결정과 반응이 그들이 직면한 압박을 고려했을 때 설득력이 있나요? 동기가 없거나, 편의상 타이밍이 맞거나, 심리적으로 믿기 어려운 선택을 표시하세요.
 
-3. **문화적 정합성** — 규범, 가치관, 사회적 역학이 명시된 시대, 지역, 문화적 맥락과 일치하나요? 시대착오, 문화적 모순, 또는 맞지 않는 사회적 논리를 표시하세요.
+3. **문화적 정합성** — 규범, 가치관, 사회적 역학이 명시된 시대, 지역, 문화적 맥락과 일치하나요? 해당 세대·문화권·직업군에서 실제로 가능성(확률) 있는 행동과 인식인지를 기준으로 판단하세요. 시대착오, 문화적 모순, 또는 맞지 않는 사회적 논리를 표시하세요.
 
 4. **직업적 논리** — 기술, 접근권, 지식이 캐릭터의 명시된 역할과 경험에 부합하나요? 캐릭터가 너무 많이 알거나, 너무 적게 알거나, 개연성 있는 능력 밖의 행동을 하는 경우를 표시하세요.
 
@@ -254,7 +266,7 @@ ${metaBlock(body.optionalMeta)}
   "stability": "low | medium | high",
   "eyebrowRaiseRisk": "low | medium | high",
   "extractedAssumptions": [
-    "단락이 명시적으로 언급하지 않은 모든 추론 (한국어). 실제 역사적 주장은 '[Historical]' 또는 '(근사치)'로 태그하세요."
+    "단락이 명시적으로 언급하지 않은 모든 추론 (한국어). 실제 역사적 주장은 '[Historical]' 또는 '(추정)'으로 태그하세요."
   ],
   "missingInfoQuestions": [
     "분석을 의미 있게 바꿀 수 있는 부재한 맥락에 대한 부드럽고 호기심 어린 질문 (한국어). 결코 비난조가 아니어야 함."
@@ -271,7 +283,7 @@ ${metaBlock(body.optionalMeta)}
 - 각 긴장 요소: 정확히 2–3개의 수정 제안.
 - missingInfoQuestions: 0–4개 항목, 호기심과 따뜻함으로 표현. 필요 없으면 배열 항목을 완전히 생략하세요.
 - extractedAssumptions: 모든 암묵적 추론을 나열하세요. 절대 생략하지 마세요.
-- 통계나 역사적 사실을 날조하지 마세요 — 불확실한 주장은 "(근사치)"로 표시하세요.
+- 통계나 역사적 사실을 날조하지 마세요 — 불확실한 주장은 "(추정)"으로 표시하세요.
 - riskLevel, stability, eyebrowRaiseRisk 값은 반드시 영어로: "low", "medium", "high" 중 하나.
 - JSON 객체만 출력하세요. 앞뒤 산문 없음.`;
 }
