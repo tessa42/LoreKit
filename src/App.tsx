@@ -14,6 +14,7 @@ import Privacy from './pages/Privacy';
 import Refund from './pages/Refund';
 import Pricing from './pages/Pricing';
 import CheckoutSuccess from './pages/CheckoutSuccess';
+import MyPage from './pages/MyPage';
 import './App.css';
 
 export default function App() {
@@ -36,6 +37,7 @@ export default function App() {
               <Route path="/refund"           element={<Refund />} />
               <Route path="/pricing"          element={<Pricing />} />
               <Route path="/checkout/success" element={<CheckoutSuccess />} />
+              <Route path="/mypage"           element={<MyPage />} />
             </Routes>
           </main>
           <Footer />

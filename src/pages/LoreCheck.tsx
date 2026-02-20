@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import type { LoreCheckForm, LoreCheckReport, RiskLevel, TensionPoint } from '../types/lorecheck';
 import { useLang } from '../i18n';
 import { useAuth } from '../contexts/AuthContext';
+import { saveReport } from '../lib/library';
 
 // ─── Stability meter ──────────────────────────────────────────────────────────
 function StabilityMeter({
@@ -99,7 +100,7 @@ export default function LoreCheck() {
   const location    = useLocation();
   const initState   = location.state as LocationState | null;
   const { lang, t } = useLang();
-  const { session, refetchSeeds } = useAuth();
+  const { user, session, refetchSeeds } = useAuth();
 
   const [form, setForm] = useState<LoreCheckForm>({
     ...EMPTY_FORM,
@@ -110,6 +111,7 @@ export default function LoreCheck() {
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState<string | null>(null);
   const [needsSeeds, setNeedsSeeds] = useState(false);
+  const [saveState,  setSaveState]  = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   const charCount = form.worldText.trim().length;
   const canScan   = charCount >= 30 && charCount <= 4_000;
@@ -192,9 +194,20 @@ export default function LoreCheck() {
     navigate('/lorecraft', { state: { prefill: { extraContext: payload } } });
   }
 
+  async function handleSave() {
+    if (!report || !user) return;
+    setSaveState('saving');
+    const title = form.worldText.trim().slice(0, 50) + (form.worldText.trim().length > 50 ? '…' : '');
+    const { error: saveError } = await saveReport(
+      user.id, 'lorecheck', title, { worldText: form.worldText.trim(), report },
+    );
+    setSaveState(saveError ? 'error' : 'saved');
+  }
+
   function handleClear() {
     setReport(null);
     setError(null);
+    setSaveState('idle');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -408,6 +421,19 @@ export default function LoreCheck() {
               <button className="btn btn-primary btn-sm" onClick={handleRefineLoreCraft}>
                 {t('lorecheck_refine')}
               </button>
+              {user && (
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={handleSave}
+                  disabled={saveState === 'saving' || saveState === 'saved'}
+                >
+                  {saveState === 'saved'
+                    ? t('save_to_library_done')
+                    : saveState === 'error'
+                    ? t('save_to_library_error')
+                    : t('save_to_library')}
+                </button>
+              )}
               <button
                 className="btn btn-ghost btn-sm"
                 onClick={() => navigator.clipboard.writeText(buildCopyText(report))}

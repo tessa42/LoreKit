@@ -4,15 +4,10 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function Header() {
   const { lang, setLang, t } = useLang();
-  const { user, loading, signOut, seeds } = useAuth();
+  const { user, loading, seeds } = useAuth();
   const navigate  = useNavigate();
   const location  = useLocation();
   const onPricing = location.pathname === '/pricing';
-
-  async function handleSignOut() {
-    await signOut();
-    navigate('/');
-  }
 
   return (
     <header className="site-header">
@@ -83,9 +78,9 @@ export default function Header() {
             <button
               type="button"
               className={`auth-icon-btn ${user ? 'auth-icon-btn--active' : ''}`}
-              onClick={user ? handleSignOut : () => navigate('/login')}
-              title={user ? `${user.email} — ${t('auth_signout_btn')}` : t('auth_login_btn')}
-              aria-label={user ? t('auth_signout_btn') : t('auth_login_btn')}
+              onClick={user ? () => navigate('/mypage') : () => navigate('/login')}
+              title={user ? `${user.email} — ${t('mypage_tab_info')}` : t('auth_login_btn')}
+              aria-label={user ? t('mypage_title') : t('auth_login_btn')}
             >
               👤
             </button>

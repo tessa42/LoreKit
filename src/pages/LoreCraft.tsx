@@ -10,6 +10,7 @@ import type {
 import ReportView from '../components/ReportView';
 import { useLang, type TranslationKey } from '../i18n';
 import { useAuth } from '../contexts/AuthContext';
+import { saveReport } from '../lib/library';
 
 // Frontend worldType → API worldType
 const TYPE_MAP: Record<string, string> = {
@@ -337,7 +338,7 @@ export default function LoreCraft() {
   const navigate    = useNavigate();
   const state       = location.state as LocationState | null;
   const { lang, t } = useLang();
-  const { session, refetchSeeds } = useAuth();
+  const { user, session, refetchSeeds } = useAuth();
 
   const [form, setForm] = useState<LoreCraftForm>({
     ...EMPTY_FORM,
@@ -347,6 +348,7 @@ export default function LoreCraft() {
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState<string | null>(null);
   const [needsSeeds, setNeedsSeeds] = useState(false);
+  const [saveState,  setSaveState]  = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   const setField =
     (k: keyof LoreCraftForm) =>
@@ -456,8 +458,16 @@ export default function LoreCraft() {
     }
   }
 
+  async function handleSave() {
+    if (!report || !user) return;
+    setSaveState('saving');
+    const { error: saveError } = await saveReport(user.id, 'lorecraft', report.title, report);
+    setSaveState(saveError ? 'error' : 'saved');
+  }
+
   function handleClear() {
     setReport(null);
+    setSaveState('idle');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -556,6 +566,20 @@ export default function LoreCraft() {
               <span className="nutrients-cost-label">
                 {t('lorecraft_nutrients_cost', { n: SEEDS_COST })}
               </span>
+              {report && user && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={handleSave}
+                  disabled={saveState === 'saving' || saveState === 'saved'}
+                >
+                  {saveState === 'saved'
+                    ? t('save_to_library_done')
+                    : saveState === 'error'
+                    ? t('save_to_library_error')
+                    : t('save_to_library')}
+                </button>
+              )}
               {report && (
                 <button type="button" className="btn btn-ghost btn-sm" onClick={handleClear}>
                   {t('lorecraft_clear')}

@@ -2,6 +2,8 @@ import { useState, useRef } from 'react';
 import type { SimulatorCard, SimulatorForm, VibeType } from '../types/simulator';
 import { useLang } from '../i18n';
 import type { TranslationKey } from '../i18n';
+import { useAuth } from '../contexts/AuthContext';
+import { saveReport } from '../lib/library';
 
 // ─── World metadata lookup (matches the 12 preset worlds in the backend) ──────
 const WORLD_META: Record<string, { emoji: string; tagline: string }> = {
@@ -36,10 +38,14 @@ function CharacterCard({
   card,
   imageDataUrl,
   onTryAgain,
+  onSave,
+  saveState,
 }: {
   card:         SimulatorCard;
   imageDataUrl: string | null;
   onTryAgain:   () => void;
+  onSave?:      () => void;
+  saveState?:   'idle' | 'saving' | 'saved' | 'error';
 }) {
   const { t } = useLang();
   const [copied,          setCopied] = useState(false);
@@ -153,6 +159,19 @@ function CharacterCard({
           </div>
         </div>
 
+        {onSave && (
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={onSave}
+            disabled={saveState === 'saving' || saveState === 'saved'}
+          >
+            {saveState === 'saved'
+              ? t('save_to_library_done')
+              : saveState === 'error'
+              ? t('save_to_library_error')
+              : t('save_to_library')}
+          </button>
+        )}
         <button className="btn btn-ghost btn-sm" onClick={onTryAgain}>
           {t('sim_try_again')}
         </button>
@@ -190,12 +209,14 @@ function VibeChip({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Simulator() {
   const { t, lang } = useLang();
+  const { user }    = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [form,    setForm]    = useState<SimulatorForm>({ name: '', vibe: '', imageDataUrl: null });
-  const [card,    setCard]    = useState<SimulatorCard | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState<string | null>(null);
+  const [form,      setForm]      = useState<SimulatorForm>({ name: '', vibe: '', imageDataUrl: null });
+  const [card,      setCard]      = useState<SimulatorCard | null>(null);
+  const [loading,   setLoading]   = useState(false);
+  const [error,     setError]     = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   const canReveal = form.name.trim().length > 0 && form.name.trim().length <= 60;
 
@@ -250,9 +271,18 @@ export default function Simulator() {
     }
   }
 
+  async function handleSave() {
+    if (!card || !user) return;
+    setSaveState('saving');
+    const title = `${card.name} — ${card.assignedWorld}`;
+    const { error: saveError } = await saveReport(user.id, 'simulator', title, card);
+    setSaveState(saveError ? 'error' : 'saved');
+  }
+
   function handleTryAgain() {
     setCard(null);
     setError(null);
+    setSaveState('idle');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -398,6 +428,8 @@ export default function Simulator() {
             card={card}
             imageDataUrl={form.imageDataUrl}
             onTryAgain={handleTryAgain}
+            onSave={user ? handleSave : undefined}
+            saveState={saveState}
           />
         </div>
       )}
