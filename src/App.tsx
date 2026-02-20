@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+import Refund from './pages/Refund';
 import Pricing from './pages/Pricing';
 import CheckoutSuccess from './pages/CheckoutSuccess';
 import './App.css';
@@ -32,6 +33,7 @@ export default function App() {
               <Route path="/signup"     element={<Signup />} />
               <Route path="/terms"            element={<Terms />} />
               <Route path="/privacy"          element={<Privacy />} />
+              <Route path="/refund"           element={<Refund />} />
               <Route path="/pricing"          element={<Pricing />} />
               <Route path="/checkout/success" element={<CheckoutSuccess />} />
             </Routes>

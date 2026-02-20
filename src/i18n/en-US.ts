@@ -230,6 +230,7 @@ export const en = {
   // ── Footer ───────────────────────────────────────────────────────────────────
   footer_tagline:  'AI worldbuilding toolkit for creators · Ages 13+',
   footer_terms:    'Terms of Service',
+  footer_refund:   'Refund Policy',
   footer_privacy:  'Privacy Policy',
 
   // ── ReportView ───────────────────────────────────────────────────────────────

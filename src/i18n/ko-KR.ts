@@ -232,6 +232,7 @@ export const ko: Record<TranslationKey, string> = {
   // ── Footer ───────────────────────────────────────────────────────────────────
   footer_tagline:  '창작자를 위한 AI 세계관 툴킷 · 만 13세 이상',
   footer_terms:    '서비스 이용약관',
+  footer_refund:   '환불 규정',
   footer_privacy:  '개인정보 처리방침',
 
   // ── ReportView ───────────────────────────────────────────────────────────────
