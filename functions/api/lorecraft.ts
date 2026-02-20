@@ -474,16 +474,21 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // ── Spend seeds ────────────────────────────────────────────────────────────
   let userId: string | undefined;
   if (env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
-    const seedResult = await spendSeeds(
-      env.SUPABASE_URL,
-      env.SUPABASE_SERVICE_KEY,
-      request.headers.get('Authorization'),
-      SEEDS_COST,
-    );
-    if (!seedResult.ok) {
-      return jsonError(seedResult.error ?? 'Seeds error.', seedResult.status ?? 400);
+    try {
+      const seedResult = await spendSeeds(
+        env.SUPABASE_URL,
+        env.SUPABASE_SERVICE_KEY,
+        request.headers.get('Authorization'),
+        SEEDS_COST,
+      );
+      if (!seedResult.ok) {
+        return jsonError(seedResult.error ?? 'Seeds error.', seedResult.status ?? 400);
+      }
+      userId = seedResult.userId;
+    } catch (e) {
+      console.error('[lorecraft] spendSeeds error:', e);
+      return jsonError('Failed to process seeds. Please try again.', 500);
     }
-    userId = seedResult.userId;
   }
 
   // ── AI call (refund seeds on failure) ──────────────────────────────────────
@@ -499,7 +504,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     });
   } catch (e) {
     if (userId && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
-      await refundSeeds(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, userId, SEEDS_COST);
+      try { await refundSeeds(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, userId, SEEDS_COST); } catch {}
     }
     if (e instanceof LLMError) {
       return jsonError('AI service returned an error.', e.status, e.message);
@@ -509,7 +514,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   if (!isValidReport(report)) {
     if (userId && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
-      await refundSeeds(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, userId, SEEDS_COST);
+      try { await refundSeeds(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, userId, SEEDS_COST); } catch {}
     }
     return jsonError(
       'The AI returned an unexpected response shape. Please try again.',
