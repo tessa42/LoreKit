@@ -461,8 +461,9 @@ p  { color: var(--text-secondary); }
   letter-spacing: 0.04em;
 }
 .site-header__logo-cat {
-  font-size: 1.4rem;
-  line-height: 1;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
 }
 .site-header__nav {
   display: flex;
@@ -579,10 +580,12 @@ p  { color: var(--text-secondary); }
   position: relative;
 }
 .hero__cat {
-  font-size: 4rem;
-  line-height: 1;
+  width: 120px;
+  height: auto;
   margin-bottom: var(--sp-lg);
   display: block;
+  margin-left: auto;
+  margin-right: auto;
   filter: drop-shadow(0 0 24px rgba(124,58,237,0.6));
 }
 .hero__title {
@@ -778,7 +781,7 @@ p  { color: var(--text-secondary); }
   }
   .site-header__inner { padding: 0.6rem var(--sp-md); }
   .hero { padding: var(--sp-2xl) var(--sp-md); }
-  .hero__cat { font-size: 3rem; }
+  .hero__cat { width: 88px; }
   .card { padding: var(--sp-lg); }
   .result-section__header { flex-direction: column; align-items: flex-start; }
   .nutrients-badge__label { display: none; }
@@ -1280,7 +1283,7 @@ p  { color: var(--text-secondary); }
   gap: 1rem;
   margin-bottom: 1rem;
 }
-.verdict-cat { font-size: 2rem; line-height: 1; }
+.verdict-cat { width: 36px; height: 36px; object-fit: contain; }
 .verdict-text {
   font-size: 0.91rem;
   color: var(--text-secondary);

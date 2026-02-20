@@ -170,7 +170,7 @@ function VerdictSection({
   return (
     <div className="report-card report-card--verdict">
       <div className="verdict-header">
-        <span className="verdict-cat">🐱</span>
+        <img src="/cat-mascot.svg" className="verdict-cat" alt="" aria-hidden="true" />
         <h3 className="report-section-title" style={{ margin: 0 }}>
           {section.title}
         </h3>
