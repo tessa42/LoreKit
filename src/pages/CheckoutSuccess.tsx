@@ -8,8 +8,18 @@ export default function CheckoutSuccess() {
   const navigate = useNavigate();
   const { refetchSeeds } = useAuth();
 
+  // Poll until the Polar webhook has credited seeds to Supabase.
+  // The webhook fires asynchronously after redirect, so a single fetch on
+  // mount often reads the pre-purchase balance. We retry every 2 s for
+  // up to ~24 s to catch the update.
   useEffect(() => {
+    let count = 0;
     refetchSeeds();
+    const id = setInterval(async () => {
+      await refetchSeeds();
+      if (++count >= 11) clearInterval(id);
+    }, 2000);
+    return () => clearInterval(id);
   }, [refetchSeeds]);
 
   return (

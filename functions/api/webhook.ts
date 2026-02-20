@@ -100,8 +100,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       console.log(`[webhook] order.paid — product=${productId} user=${externalUserId} nutrients=+${nutrients}`);
 
       if (externalUserId && nutrients && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
-        await callSeedsRpc(env, 'add_seeds', externalUserId, nutrients);
-        console.log(`[webhook] seeds credited: user=${externalUserId} +${nutrients}`);
+        try {
+          await callSeedsRpc(env, 'add_seeds', externalUserId, nutrients);
+          console.log(`[webhook] seeds credited: user=${externalUserId} +${nutrients}`);
+        } catch (err) {
+          console.error('[webhook] add_seeds failed:', err);
+        }
       }
 
       if (customerEmail && productId && orderId && env.RESEND_API_KEY) {
@@ -141,8 +145,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       console.log(`[webhook] order.refunded — product=${productId} user=${externalUserId} nutrients=-${nutrients}`);
 
       if (externalUserId && nutrients && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
-        await callSeedsRpc(env, 'remove_seeds', externalUserId, nutrients);
-        console.log(`[webhook] seeds deducted: user=${externalUserId} -${nutrients}`);
+        try {
+          await callSeedsRpc(env, 'remove_seeds', externalUserId, nutrients);
+          console.log(`[webhook] seeds deducted: user=${externalUserId} -${nutrients}`);
+        } catch (err) {
+          console.error('[webhook] remove_seeds failed:', err);
+        }
       }
 
       if (customerEmail && productId && orderId && env.RESEND_API_KEY) {
