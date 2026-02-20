@@ -26,5 +26,9 @@ dist-ssr
 # Cloudflare local secrets — never commit
 .dev.vars
 
+# Vite frontend env vars (contain Supabase public keys — still keep out of git)
+.env
+.env.local
+
 # Wrangler cache
 .wrangler/

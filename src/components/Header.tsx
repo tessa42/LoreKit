@@ -1,8 +1,16 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useLang } from '../i18n';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Header() {
   const { lang, setLang, t } = useLang();
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleSignOut() {
+    await signOut();
+    navigate('/');
+  }
 
   return (
     <header className="site-header">
@@ -34,6 +42,7 @@ export default function Header() {
         </nav>
 
         <div className="site-header__right">
+
           {/* Language toggle */}
           <div className="lang-toggle" aria-label="Language selector">
             <button
@@ -54,12 +63,48 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Nutrients balance — static placeholder */}
+          {/* Auth cluster */}
+          {!loading && (
+            user ? (
+              <div className="auth-cluster">
+                <span className="auth-cluster__email" title={user.email}>
+                  {user.email}
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={handleSignOut}
+                >
+                  {t('auth_signout_btn')}
+                </button>
+              </div>
+            ) : (
+              <div className="auth-cluster">
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => navigate('/login')}
+                >
+                  {t('auth_login_btn')}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-teal btn-sm"
+                  onClick={() => navigate('/signup')}
+                >
+                  {t('auth_signup_btn')}
+                </button>
+              </div>
+            )
+          )}
+
+          {/* Nutrients balance */}
           <div className="nutrients-badge" title={t('nutrients_title')}>
             <span className="nutrients-badge__icon">✦</span>
             <span className="nutrients-badge__value">250</span>
             <span className="nutrients-badge__label">{t('nutrients_label')}</span>
           </div>
+
         </div>
       </div>
     </header>
