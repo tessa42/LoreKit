@@ -2137,10 +2137,11 @@ p  { color: var(--text-secondary); }
   line-height: 1;
   padding: 0.25rem;
   border-radius: var(--r-sm);
-  color: var(--text-secondary);
-  transition: color 0.15s, opacity 0.15s;
+  color: var(--text-muted);
+  filter: brightness(2.2);
+  transition: filter 0.15s, opacity 0.15s;
   flex-shrink: 0;
 }
-.auth-icon-btn:hover          { color: var(--text-primary); }
-.auth-icon-btn--active        { color: var(--teal); }
-.auth-icon-btn--active:hover  { opacity: 0.75; }
+.auth-icon-btn:hover          { filter: brightness(3.5); }
+.auth-icon-btn--active        { filter: brightness(1) drop-shadow(0 0 6px var(--teal)); color: var(--teal); }
+.auth-icon-btn--active:hover  { opacity: 0.8; }
