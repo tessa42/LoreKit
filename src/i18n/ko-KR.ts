@@ -25,7 +25,7 @@ export const ko: Record<TranslationKey, string> = {
   home_lorecheck_desc:     '설정, 장면, 시놉시스를 붙여넣으면 LoreKit이 개연성의 틈을 잡아냅니다. 독자가 느끼지만 말로 표현하지 못하는 것들이에요.',
   home_lorecheck_cta:      '세계관 검증하기 →',
   home_simulator_subtitle: '이야기 미리보기',
-  home_simulator_desc:     '이름을 입력하고 분위기를 선택하면 LoreKit이 고대 세계에서 당신의 캐릭터 카드를 소환합니다. 무료로 즉시, 공유하기 좋게.',
+  home_simulator_desc:     '이름을 입력하고 분위기를 선택하면 LoreKit이 고대 세계에서 당신의 캐릭터 카드를 소환합니다.',
   home_simulator_cta:      '포털 입장하기 →',
   home_cat_quote:          '"어떤 세계든 나름의 논리가 있어요. 제 일은 그 논리가 어디서 꺾이는지 찾는 거랍니다." — LoreKit',
 
@@ -154,7 +154,7 @@ export const ko: Record<TranslationKey, string> = {
   // ── Simulator ────────────────────────────────────────────────────────────────
   sim_eyebrow:          '✨ 시뮬레이터',
   sim_title:            '포털 속으로',
-  sim_desc:             '이름을 입력하고 분위기를 선택하면 LoreKit이 고대 세계에서 당신의 캐릭터 카드를 소환합니다. 무료로 즉시, 공유하기 좋게.',
+  sim_desc:             '이름을 입력하고 분위기를 선택하면 LoreKit이 고대 세계에서 당신의 캐릭터 카드를 소환합니다.',
   sim_name_label:       '이름',
   sim_name_placeholder: '방랑자여, 어떻게 불러드릴까요?',
   sim_vibe_label:       '분위기',

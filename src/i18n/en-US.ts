@@ -23,7 +23,7 @@ export const en = {
   home_lorecheck_desc:     'Paste any lore, scene, or worldbuilding passage. LoreKit scans for plausibility tensions and serves up crisp, actionable insights.',
   home_lorecheck_cta:      'Check your lore →',
   home_simulator_subtitle: 'Preview Your Story',
-  home_simulator_desc:     'Drop your name and a vibe. Receive a character-story card pulled from the ancient worlds. Free, fast, and made for sharing.',
+  home_simulator_desc:     'Drop your name and a vibe. Receive a character-story card pulled from the ancient worlds.',
   home_simulator_cta:      'Enter the portal →',
   home_cat_quote:          '"Every world has a logic. My job is to find where yours bends." — LoreKit',
 
@@ -152,7 +152,7 @@ export const en = {
   // ── Simulator ────────────────────────────────────────────────────────────────
   sim_eyebrow:          '✨ Simulator',
   sim_title:            'Step Through the Portal',
-  sim_desc:             'Enter your name, choose a vibe, add a portrait. LoreKit will summon your character card from one of the ancient worlds. Free, instant, and made for sharing.',
+  sim_desc:             'Enter your name, choose a vibe, add a portrait. LoreKit will summon your character card from one of the ancient worlds.',
   sim_name_label:       'Your Name',
   sim_name_placeholder: 'What shall we call you, wanderer?',
   sim_vibe_label:       'Vibe',
