@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type {
   WorldType,
   DeviationType,
@@ -9,6 +9,7 @@ import type {
 } from '../types/lorecraft';
 import ReportView from '../components/ReportView';
 import { useLang, type TranslationKey } from '../i18n';
+import { useAuth } from '../contexts/AuthContext';
 
 // Frontend worldType → API worldType
 const TYPE_MAP: Record<string, string> = {
@@ -72,7 +73,7 @@ const DEVIATIONS: {
   { key: 'social',       labelKey: 'deviation_social_label',       descKey: 'deviation_social_desc' },
 ];
 
-const NUTRIENTS_COST = 62;
+const SEEDS_COST = 4;
 
 // ─── Sub-forms ────────────────────────────────────────────────────────────────
 function HistoricalFields({
@@ -333,16 +334,19 @@ const EMPTY_FORM: LoreCraftForm = {
 
 export default function LoreCraft() {
   const location    = useLocation();
+  const navigate    = useNavigate();
   const state       = location.state as LocationState | null;
   const { lang, t } = useLang();
+  const { session, refetchSeeds } = useAuth();
 
   const [form, setForm] = useState<LoreCraftForm>({
     ...EMPTY_FORM,
     extraContext: state?.prefill?.extraContext ?? '',
   });
-  const [report,  setReport]  = useState<LoreCraftReport | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState<string | null>(null);
+  const [report,     setReport]     = useState<LoreCraftReport | null>(null);
+  const [loading,    setLoading]    = useState(false);
+  const [error,      setError]      = useState<string | null>(null);
+  const [needsSeeds, setNeedsSeeds] = useState(false);
 
   const setField =
     (k: keyof LoreCraftForm) =>
@@ -390,6 +394,7 @@ export default function LoreCraft() {
     setLoading(true);
     setReport(null);
     setError(null);
+    setNeedsSeeds(false);
 
     let fields: Record<string, unknown>;
     if (form.worldType === 'historical') {
@@ -411,13 +416,16 @@ export default function LoreCraft() {
     }
 
     try {
+      const headers: Record<string, string> = {
+        'Content-Type':   'application/json',
+        'X-LoreKit-Lang': lang,
+      };
+      if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
       const res = await fetch('/api/lorecraft', {
-        method:  'POST',
-        headers: {
-          'Content-Type':   'application/json',
-          'X-LoreKit-Lang': lang,
-        },
-        body:    JSON.stringify({
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
           worldType:    TYPE_MAP[form.worldType],
           fields,
           extraContext: form.extraContext.trim() || undefined,
@@ -427,10 +435,16 @@ export default function LoreCraft() {
 
       const data = await res.json() as Record<string, unknown>;
 
-      if (!res.ok) {
+      if (res.status === 401) {
+        navigate('/login');
+      } else if (res.status === 402) {
+        setNeedsSeeds(true);
+        setError(t('err_insufficient_seeds'));
+      } else if (!res.ok) {
         setError((data['error'] as string | undefined) ?? t('err_generic'));
       } else {
         setReport(data as unknown as LoreCraftReport);
+        refetchSeeds();
         setTimeout(() => {
           document.getElementById('lorecraft-report')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
@@ -540,8 +554,7 @@ export default function LoreCraft() {
                 {loading ? t('lorecraft_generating') : t('lorecraft_generate')}
               </button>
               <span className="nutrients-cost-label">
-                <span className="nutrients-cost-label__icon">✦</span>
-                {t('lorecraft_nutrients_cost', { n: NUTRIENTS_COST })}
+                {t('lorecraft_nutrients_cost', { n: SEEDS_COST })}
               </span>
               {report && (
                 <button type="button" className="btn btn-ghost btn-sm" onClick={handleClear}>
@@ -566,6 +579,16 @@ export default function LoreCraft() {
       {error && !loading && (
         <div className="card animate-fade-up" style={{ marginTop: '1.5rem', borderColor: 'var(--rose)' }}>
           <p style={{ color: 'var(--rose)', margin: 0 }}>🐱 {error}</p>
+          {needsSeeds && (
+            <button
+              type="button"
+              className="btn btn-teal btn-sm"
+              style={{ marginTop: '0.75rem' }}
+              onClick={() => navigate('/pricing')}
+            >
+              {t('get_more_seeds')}
+            </button>
+          )}
         </div>
       )}
 

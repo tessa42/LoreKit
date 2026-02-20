@@ -43,6 +43,9 @@ import {
 import { callLLM, LLMError } from '../lib/openai';
 import { checkRateLimit, getClientIp } from '../lib/ratelimit';
 import { getLang, isKorean } from '../_shared/i18n';
+import { spendSeeds, refundSeeds } from '../_shared/seeds';
+
+const SEEDS_COST = 4;
 
 // ─── Input types ──────────────────────────────────────────────────────────────
 type WorldType = 'reality' | 'fiction' | 'hybrid';
@@ -468,6 +471,22 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const body = sanitise(raw as LoreCraftRequest);
   const ko   = isKorean(lang);
 
+  // ── Spend seeds ────────────────────────────────────────────────────────────
+  let userId: string | undefined;
+  if (env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
+    const seedResult = await spendSeeds(
+      env.SUPABASE_URL,
+      env.SUPABASE_SERVICE_KEY,
+      request.headers.get('Authorization'),
+      SEEDS_COST,
+    );
+    if (!seedResult.ok) {
+      return jsonError(seedResult.error ?? 'Seeds error.', seedResult.status ?? 400);
+    }
+    userId = seedResult.userId;
+  }
+
+  // ── AI call (refund seeds on failure) ──────────────────────────────────────
   let report: unknown;
   try {
     report = await callLLM(env.OPENAI_API_KEY, {
@@ -479,6 +498,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       maxTokens:   4_500,
     });
   } catch (e) {
+    if (userId && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
+      await refundSeeds(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, userId, SEEDS_COST);
+    }
     if (e instanceof LLMError) {
       return jsonError('AI service returned an error.', e.status, e.message);
     }
@@ -486,6 +508,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   if (!isValidReport(report)) {
+    if (userId && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
+      await refundSeeds(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, userId, SEEDS_COST);
+    }
     return jsonError(
       'The AI returned an unexpected response shape. Please try again.',
       502,

@@ -2,8 +2,11 @@ export const en = {
   // ── Common ──────────────────────────────────────────────────────────────────
   optional:    '(optional)',
   coming_soon: 'soon',
-  err_server:  'Could not reach the server. Check your connection and try again.',
-  err_generic: 'Something went wrong. Please try again.',
+  err_server:             'Could not reach the server. Check your connection and try again.',
+  err_generic:            'Something went wrong. Please try again.',
+  err_insufficient_seeds: 'Not enough Seeds to run this.',
+  err_auth_required:      'Please log in to use this feature.',
+  get_more_seeds:         'Get Seeds →',
 
   // ── Header / Nav ─────────────────────────────────────────────────────────────
   nav_lorecraft:    'LoreCraft',
@@ -71,7 +74,7 @@ export const en = {
   lorecraft_generating:                 '🐱 Consulting the ancient tomes…',
   lorecraft_clear:                      'Clear',
   lorecraft_weaving:                    'LoreKit is weaving the report…',
-  lorecraft_nutrients_cost:             '~{n} Nutrients',
+  lorecraft_nutrients_cost:             '🌱 {n} Seeds',
 
   // Deviations
   deviation_climate_label:      'Climate',
@@ -128,6 +131,7 @@ export const en = {
   lorecheck_age_range_placeholder: 'e.g. early 20s, mid-40s, teenager',
   lorecheck_occupation:         'Main Character Occupation',
   lorecheck_occupation_placeholder: 'e.g. private investigator, healer-monk, street archivist',
+  lorecheck_seeds_cost:         '🌱 {n} Seed',
   lorecheck_scan:               '📜 Quick Scan',
   lorecheck_scanning:           '🐱 Reading every line…',
   lorecheck_deep_audit:         '🔬 Deep Audit',

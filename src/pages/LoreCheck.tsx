@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { LoreCheckForm, LoreCheckReport, RiskLevel, TensionPoint } from '../types/lorecheck';
 import { useLang } from '../i18n';
+import { useAuth } from '../contexts/AuthContext';
 
 // ─── Stability meter ──────────────────────────────────────────────────────────
 function StabilityMeter({
@@ -98,15 +99,17 @@ export default function LoreCheck() {
   const location    = useLocation();
   const initState   = location.state as LocationState | null;
   const { lang, t } = useLang();
+  const { session, refetchSeeds } = useAuth();
 
   const [form, setForm] = useState<LoreCheckForm>({
     ...EMPTY_FORM,
     worldText: initState?.prefill?.worldText ?? '',
   });
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [report,  setReport]  = useState<LoreCheckReport | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState<string | null>(null);
+  const [report,     setReport]     = useState<LoreCheckReport | null>(null);
+  const [loading,    setLoading]    = useState(false);
+  const [error,      setError]      = useState<string | null>(null);
+  const [needsSeeds, setNeedsSeeds] = useState(false);
 
   const charCount = form.worldText.trim().length;
   const canScan   = charCount >= 30 && charCount <= 4_000;
@@ -122,15 +125,19 @@ export default function LoreCheck() {
     setLoading(true);
     setReport(null);
     setError(null);
+    setNeedsSeeds(false);
 
     try {
+      const headers: Record<string, string> = {
+        'Content-Type':   'application/json',
+        'X-LoreKit-Lang': lang,
+      };
+      if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
       const res = await fetch('/api/lorecheck', {
-        method:  'POST',
-        headers: {
-          'Content-Type':   'application/json',
-          'X-LoreKit-Lang': lang,
-        },
-        body:    JSON.stringify({
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
           text: form.worldText.trim(),
           optionalMeta: {
             timePeriod: form.timePeriod          || undefined,
@@ -144,10 +151,16 @@ export default function LoreCheck() {
 
       const data = await res.json() as Record<string, unknown>;
 
-      if (!res.ok) {
+      if (res.status === 401) {
+        navigate('/login');
+      } else if (res.status === 402) {
+        setNeedsSeeds(true);
+        setError(t('err_insufficient_seeds'));
+      } else if (!res.ok) {
         setError((data['error'] as string | undefined) ?? t('err_generic'));
       } else {
         setReport(data as unknown as LoreCheckReport);
+        refetchSeeds();
         setTimeout(() => {
           document.getElementById('lc-report')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
@@ -331,6 +344,9 @@ export default function LoreCheck() {
               >
                 {loading ? t('lorecheck_scanning') : t('lorecheck_scan')}
               </button>
+              <span className="nutrients-cost-label">
+                {t('lorecheck_seeds_cost', { n: 1 })}
+              </span>
 
               <button
                 type="button"
@@ -365,6 +381,16 @@ export default function LoreCheck() {
       {error && !loading && (
         <div className="card animate-fade-up" style={{ marginTop: '1.5rem', borderColor: 'var(--rose)' }}>
           <p style={{ color: 'var(--rose)', margin: 0 }}>🐱 {error}</p>
+          {needsSeeds && (
+            <button
+              type="button"
+              className="btn btn-teal btn-sm"
+              style={{ marginTop: '0.75rem' }}
+              onClick={() => navigate('/pricing')}
+            >
+              {t('get_more_seeds')}
+            </button>
+          )}
         </div>
       )}
 

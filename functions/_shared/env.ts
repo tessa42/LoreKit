@@ -8,5 +8,9 @@
  */
 export interface Env {
   /** OpenAI secret key — required for LoreCraft, LoreCheck, and Simulator endpoints */
-  OPENAI_API_KEY: string;
+  OPENAI_API_KEY:    string;
+  /** Supabase project URL — required for seeds spending */
+  SUPABASE_URL:      string;
+  /** Supabase service role key — required for seeds spending */
+  SUPABASE_SERVICE_KEY: string;
 }

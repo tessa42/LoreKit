@@ -4,8 +4,11 @@ export const ko: Record<TranslationKey, string> = {
   // ── Common ──────────────────────────────────────────────────────────────────
   optional:    '(선택)',
   coming_soon: '준비 중',
-  err_server:  '서버에 연결할 수 없어요. 잠시 후 다시 시도해 볼까요?',
-  err_generic: '조금 문제가 생겼어요. 다시 시도해 볼까요?',
+  err_server:             '서버에 연결할 수 없어요. 잠시 후 다시 시도해 볼까요?',
+  err_generic:            '조금 문제가 생겼어요. 다시 시도해 볼까요?',
+  err_insufficient_seeds: '씨앗이 부족합니다.',
+  err_auth_required:      '로그인 후 이용할 수 있는 기능입니다.',
+  get_more_seeds:         '씨앗 구매 →',
 
   // ── Header / Nav ─────────────────────────────────────────────────────────────
   nav_lorecraft:   'LoreCraft',
@@ -73,7 +76,7 @@ export const ko: Record<TranslationKey, string> = {
   lorecraft_generating:                 '🐱 고대 서적을 뒤지는 중…',
   lorecraft_clear:                      '지우기',
   lorecraft_weaving:                    'LoreKit이 리포트를 엮는 중…',
-  lorecraft_nutrients_cost:             '~{n} 영양분',
+  lorecraft_nutrients_cost:             '🌱 씨앗 {n}개',
 
   // Deviations
   deviation_climate_label:      '기후',
@@ -130,6 +133,7 @@ export const ko: Record<TranslationKey, string> = {
   lorecheck_age_range_placeholder: '예: 20대 초반, 40대 중반, 10대',
   lorecheck_occupation:         '주인공 직업',
   lorecheck_occupation_placeholder: '예: 사립 탐정, 치유 수도승, 거리 기록가',
+  lorecheck_seeds_cost:         '🌱 씨앗 {n}개',
   lorecheck_scan:               '📜 빠른 스캔',
   lorecheck_scanning:           '🐱 모든 줄을 읽는 중…',
   lorecheck_deep_audit:         '🔬 심층 점검',
