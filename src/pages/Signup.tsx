@@ -32,6 +32,13 @@ export default function Signup() {
       setError(err.message);
       setBusy(false);
     } else {
+      // Fire-and-forget welcome email — don't block signup flow
+      fetch('/api/welcome', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email }),
+      }).catch(() => {/* non-critical */});
+
       setDone(true);
       setTimeout(() => navigate('/'), 4000);
     }

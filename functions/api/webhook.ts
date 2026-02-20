@@ -19,10 +19,12 @@
  */
 
 import { Webhook } from 'standardwebhooks';
+import { sendEmail, purchaseEmail, refundEmail } from '../_shared/email';
 
 interface Env {
-  POLAR_ACCESS_TOKEN:  string;
+  POLAR_ACCESS_TOKEN:   string;
   POLAR_WEBHOOK_SECRET: string;
+  RESEND_API_KEY:       string;
 }
 
 // ─── Nutrients to grant per product ──────────────────────────────────────────
@@ -64,15 +66,24 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   switch (type) {
     case 'order.paid': {
+      const customer       = data?.['customer'] as Record<string, unknown> | undefined;
       const productId      = (data?.['product'] as Record<string, unknown>)?.['id'] as string | undefined;
-      const externalUserId = (data?.['customer'] as Record<string, unknown>)?.['external_id'] as string | undefined;
+      const orderId        = data?.['id'] as string | undefined;
+      const customerEmail  = customer?.['email'] as string | undefined;
+      const externalUserId = customer?.['external_id'] as string | undefined;
       const nutrients      = productId ? (NUTRIENTS_BY_PRODUCT[productId] ?? 0) : 0;
 
       console.log(`[webhook] order.paid — product=${productId} user=${externalUserId} nutrients=+${nutrients}`);
 
       // TODO: credit Nutrients to the user in Supabase
-      // Example:
       // await supabase.rpc('add_nutrients', { user_id: externalUserId, amount: nutrients });
+
+      if (customerEmail && productId && orderId && env.RESEND_API_KEY) {
+        const { subject, html } = purchaseEmail(customerEmail, productId, orderId);
+        sendEmail({ to: customerEmail, subject, html, apiKey: env.RESEND_API_KEY })
+          .then(() => console.log(`[webhook] purchase email sent to ${customerEmail}`))
+          .catch((err: unknown) => console.error('[webhook] purchase email failed:', err));
+      }
       break;
     }
 
@@ -95,13 +106,23 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     }
 
     case 'order.refunded': {
+      const customer       = data?.['customer'] as Record<string, unknown> | undefined;
       const productId      = (data?.['product'] as Record<string, unknown>)?.['id'] as string | undefined;
-      const externalUserId = (data?.['customer'] as Record<string, unknown>)?.['external_id'] as string | undefined;
+      const orderId        = data?.['id'] as string | undefined;
+      const customerEmail  = customer?.['email'] as string | undefined;
+      const externalUserId = customer?.['external_id'] as string | undefined;
       const nutrients      = productId ? (NUTRIENTS_BY_PRODUCT[productId] ?? 0) : 0;
       console.log(`[webhook] order.refunded — product=${productId} user=${externalUserId} nutrients=-${nutrients}`);
 
       // TODO: deduct Nutrients from the user in Supabase
       // await supabase.rpc('remove_nutrients', { user_id: externalUserId, amount: nutrients });
+
+      if (customerEmail && productId && orderId && env.RESEND_API_KEY) {
+        const { subject, html } = refundEmail(customerEmail, productId, orderId);
+        sendEmail({ to: customerEmail, subject, html, apiKey: env.RESEND_API_KEY })
+          .then(() => console.log(`[webhook] refund email sent to ${customerEmail}`))
+          .catch((err: unknown) => console.error('[webhook] refund email failed:', err));
+      }
       break;
     }
 
