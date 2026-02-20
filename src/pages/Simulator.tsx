@@ -4,6 +4,7 @@ import { useLang } from '../i18n';
 import type { TranslationKey } from '../i18n';
 import { useAuth } from '../contexts/AuthContext';
 import { saveReport } from '../lib/library';
+import LoadingScreen from '../components/LoadingScreen';
 
 // ─── World metadata lookup (matches the 12 preset worlds in the backend) ──────
 const WORLD_META: Record<string, { emoji: string; tagline: string }> = {
@@ -259,8 +260,8 @@ export default function Simulator() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [form,      setForm]      = useState<SimulatorForm>({ name: '', vibe: '', imageDataUrl: null });
+  const [view,      setView]      = useState<'form' | 'loading' | 'result'>('form');
   const [card,      setCard]      = useState<SimulatorCard | null>(null);
-  const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState<string | null>(null);
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
@@ -281,8 +282,8 @@ export default function Simulator() {
 
   async function handleReveal(e: React.FormEvent) {
     e.preventDefault();
-    if (!canReveal || loading) return;
-    setLoading(true);
+    if (!canReveal || view === 'loading') return;
+    setView('loading');
     setCard(null);
     setError(null);
 
@@ -304,16 +305,14 @@ export default function Simulator() {
 
       if (!res.ok) {
         setError((data['error'] as string | undefined) ?? t('err_generic'));
+        setView('form');
       } else {
         setCard({ ...(data as Omit<SimulatorCard, 'vibe'>), vibe: form.vibe });
-        setTimeout(() => {
-          document.getElementById('sim-card-anchor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 80);
+        setView('result');
       }
     } catch {
       setError(t('err_server'));
-    } finally {
-      setLoading(false);
+      setView('form');
     }
   }
 
@@ -329,6 +328,7 @@ export default function Simulator() {
     setCard(null);
     setError(null);
     setSaveState('idle');
+    setView('form');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -342,134 +342,129 @@ export default function Simulator() {
         <p>{t('sim_desc')}</p>
       </section>
 
-      {/* ── Form ────────────────────────────────────────────────────────── */}
-      <div className="card animate-fade-up" style={{ animationDelay: '60ms' }}>
-        <form onSubmit={handleReveal}>
+      {/* ── Loading screen ───────────────────────────────────────────────── */}
+      {view === 'loading' && (
+        <LoadingScreen message={t('sim_weaving')} />
+      )}
 
-          {/* Name */}
-          <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-            <label className="form-label" htmlFor="simName">
-              {t('sim_name_label')} <span style={{ color: 'var(--rose)' }}>*</span>
-            </label>
-            <input
-              id="simName"
-              type="text"
-              className="form-input sim-name-input"
-              placeholder={t('sim_name_placeholder')}
-              value={form.name}
-              maxLength={60}
-              onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-            />
-          </div>
+      {/* ── Form (form state only) ───────────────────────────────────────── */}
+      {view === 'form' && (
+        <div className="card animate-fade-up" style={{ animationDelay: '60ms' }}>
+          <form onSubmit={handleReveal}>
 
-          {/* Vibe selector */}
-          <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-            <p className="form-label" style={{ marginBottom: '0.6rem' }}>
-              {t('sim_vibe_label')} <span className="optional">{t('sim_vibe_optional')}</span>
-            </p>
-            <div className="sim-vibe-group">
-              {VIBES.map(v => (
-                <VibeChip
-                  key={v.key}
-                  vibe={v}
-                  selected={form.vibe === v.key}
-                  onToggle={() => toggleVibe(v.key)}
-                />
-              ))}
-            </div>
-            {form.vibe && (
-              <p className="form-hint sim-vibe-hint">
-                {t(VIBES.find(v => v.key === form.vibe)!.hintKey)}
-              </p>
-            )}
-          </div>
-
-          {/* Portrait upload */}
-          <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-            <p className="form-label" style={{ marginBottom: '0.5rem' }}>
-              {t('sim_portrait_label')} <span className="optional">{t('sim_portrait_optional')}</span>
-            </p>
-            <div className="sim-upload-area">
-              {form.imageDataUrl ? (
-                <div className="sim-upload-area__preview">
-                  <img
-                    src={form.imageDataUrl}
-                    alt="Portrait preview"
-                    className="sim-upload-preview-img"
-                  />
-                  <div className="sim-upload-area__preview-actions">
-                    <button
-                      type="button"
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => fileRef.current?.click()}
-                    >
-                      {t('sim_portrait_change')}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => setForm(p => ({ ...p, imageDataUrl: null }))}
-                    >
-                      {t('sim_portrait_remove')}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  className="sim-upload-trigger"
-                  onClick={() => fileRef.current?.click()}
-                >
-                  <span className="sim-upload-trigger__icon">🖼</span>
-                  <span className="sim-upload-trigger__label">{t('sim_portrait_click')}</span>
-                  <span className="sim-upload-trigger__hint">{t('sim_portrait_hint')}</span>
-                </button>
-              )}
+            {/* Name */}
+            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+              <label className="form-label" htmlFor="simName">
+                {t('sim_name_label')} <span style={{ color: 'var(--rose)' }}>*</span>
+              </label>
               <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                style={{ display: 'none' }}
+                id="simName"
+                type="text"
+                className="form-input sim-name-input"
+                placeholder={t('sim_name_placeholder')}
+                value={form.name}
+                maxLength={60}
+                onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
               />
             </div>
-          </div>
 
-          {/* Submit */}
-          <div className="form-actions">
-            <button
-              type="submit"
-              className="btn btn-teal btn-lg sim-reveal-btn"
-              disabled={!canReveal || loading}
-            >
-              {loading
-                ? t('sim_revealing')
-                : card
-                ? t('sim_reveal_again')
-                : t('sim_reveal')}
-            </button>
-          </div>
-        </form>
-      </div>
+            {/* Vibe selector */}
+            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+              <p className="form-label" style={{ marginBottom: '0.6rem' }}>
+                {t('sim_vibe_label')} <span className="optional">{t('sim_vibe_optional')}</span>
+              </p>
+              <div className="sim-vibe-group">
+                {VIBES.map(v => (
+                  <VibeChip
+                    key={v.key}
+                    vibe={v}
+                    selected={form.vibe === v.key}
+                    onToggle={() => toggleVibe(v.key)}
+                  />
+                ))}
+              </div>
+              {form.vibe && (
+                <p className="form-hint sim-vibe-hint">
+                  {t(VIBES.find(v => v.key === form.vibe)!.hintKey)}
+                </p>
+              )}
+            </div>
 
-      {/* ── Loading ──────────────────────────────────────────────────────── */}
-      {loading && (
-        <div className="spinner-wrap">
-          <div className="spinner" />
-          <span>{t('sim_weaving')}</span>
+            {/* Portrait upload */}
+            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+              <p className="form-label" style={{ marginBottom: '0.5rem' }}>
+                {t('sim_portrait_label')} <span className="optional">{t('sim_portrait_optional')}</span>
+              </p>
+              <div className="sim-upload-area">
+                {form.imageDataUrl ? (
+                  <div className="sim-upload-area__preview">
+                    <img
+                      src={form.imageDataUrl}
+                      alt="Portrait preview"
+                      className="sim-upload-preview-img"
+                    />
+                    <div className="sim-upload-area__preview-actions">
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => fileRef.current?.click()}
+                      >
+                        {t('sim_portrait_change')}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => setForm(p => ({ ...p, imageDataUrl: null }))}
+                      >
+                        {t('sim_portrait_remove')}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="sim-upload-trigger"
+                    onClick={() => fileRef.current?.click()}
+                  >
+                    <span className="sim-upload-trigger__icon">🖼</span>
+                    <span className="sim-upload-trigger__label">{t('sim_portrait_click')}</span>
+                    <span className="sim-upload-trigger__hint">{t('sim_portrait_hint')}</span>
+                  </button>
+                )}
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  style={{ display: 'none' }}
+                />
+              </div>
+            </div>
+
+            {/* Submit */}
+            <div className="form-actions">
+              <button
+                type="submit"
+                className="btn btn-teal btn-lg sim-reveal-btn"
+                disabled={!canReveal}
+              >
+                {t('sim_reveal')}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
-      {/* ── Error ────────────────────────────────────────────────────────── */}
-      {error && !loading && (
+      {/* ── Error (form state only) ───────────────────────────────────────── */}
+      {view === 'form' && error && (
         <div className="card animate-fade-up" style={{ marginTop: '1.5rem', borderColor: 'var(--rose)' }}>
           <p style={{ color: 'var(--rose)', margin: 0 }}>🐱 {error}</p>
         </div>
       )}
 
-      {/* ── Character card ────────────────────────────────────────────────── */}
-      {card && !loading && (
-        <div id="sim-card-anchor" style={{ marginTop: '2.5rem' }}>
+      {/* ── Character card (result state) ────────────────────────────────── */}
+      {view === 'result' && card && (
+        <div style={{ marginTop: '2.5rem' }}>
           <CharacterCard
             card={card}
             imageDataUrl={form.imageDataUrl}

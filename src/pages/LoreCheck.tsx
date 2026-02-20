@@ -4,6 +4,7 @@ import type { LoreCheckForm, LoreCheckReport, RiskLevel, TensionPoint } from '..
 import { useLang } from '../i18n';
 import { useAuth } from '../contexts/AuthContext';
 import { saveReport } from '../lib/library';
+import LoadingScreen from '../components/LoadingScreen';
 
 // ─── Stability meter ──────────────────────────────────────────────────────────
 function StabilityMeter({
@@ -107,8 +108,8 @@ export default function LoreCheck() {
     worldText: initState?.prefill?.worldText ?? '',
   });
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [view,       setView]       = useState<'form' | 'loading' | 'result'>('form');
   const [report,     setReport]     = useState<LoreCheckReport | null>(null);
-  const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState<string | null>(null);
   const [needsSeeds, setNeedsSeeds] = useState(false);
   const [saveState,  setSaveState]  = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -123,8 +124,8 @@ export default function LoreCheck() {
 
   async function handleQuickScan(e: React.FormEvent) {
     e.preventDefault();
-    if (!canScan || loading) return;
-    setLoading(true);
+    if (!canScan || view === 'loading') return;
+    setView('loading');
     setReport(null);
     setError(null);
     setNeedsSeeds(false);
@@ -158,19 +159,18 @@ export default function LoreCheck() {
       } else if (res.status === 402) {
         setNeedsSeeds(true);
         setError(t('err_insufficient_seeds'));
+        setView('form');
       } else if (!res.ok) {
         setError((data['error'] as string | undefined) ?? t('err_generic'));
+        setView('form');
       } else {
         setReport(data as unknown as LoreCheckReport);
         refetchSeeds();
-        setTimeout(() => {
-          document.getElementById('lc-report')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
+        setView('result');
       }
     } catch {
       setError(t('err_server'));
-    } finally {
-      setLoading(false);
+      setView('form');
     }
   }
 
@@ -208,6 +208,7 @@ export default function LoreCheck() {
     setReport(null);
     setError(null);
     setSaveState('idle');
+    setView('form');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -235,163 +236,156 @@ export default function LoreCheck() {
         <p>{t('lorecheck_desc')}</p>
       </section>
 
-      {/* ── Input card ──────────────────────────────────────────────────── */}
-      <div className="card animate-fade-up" style={{ animationDelay: '60ms' }}>
-        <form onSubmit={handleQuickScan}>
+      {/* ── Loading screen ───────────────────────────────────────────────── */}
+      {view === 'loading' && (
+        <LoadingScreen message={t('lorecheck_reading')} />
+      )}
 
-          {/* Main textarea */}
-          <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-            <label className="form-label" htmlFor="worldText">
-              {t('lorecheck_text_label')}{' '}
-              <span style={{ color: 'var(--rose)' }}>*</span>
-            </label>
-            <textarea
-              id="worldText"
-              className="form-textarea lc-main-textarea"
-              rows={10}
-              placeholder={t('lorecheck_text_placeholder')}
-              value={form.worldText}
-              onChange={setField('worldText')}
-            />
-            <div className="lc-char-row">
-              {charCount > 0 && charCount < 30 && (
-                <span className="lc-char-warn">
-                  {t('lorecheck_char_warn_min')}
+      {/* ── Input card (form state only) ─────────────────────────────────── */}
+      {view === 'form' && (
+        <div className="card animate-fade-up" style={{ animationDelay: '60ms' }}>
+          <form onSubmit={handleQuickScan}>
+
+            {/* Main textarea */}
+            <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+              <label className="form-label" htmlFor="worldText">
+                {t('lorecheck_text_label')}{' '}
+                <span style={{ color: 'var(--rose)' }}>*</span>
+              </label>
+              <textarea
+                id="worldText"
+                className="form-textarea lc-main-textarea"
+                rows={10}
+                placeholder={t('lorecheck_text_placeholder')}
+                value={form.worldText}
+                onChange={setField('worldText')}
+              />
+              <div className="lc-char-row">
+                {charCount > 0 && charCount < 30 && (
+                  <span className="lc-char-warn">
+                    {t('lorecheck_char_warn_min')}
+                  </span>
+                )}
+                {charCount > 4_000 && (
+                  <span className="lc-char-warn">
+                    {t('lorecheck_char_warn_max')}
+                  </span>
+                )}
+                <span className="lc-char-count" style={{ marginLeft: 'auto' }}>
+                  {charCount.toLocaleString()} / 4 000
                 </span>
-              )}
-              {charCount > 4_000 && (
-                <span className="lc-char-warn">
-                  {t('lorecheck_char_warn_max')}
+              </div>
+            </div>
+
+            {/* Advanced toggle */}
+            <button
+              type="button"
+              className="lc-advanced-toggle"
+              onClick={() => setShowAdvanced(v => !v)}
+              aria-expanded={showAdvanced}
+            >
+              <span className={`lc-advanced-toggle__chevron ${showAdvanced ? 'lc-advanced-toggle__chevron--open' : ''}`}>
+                ›
+              </span>
+              {t('lorecheck_advanced_toggle')}{' '}
+              <span className="lc-advanced-toggle__hint">
+                {t('lorecheck_advanced_hint')}
+              </span>
+            </button>
+
+            {/* Collapsible advanced fields */}
+            <div className={`lc-advanced-fields ${showAdvanced ? 'lc-advanced-fields--open' : ''}`}>
+              <div className="form-grid lc-advanced-grid">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="timePeriod">
+                    {t('lorecheck_time_period')} <span className="optional">{t('optional')}</span>
+                  </label>
+                  <input
+                    id="timePeriod"
+                    type="text"
+                    className="form-input"
+                    placeholder={t('lorecheck_time_period_placeholder')}
+                    value={form.timePeriod}
+                    onChange={setField('timePeriod')}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="countryRegion">
+                    {t('lorecheck_region')} <span className="optional">{t('optional')}</span>
+                  </label>
+                  <input
+                    id="countryRegion"
+                    type="text"
+                    className="form-input"
+                    placeholder={t('lorecheck_region_placeholder')}
+                    value={form.countryRegion}
+                    onChange={setField('countryRegion')}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="charAge">
+                    {t('lorecheck_age_range')} <span className="optional">{t('optional')}</span>
+                  </label>
+                  <input
+                    id="charAge"
+                    type="text"
+                    className="form-input"
+                    placeholder={t('lorecheck_age_range_placeholder')}
+                    value={form.characterAgeRange}
+                    onChange={setField('characterAgeRange')}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="charOccupation">
+                    {t('lorecheck_occupation')} <span className="optional">{t('optional')}</span>
+                  </label>
+                  <input
+                    id="charOccupation"
+                    type="text"
+                    className="form-input"
+                    placeholder={t('lorecheck_occupation_placeholder')}
+                    value={form.characterOccupation}
+                    onChange={setField('characterOccupation')}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Action row */}
+            <div className="lc-action-row">
+              <div className="lc-action-row__primary">
+                <button
+                  type="submit"
+                  className="btn btn-gold btn-lg"
+                  disabled={!canScan}
+                >
+                  {t('lorecheck_scan')}
+                </button>
+                <span className="nutrients-cost-label">
+                  {t('lorecheck_seeds_cost', { n: 1 })}
                 </span>
-              )}
-              <span className="lc-char-count" style={{ marginLeft: 'auto' }}>
-                {charCount.toLocaleString()} / 4 000
-              </span>
-            </div>
-          </div>
 
-          {/* Advanced toggle */}
-          <button
-            type="button"
-            className="lc-advanced-toggle"
-            onClick={() => setShowAdvanced(v => !v)}
-            aria-expanded={showAdvanced}
-          >
-            <span className={`lc-advanced-toggle__chevron ${showAdvanced ? 'lc-advanced-toggle__chevron--open' : ''}`}>
-              ›
-            </span>
-            {t('lorecheck_advanced_toggle')}{' '}
-            <span className="lc-advanced-toggle__hint">
-              {t('lorecheck_advanced_hint')}
-            </span>
-          </button>
-
-          {/* Collapsible advanced fields */}
-          <div className={`lc-advanced-fields ${showAdvanced ? 'lc-advanced-fields--open' : ''}`}>
-            <div className="form-grid lc-advanced-grid">
-              <div className="form-group">
-                <label className="form-label" htmlFor="timePeriod">
-                  {t('lorecheck_time_period')} <span className="optional">{t('optional')}</span>
-                </label>
-                <input
-                  id="timePeriod"
-                  type="text"
-                  className="form-input"
-                  placeholder={t('lorecheck_time_period_placeholder')}
-                  value={form.timePeriod}
-                  onChange={setField('timePeriod')}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label" htmlFor="countryRegion">
-                  {t('lorecheck_region')} <span className="optional">{t('optional')}</span>
-                </label>
-                <input
-                  id="countryRegion"
-                  type="text"
-                  className="form-input"
-                  placeholder={t('lorecheck_region_placeholder')}
-                  value={form.countryRegion}
-                  onChange={setField('countryRegion')}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label" htmlFor="charAge">
-                  {t('lorecheck_age_range')} <span className="optional">{t('optional')}</span>
-                </label>
-                <input
-                  id="charAge"
-                  type="text"
-                  className="form-input"
-                  placeholder={t('lorecheck_age_range_placeholder')}
-                  value={form.characterAgeRange}
-                  onChange={setField('characterAgeRange')}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label" htmlFor="charOccupation">
-                  {t('lorecheck_occupation')} <span className="optional">{t('optional')}</span>
-                </label>
-                <input
-                  id="charOccupation"
-                  type="text"
-                  className="form-input"
-                  placeholder={t('lorecheck_occupation_placeholder')}
-                  value={form.characterOccupation}
-                  onChange={setField('characterOccupation')}
-                />
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-lg lc-deep-audit-btn"
+                  disabled
+                  title={t('coming_soon')}
+                >
+                  {t('lorecheck_deep_audit')}
+                  <span className="lc-coming-soon">{t('coming_soon')}</span>
+                </button>
               </div>
             </div>
-          </div>
 
-          {/* Action row */}
-          <div className="lc-action-row">
-            <div className="lc-action-row__primary">
-              <button
-                type="submit"
-                className="btn btn-gold btn-lg"
-                disabled={!canScan || loading}
-              >
-                {loading ? t('lorecheck_scanning') : t('lorecheck_scan')}
-              </button>
-              <span className="nutrients-cost-label">
-                {t('lorecheck_seeds_cost', { n: 1 })}
-              </span>
-
-              <button
-                type="button"
-                className="btn btn-ghost btn-lg lc-deep-audit-btn"
-                disabled
-                title={t('coming_soon')}
-              >
-                {t('lorecheck_deep_audit')}
-                <span className="lc-coming-soon">{t('coming_soon')}</span>
-              </button>
-            </div>
-
-            {report && (
-              <button type="button" className="btn btn-ghost btn-sm" onClick={handleClear}>
-                {t('lorecheck_clear_results')}
-              </button>
-            )}
-          </div>
-
-        </form>
-      </div>
-
-      {/* ── Loading ──────────────────────────────────────────────────────── */}
-      {loading && (
-        <div className="spinner-wrap">
-          <div className="spinner" />
-          <span>{t('lorecheck_reading')}</span>
+          </form>
         </div>
       )}
 
-      {/* ── Error ────────────────────────────────────────────────────────── */}
-      {error && !loading && (
+      {/* ── Error (form state only) ───────────────────────────────────────── */}
+      {view === 'form' && error && (
         <div className="card animate-fade-up" style={{ marginTop: '1.5rem', borderColor: 'var(--rose)' }}>
           <p style={{ color: 'var(--rose)', margin: 0 }}>🐱 {error}</p>
           {needsSeeds && (
@@ -407,9 +401,9 @@ export default function LoreCheck() {
         </div>
       )}
 
-      {/* ── Report ───────────────────────────────────────────────────────── */}
-      {report && !loading && (
-        <section id="lc-report" className="lc-report animate-fade-up">
+      {/* ── Report (result state) ────────────────────────────────────────── */}
+      {view === 'result' && report && (
+        <section className="lc-report animate-fade-up">
 
           {/* Report header */}
           <div className="lc-report__header">

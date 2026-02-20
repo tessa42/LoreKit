@@ -11,6 +11,7 @@ import ReportView from '../components/ReportView';
 import { useLang, type TranslationKey } from '../i18n';
 import { useAuth } from '../contexts/AuthContext';
 import { saveReport } from '../lib/library';
+import LoadingScreen from '../components/LoadingScreen';
 
 // Frontend worldType → API worldType
 const TYPE_MAP: Record<string, string> = {
@@ -344,8 +345,8 @@ export default function LoreCraft() {
     ...EMPTY_FORM,
     extraContext: state?.prefill?.extraContext ?? '',
   });
+  const [view,       setView]       = useState<'form' | 'loading' | 'result'>('form');
   const [report,     setReport]     = useState<LoreCraftReport | null>(null);
-  const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState<string | null>(null);
   const [needsSeeds, setNeedsSeeds] = useState(false);
   const [saveState,  setSaveState]  = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -392,8 +393,8 @@ export default function LoreCraft() {
 
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault();
-    if (!canSubmit || loading) return;
-    setLoading(true);
+    if (!canSubmit || view === 'loading') return;
+    setView('loading');
     setReport(null);
     setError(null);
     setNeedsSeeds(false);
@@ -442,19 +443,18 @@ export default function LoreCraft() {
       } else if (res.status === 402) {
         setNeedsSeeds(true);
         setError(t('err_insufficient_seeds'));
+        setView('form');
       } else if (!res.ok) {
         setError((data['error'] as string | undefined) ?? t('err_generic'));
+        setView('form');
       } else {
         setReport(data as unknown as LoreCraftReport);
         refetchSeeds();
-        setTimeout(() => {
-          document.getElementById('lorecraft-report')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
+        setView('result');
       }
     } catch {
       setError(t('err_server'));
-    } finally {
-      setLoading(false);
+      setView('form');
     }
   }
 
@@ -468,6 +468,7 @@ export default function LoreCraft() {
   function handleClear() {
     setReport(null);
     setSaveState('idle');
+    setView('form');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -481,126 +482,106 @@ export default function LoreCraft() {
         <p>{t('lorecraft_desc')}</p>
       </section>
 
-      {/* ── Form card ───────────────────────────────────────────────────── */}
-      <div className="card animate-fade-up" style={{ animationDelay: '60ms' }}>
-        <form onSubmit={handleGenerate}>
+      {/* ── Loading screen ───────────────────────────────────────────────── */}
+      {view === 'loading' && (
+        <LoadingScreen message={t('lorecraft_weaving')} />
+      )}
 
-          {/* World Type radios */}
-          <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-            <p className="form-label" style={{ marginBottom: '0.75rem' }}>
-              {t('lorecraft_world_type_label')} <span className="req">*</span>
-            </p>
-            <div className="radio-group">
-              <WorldTypeCard
-                value="historical"
-                selected={form.worldType === 'historical'}
-                icon="🏛"
-                title={t('lorecraft_historical_title')}
-                description={t('lorecraft_historical_desc')}
-                onSelect={() => setForm(p => ({ ...p, worldType: 'historical' }))}
-              />
-              <WorldTypeCard
-                value="fictional"
-                selected={form.worldType === 'fictional'}
-                icon="🌌"
-                title={t('lorecraft_fictional_title')}
-                description={t('lorecraft_fictional_desc')}
-                onSelect={() => setForm(p => ({ ...p, worldType: 'fictional' }))}
-              />
-              <WorldTypeCard
-                value="hybrid"
-                selected={form.worldType === 'hybrid'}
-                icon="⚗️"
-                title={t('lorecraft_hybrid_title')}
-                description={t('lorecraft_hybrid_desc')}
-                onSelect={() => setForm(p => ({ ...p, worldType: 'hybrid' }))}
-              />
+      {/* ── Form card (form state only) ──────────────────────────────────── */}
+      {view === 'form' && (
+        <div className="card animate-fade-up" style={{ animationDelay: '60ms' }}>
+          <form onSubmit={handleGenerate}>
+
+            {/* World Type radios */}
+            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+              <p className="form-label" style={{ marginBottom: '0.75rem' }}>
+                {t('lorecraft_world_type_label')} <span className="req">*</span>
+              </p>
+              <div className="radio-group">
+                <WorldTypeCard
+                  value="historical"
+                  selected={form.worldType === 'historical'}
+                  icon="🏛"
+                  title={t('lorecraft_historical_title')}
+                  description={t('lorecraft_historical_desc')}
+                  onSelect={() => setForm(p => ({ ...p, worldType: 'historical' }))}
+                />
+                <WorldTypeCard
+                  value="fictional"
+                  selected={form.worldType === 'fictional'}
+                  icon="🌌"
+                  title={t('lorecraft_fictional_title')}
+                  description={t('lorecraft_fictional_desc')}
+                  onSelect={() => setForm(p => ({ ...p, worldType: 'fictional' }))}
+                />
+                <WorldTypeCard
+                  value="hybrid"
+                  selected={form.worldType === 'hybrid'}
+                  icon="⚗️"
+                  title={t('lorecraft_hybrid_title')}
+                  description={t('lorecraft_hybrid_desc')}
+                  onSelect={() => setForm(p => ({ ...p, worldType: 'hybrid' }))}
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Conditional fields */}
-          {form.worldType === 'historical' && (
-            <HistoricalFields form={form} set={setField as any} />
-          )}
-          {form.worldType === 'fictional' && (
-            <FictionalFields form={form} setField={setField as any} setSelect={setSelect} />
-          )}
-          {form.worldType === 'hybrid' && (
-            <HybridFields
-              form={form}
-              setField={setField}
-              setDeviation={setDeviation}
-              setDeviationLevel={setDeviationLevel}
-            />
-          )}
-
-          {/* Extra context */}
-          {form.worldType !== '' && (
-            <div className="form-group" style={{ marginTop: '1.25rem' }}>
-              <label className="form-label" htmlFor="extraContext">
-                {t('lorecraft_extra_context')}{' '}
-                <span className="optional">{t('optional')}</span>
-              </label>
-              <p className="form-hint">{t('lorecraft_extra_context_hint')}</p>
-              <textarea
-                id="extraContext"
-                className="form-textarea"
-                rows={4}
-                placeholder={t('lorecraft_extra_context_placeholder')}
-                value={form.extraContext}
-                onChange={setField('extraContext')}
+            {/* Conditional fields */}
+            {form.worldType === 'historical' && (
+              <HistoricalFields form={form} set={setField as any} />
+            )}
+            {form.worldType === 'fictional' && (
+              <FictionalFields form={form} setField={setField as any} setSelect={setSelect} />
+            )}
+            {form.worldType === 'hybrid' && (
+              <HybridFields
+                form={form}
+                setField={setField}
+                setDeviation={setDeviation}
+                setDeviationLevel={setDeviationLevel}
               />
-            </div>
-          )}
+            )}
 
-          {/* Submit row */}
-          {form.worldType !== '' && (
-            <div className="form-actions" style={{ marginTop: '1.5rem' }}>
-              <button
-                type="submit"
-                className="btn btn-primary btn-lg"
-                disabled={!canSubmit || loading}
-              >
-                {loading ? t('lorecraft_generating') : t('lorecraft_generate')}
-              </button>
-              <span className="nutrients-cost-label">
-                {t('lorecraft_nutrients_cost', { n: SEEDS_COST })}
-              </span>
-              {report && user && (
+            {/* Extra context */}
+            {form.worldType !== '' && (
+              <div className="form-group" style={{ marginTop: '1.25rem' }}>
+                <label className="form-label" htmlFor="extraContext">
+                  {t('lorecraft_extra_context')}{' '}
+                  <span className="optional">{t('optional')}</span>
+                </label>
+                <p className="form-hint">{t('lorecraft_extra_context_hint')}</p>
+                <textarea
+                  id="extraContext"
+                  className="form-textarea"
+                  rows={4}
+                  placeholder={t('lorecraft_extra_context_placeholder')}
+                  value={form.extraContext}
+                  onChange={setField('extraContext')}
+                />
+              </div>
+            )}
+
+            {/* Submit row */}
+            {form.worldType !== '' && (
+              <div className="form-actions" style={{ marginTop: '1.5rem' }}>
                 <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={handleSave}
-                  disabled={saveState === 'saving' || saveState === 'saved'}
+                  type="submit"
+                  className="btn btn-primary btn-lg"
+                  disabled={!canSubmit}
                 >
-                  {saveState === 'saved'
-                    ? t('save_to_library_done')
-                    : saveState === 'error'
-                    ? t('save_to_library_error')
-                    : t('save_to_library')}
+                  {t('lorecraft_generate')}
                 </button>
-              )}
-              {report && (
-                <button type="button" className="btn btn-ghost btn-sm" onClick={handleClear}>
-                  {t('lorecraft_clear')}
-                </button>
-              )}
-            </div>
-          )}
+                <span className="nutrients-cost-label">
+                  {t('lorecraft_nutrients_cost', { n: SEEDS_COST })}
+                </span>
+              </div>
+            )}
 
-        </form>
-      </div>
-
-      {/* ── Loading ──────────────────────────────────────────────────────── */}
-      {loading && (
-        <div className="spinner-wrap">
-          <div className="spinner" />
-          <span>{t('lorecraft_weaving')}</span>
+          </form>
         </div>
       )}
 
-      {/* ── Error ────────────────────────────────────────────────────────── */}
-      {error && !loading && (
+      {/* ── Error (form state only) ───────────────────────────────────────── */}
+      {view === 'form' && error && (
         <div className="card animate-fade-up" style={{ marginTop: '1.5rem', borderColor: 'var(--rose)' }}>
           <p style={{ color: 'var(--rose)', margin: 0 }}>🐱 {error}</p>
           {needsSeeds && (
@@ -616,9 +597,25 @@ export default function LoreCraft() {
         </div>
       )}
 
-      {/* ── Report ───────────────────────────────────────────────────────── */}
-      {report && !loading && (
-        <div id="lorecraft-report" style={{ marginTop: '2.5rem' }}>
+      {/* ── Report (result state) ────────────────────────────────────────── */}
+      {view === 'result' && report && (
+        <div style={{ marginTop: '2.5rem' }}>
+          {user && (
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={handleSave}
+                disabled={saveState === 'saving' || saveState === 'saved'}
+              >
+                {saveState === 'saved'
+                  ? t('save_to_library_done')
+                  : saveState === 'error'
+                  ? t('save_to_library_error')
+                  : t('save_to_library')}
+              </button>
+            </div>
+          )}
           <ReportView report={report} onClear={handleClear} />
         </div>
       )}

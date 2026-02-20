@@ -2502,3 +2502,39 @@ p  { color: var(--text-secondary); }
   border-radius: 4px;
   padding: 0.2rem 0.5rem;
 }
+
+/* ─── LoadingScreen ──────────────────────────────────────────────────────── */
+.loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 55vh;
+  padding: 2rem;
+  text-align: center;
+  gap: 1.75rem;
+}
+
+.loading-screen__kitten {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  animation: kitten-float 2.2s ease-in-out infinite;
+}
+
+@keyframes kitten-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-16px); }
+}
+
+.loading-screen__message {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  animation: text-pulse 2s ease-in-out infinite;
+}
+
+@keyframes text-pulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
+}
