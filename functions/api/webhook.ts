@@ -31,7 +31,7 @@ interface Env {
 
 // ─── Supabase seed helpers ────────────────────────────────────────────────────
 function supabaseBase(url: string): string {
-  return url.replace(/\/+$/, '');
+  return url.trim().replace(/\/+$/, '');
 }
 
 async function callSeedsRpc(

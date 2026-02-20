@@ -13,9 +13,9 @@ interface SpendResult {
   error?:  string;
 }
 
-/** Strip trailing slashes so URL construction never produces double-slashes. */
+/** Strip trailing slashes and whitespace so URL construction never produces double-slashes or invalid URLs. */
 function base(url: string): string {
-  return url.replace(/\/+$/, '');
+  return url.trim().replace(/\/+$/, '');
 }
 
 /**
