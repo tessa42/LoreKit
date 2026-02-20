@@ -176,6 +176,8 @@ export const en = {
   sim_download:         '🖼 Download card',
   sim_download_tip:     'Image export is coming in a future release.',
   sim_try_again:        '↺ Try again',
+  sim_share_x:          '𝕏 Share',
+  sim_share_native:     '↑ Share',
 
   // Vibes
   vibe_dark_label:      'Dark',

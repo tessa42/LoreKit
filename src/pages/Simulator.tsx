@@ -72,6 +72,30 @@ function CharacterCard({
     setTimeout(() => setCopied(false), 2200);
   }
 
+  function handleShareX() {
+    const shareText = [
+      `I just got placed in ${card.assignedWorld} as ${card.roleArchetype}!`,
+      '',
+      `"${card.fateQuote}"`,
+      '',
+      '🐱 lorekit.cc/simulator',
+    ].join('\n');
+    const url = `https://x.com/intent/post?text=${encodeURIComponent(shareText)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  async function handleNativeShare() {
+    try {
+      await navigator.share({
+        title: `${card.name} — ${card.assignedWorld}`,
+        text:  plainText,
+        url:   `${window.location.origin}/simulator`,
+      });
+    } catch {
+      // user cancelled or browser unsupported — no-op
+    }
+  }
+
   return (
     <div className="sim-result animate-fade-up">
 
@@ -136,6 +160,28 @@ function CharacterCard({
           <button className="btn btn-teal btn-sm" onClick={handleCopy}>
             {copied ? t('sim_copied') : t('sim_copy')}
           </button>
+
+          {/* Share on X */}
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm sim-share-btn sim-share-btn--x"
+            onClick={handleShareX}
+            aria-label={t('sim_share_x')}
+          >
+            {t('sim_share_x')}
+          </button>
+
+          {/* Native share (mobile) */}
+          {'share' in navigator && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={handleNativeShare}
+              aria-label={t('sim_share_native')}
+            >
+              {t('sim_share_native')}
+            </button>
+          )}
 
           <div
             className="sim-download-wrap"

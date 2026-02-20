@@ -178,6 +178,8 @@ export const ko: Record<TranslationKey, string> = {
   sim_download:         '🖼 카드 다운로드',
   sim_download_tip:     '이미지 내보내기는 추후 업데이트에서 만나볼 수 있을 거예요.',
   sim_try_again:        '↺ 다시 시도',
+  sim_share_x:          '𝕏 공유',
+  sim_share_native:     '↑ 공유하기',
 
   // Vibes
   vibe_dark_label:      '어둠',

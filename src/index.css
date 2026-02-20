@@ -2488,6 +2488,13 @@ p  { color: var(--text-secondary); }
   flex-wrap: wrap;
   gap: 0.4rem;
 }
+/* ─── Simulator share buttons ────────────────────────────────────────────── */
+.sim-share-btn--x:hover {
+  color: #fff;
+  background: #000;
+  border-color: #000;
+}
+
 .library-item__section-chip {
   font-size: 0.72rem;
   background: color-mix(in srgb, var(--teal) 12%, transparent);
