@@ -1,77 +1,87 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 185" fill="none">
-  <!-- Ground shadow -->
-  <ellipse cx="80" cy="182" rx="35" ry="4.5" fill="#000" opacity="0.22"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 180" fill="none">
 
-  <!-- Tail -->
-  <path d="M 116 160 C 148 148 152 120 138 104 C 127 91 113 102 119 118 C 124 131 116 144 106 152"
-        stroke="#3d2475" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <!-- Drop shadow -->
+  <ellipse cx="79" cy="178" rx="31" ry="4" fill="#000" opacity="0.18"/>
 
-  <!-- Body -->
-  <ellipse cx="80" cy="148" rx="38" ry="33" fill="#3d2475"/>
+  <!-- TAIL (drawn first so it's behind body) -->
+  <path d="M 106 150 C 142 138 148 110 133 96 C 122 84 107 95 112 112 C 117 126 108 138 96 146"
+        stroke="#3a2082" stroke-width="17" stroke-linecap="round" fill="none"/>
+  <path d="M 106 150 C 142 138 148 110 133 96 C 122 84 107 95 112 112 C 117 126 108 138 96 146"
+        stroke="#5a36b8" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.4"/>
 
-  <!-- Chest highlight -->
-  <ellipse cx="80" cy="152" rx="20" ry="21" fill="#4e338a" opacity="0.55"/>
+  <!-- BODY -->
+  <ellipse cx="78" cy="151" rx="30" ry="24" fill="#3a2082"/>
+  <!-- Belly -->
+  <ellipse cx="78" cy="155" rx="17" ry="15" fill="#5a36b8" opacity="0.4"/>
 
-  <!-- Front paws -->
-  <ellipse cx="60" cy="173" rx="14" ry="7.5" fill="#2e1c5c"/>
-  <ellipse cx="100" cy="173" rx="14" ry="7.5" fill="#2e1c5c"/>
-  <ellipse cx="60" cy="171" rx="9.5" ry="5" fill="#3d2475"/>
-  <ellipse cx="100" cy="171" rx="9.5" ry="5" fill="#3d2475"/>
+  <!-- PAWS -->
+  <ellipse cx="57" cy="168" rx="13" ry="8"   fill="#2b1668"/>
+  <ellipse cx="99" cy="168" rx="13" ry="8"   fill="#2b1668"/>
+  <ellipse cx="57" cy="166" rx="9"  ry="5.5" fill="#3a2082"/>
+  <ellipse cx="99" cy="166" rx="9"  ry="5.5" fill="#3a2082"/>
 
-  <!-- Head -->
-  <circle cx="80" cy="82" r="40" fill="#3d2475"/>
+  <!-- LEFT EAR (rounded bezier — drawn before head so head covers base) -->
+  <path d="M 28 54 C 22 28 32 6 54 11 C 65 13 67 34 63 53 Z" fill="#3a2082"/>
+  <path d="M 33 50 C 28 30 36 13 54 17 C 63 20 64 36 61 51 Z" fill="#7c3aed" opacity="0.65"/>
 
-  <!-- Face blush / highlight -->
-  <ellipse cx="80" cy="90" rx="27" ry="22" fill="#4e338a" opacity="0.3"/>
+  <!-- RIGHT EAR -->
+  <path d="M 132 54 C 138 28 128 6 106 11 C 95 13 93 34 97 53 Z" fill="#3a2082"/>
+  <path d="M 127 50 C 132 30 124 13 106 17 C 97 20 96 36 99 51 Z" fill="#7c3aed" opacity="0.65"/>
 
-  <!-- Left ear outer -->
-  <polygon points="37,56 18,14 60,50" fill="#3d2475"/>
-  <!-- Right ear outer -->
-  <polygon points="123,56 142,14 100,50" fill="#3d2475"/>
-  <!-- Left ear inner -->
-  <polygon points="39,51 23,19 58,47" fill="#6d28d9" opacity="0.72"/>
-  <!-- Right ear inner -->
-  <polygon points="121,51 137,19 102,47" fill="#6d28d9" opacity="0.72"/>
+  <!-- HEAD (large — chibi proportions) -->
+  <circle cx="80" cy="76" r="51" fill="#3a2082"/>
+  <!-- Subtle face highlight -->
+  <ellipse cx="80" cy="82" rx="37" ry="31" fill="#5a36b8" opacity="0.2"/>
 
-  <!-- Eye ambient glow -->
-  <ellipse cx="62" cy="83" rx="14" ry="15" fill="#0d9488" opacity="0.18"/>
-  <ellipse cx="98" cy="83" rx="14" ry="15" fill="#0d9488" opacity="0.18"/>
+  <!-- EYE GLOW -->
+  <circle cx="60" cy="77" r="16" fill="#0d9488" opacity="0.16"/>
+  <circle cx="100" cy="77" r="16" fill="#0d9488" opacity="0.16"/>
+  <!-- IRIS (big round — kawaii) -->
+  <circle cx="60" cy="77" r="13" fill="#2dd4bf"/>
+  <circle cx="100" cy="77" r="13" fill="#2dd4bf"/>
+  <!-- PUPIL (round) -->
+  <circle cx="60" cy="78" r="7.5" fill="#060412"/>
+  <circle cx="100" cy="78" r="7.5" fill="#060412"/>
+  <!-- Main shine -->
+  <circle cx="65"  cy="71" r="4.5" fill="white" opacity="0.92"/>
+  <circle cx="105" cy="71" r="4.5" fill="white" opacity="0.92"/>
+  <!-- Secondary shine -->
+  <circle cx="56"  cy="82" r="2"   fill="white" opacity="0.55"/>
+  <circle cx="96"  cy="82" r="2"   fill="white" opacity="0.55"/>
 
-  <!-- Iris -->
-  <ellipse cx="62" cy="83" rx="10.5" ry="12" fill="#2dd4bf"/>
-  <ellipse cx="98" cy="83" rx="10.5" ry="12" fill="#2dd4bf"/>
+  <!-- BLUSH CHEEKS -->
+  <ellipse cx="42"  cy="92" rx="12" ry="7" fill="#f9a8d4" opacity="0.38"/>
+  <ellipse cx="118" cy="92" rx="12" ry="7" fill="#f9a8d4" opacity="0.38"/>
 
-  <!-- Pupil (vertical slit) -->
-  <ellipse cx="62" cy="83" rx="3.2" ry="9.5" fill="#080614"/>
-  <ellipse cx="98" cy="83" rx="3.2" ry="9.5" fill="#080614"/>
+  <!-- NOSE (tiny triangle) -->
+  <path d="M 80 98 L 75 92 L 85 92 Z" fill="#f9a8d4"/>
 
-  <!-- Eye shine -->
-  <circle cx="66.5" cy="77" r="3" fill="white" opacity="0.88"/>
-  <circle cx="102.5" cy="77" r="3" fill="white" opacity="0.88"/>
+  <!-- MOUTH (cute small smile) -->
+  <path d="M 75 98 Q 80 105 85 98"
+        stroke="#f9a8d4" stroke-width="1.8" fill="none" stroke-linecap="round"/>
 
-  <!-- Nose -->
-  <path d="M 80 97 L 74 90 L 86 90 Z" fill="#f9a8d4"/>
+  <!-- WHISKERS left -->
+  <line x1="26" y1="89"  x2="64" y2="93"  stroke="#c4b5fd" stroke-width="1.2" opacity="0.55"/>
+  <line x1="23" y1="97"  x2="63" y2="98"  stroke="#c4b5fd" stroke-width="1.2" opacity="0.55"/>
+  <line x1="24" y1="104" x2="63" y2="103" stroke="#c4b5fd" stroke-width="1.0" opacity="0.38"/>
 
-  <!-- Mouth -->
-  <path d="M 74 97 Q 80 105 86 97" stroke="#f9a8d4" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <!-- WHISKERS right -->
+  <line x1="134" y1="89"  x2="96" y2="93"  stroke="#c4b5fd" stroke-width="1.2" opacity="0.55"/>
+  <line x1="137" y1="97"  x2="97" y2="98"  stroke="#c4b5fd" stroke-width="1.2" opacity="0.55"/>
+  <line x1="136" y1="104" x2="97" y2="103" stroke="#c4b5fd" stroke-width="1.0" opacity="0.38"/>
 
-  <!-- Whiskers left -->
-  <line x1="28" y1="91" x2="68" y2="95" stroke="#c4b5fd" stroke-width="1.1" opacity="0.58"/>
-  <line x1="24" y1="99" x2="66" y2="100" stroke="#c4b5fd" stroke-width="1.1" opacity="0.58"/>
+  <!-- 4-point GOLD STAR (top-left) -->
+  <path d="M 22 30 L 25 23 L 28 30 L 25 37 Z
+           M 15 30 L 25 27 L 35 30 L 25 33 Z" fill="#fbbf24" opacity="0.92"/>
 
-  <!-- Whiskers right -->
-  <line x1="132" y1="91" x2="92" y2="95" stroke="#c4b5fd" stroke-width="1.1" opacity="0.58"/>
-  <line x1="136" y1="99" x2="94" y2="100" stroke="#c4b5fd" stroke-width="1.1" opacity="0.58"/>
-
-  <!-- 4-point gold star (top-left) -->
-  <path d="M 22 31 L 24.5 25 L 27 31 L 24.5 37 Z M 16 31 L 24.5 28.5 L 33 31 L 24.5 33.5 Z" fill="#fbbf24" opacity="0.92"/>
-
-  <!-- 4-point violet star (top-right) -->
-  <path d="M 136 23 L 138.5 17 L 141 23 L 138.5 29 Z M 130 23 L 138.5 20.5 L 147 23 L 138.5 25.5 Z" fill="#a78bfa" opacity="0.92"/>
+  <!-- 4-point VIOLET STAR (top-right) -->
+  <path d="M 136 22 L 139 15 L 142 22 L 139 29 Z
+           M 129 22 L 139 19 L 149 22 L 139 25 Z" fill="#a78bfa" opacity="0.92"/>
 
   <!-- Tiny sparkle dots -->
-  <circle cx="13"  cy="68"  r="2.6" fill="#2dd4bf" opacity="0.62"/>
-  <circle cx="149" cy="50"  r="2.0" fill="#fbbf24" opacity="0.68"/>
-  <circle cx="151" cy="148" r="2.2" fill="#a78bfa" opacity="0.58"/>
-  <circle cx="11"  cy="140" r="1.8" fill="#f9a8d4" opacity="0.58"/>
+  <circle cx="11"  cy="66"  r="2.6" fill="#2dd4bf" opacity="0.6"/>
+  <circle cx="150" cy="52"  r="2.0" fill="#fbbf24" opacity="0.65"/>
+  <circle cx="151" cy="148" r="2.2" fill="#a78bfa"  opacity="0.55"/>
+  <circle cx="9"   cy="142" r="1.8" fill="#f9a8d4"  opacity="0.55"/>
+
 </svg>
