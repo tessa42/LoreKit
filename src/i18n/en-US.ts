@@ -210,7 +210,7 @@ export const en = {
   auth_signup_done_desc:         'A confirmation link is on its way. Click it to activate your account, then sign in.',
 
   // ── Footer ───────────────────────────────────────────────────────────────────
-  footer_tagline:  'AI worldbuilding toolkit for fiction writers · Ages 13+',
+  footer_tagline:  'AI worldbuilding toolkit for creators · Ages 13+',
   footer_terms:    'Terms of Service',
   footer_privacy:  'Privacy Policy',
 

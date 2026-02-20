@@ -15,7 +15,7 @@ export const ko: Record<TranslationKey, string> = {
   nutrients_title: '영양분 — 세계관 기능 AI 사용 크레딧',
 
   // ── Home ─────────────────────────────────────────────────────────────────────
-  home_subtitle:           '소설 작가를 위한 AI 세계관 툴킷. 지혜로운 고양이와 함께 당신만의 세계를 빚고, 검증하고, 탐험해 볼 수 있어요.',
+  home_subtitle:           '창작자를 위한 AI 세계관 툴킷. 지혜로운 고양이와 함께 당신만의 세계를 빚고, 검증하고, 탐험해 볼 수 있어요.',
   home_start_building:     '지금 시작하기',
   home_try_simulator:      '시뮬레이터 체험하기',
   home_lorecraft_subtitle: '나만의 세계관 창조',
@@ -212,7 +212,7 @@ export const ko: Record<TranslationKey, string> = {
   auth_signup_done_desc:         '인증 링크를 보내드렸어요. 클릭해서 계정을 활성화하고 로그인해 볼까요?',
 
   // ── Footer ───────────────────────────────────────────────────────────────────
-  footer_tagline:  '소설 작가를 위한 AI 세계관 툴킷 · 만 13세 이상',
+  footer_tagline:  '창작자를 위한 AI 세계관 툴킷 · 만 13세 이상',
   footer_terms:    '서비스 이용약관',
   footer_privacy:  '개인정보 처리방침',
 
