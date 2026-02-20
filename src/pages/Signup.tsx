@@ -12,7 +12,6 @@ export default function Signup() {
   const [password, setPassword] = useState('');
   const [confirm,  setConfirm]  = useState('');
   const [error,    setError]    = useState<string | null>(null);
-  const [done,     setDone]     = useState(false);
   const [busy,     setBusy]     = useState(false);
 
   async function handleSubmit(e: FormEvent) {
@@ -39,27 +38,11 @@ export default function Signup() {
         body:    JSON.stringify({ email }),
       }).catch(() => {/* non-critical */});
 
-      setDone(true);
-      setTimeout(() => navigate('/'), 4000);
+      navigate('/');
     }
   }
 
   if (loading) return null;
-
-  // Post-signup confirmation screen
-  if (done) {
-    return (
-      <div className="page-wrapper">
-        <div className="auth-page animate-fade-up">
-          <div className="card auth-card auth-card--done">
-            <div className="auth-done-icon">🐱</div>
-            <h2>{t('auth_signup_done_title')}</h2>
-            <p>{t('auth_signup_done_desc')}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="page-wrapper">
