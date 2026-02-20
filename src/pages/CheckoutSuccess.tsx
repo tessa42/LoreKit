@@ -1,9 +1,16 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLang } from '../i18n';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function CheckoutSuccess() {
   const { t } = useLang();
   const navigate = useNavigate();
+  const { refetchSeeds } = useAuth();
+
+  useEffect(() => {
+    refetchSeeds();
+  }, [refetchSeeds]);
 
   return (
     <div className="page-wrapper">

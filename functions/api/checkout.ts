@@ -36,14 +36,14 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     return json({ error: 'Polar not configured' }, 503);
   }
 
-  let body: { productId?: string; customerEmail?: string };
+  let body: { productId?: string; customerEmail?: string; userId?: string };
   try {
     body = await request.json() as typeof body;
   } catch {
     return json({ error: 'Invalid JSON body' }, 400);
   }
 
-  const { productId, customerEmail } = body;
+  const { productId, customerEmail, userId } = body;
 
   if (!productId || !ALLOWED_PRODUCTS.has(productId)) {
     return json({ error: 'Invalid productId' }, 400);
@@ -56,7 +56,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     products:    [productId],
     success_url: successUrl,
   };
-  if (customerEmail) payload['customer_email'] = customerEmail;
+  if (customerEmail) payload['customer_email']    = customerEmail;
+  if (userId)        payload['customer_external_id'] = userId;
 
   try {
     const res = await fetch(`${POLAR_API}/checkouts/`, {

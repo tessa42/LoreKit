@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function Header() {
   const { lang, setLang, t } = useLang();
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, seeds } = useAuth();
   const navigate  = useNavigate();
   const location  = useLocation();
   const onPricing = location.pathname === '/pricing';
@@ -74,7 +74,7 @@ export default function Header() {
             aria-label={t('nutrients_title')}
           >
             <span className="nutrients-badge__icon">🌱</span>
-            <span className="nutrients-badge__value">250</span>
+            <span className="nutrients-badge__value">{seeds}</span>
             <span className="nutrients-badge__label">{t('nutrients_label')}</span>
           </button>
 

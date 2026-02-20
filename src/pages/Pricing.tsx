@@ -91,7 +91,7 @@ export default function Pricing() {
       const res = await fetch('/api/checkout', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId, customerEmail: user?.email }),
+        body: JSON.stringify({ productId, customerEmail: user?.email, userId: user?.id }),
       });
 
       const data = await res.json() as { url?: string; error?: string };

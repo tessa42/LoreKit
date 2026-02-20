@@ -25,6 +25,30 @@ interface Env {
   POLAR_ACCESS_TOKEN:   string;
   POLAR_WEBHOOK_SECRET: string;
   RESEND_API_KEY:       string;
+  SUPABASE_URL:         string;
+  SUPABASE_SERVICE_KEY: string;
+}
+
+// ─── Supabase seed helpers ────────────────────────────────────────────────────
+async function callSeedsRpc(
+  env: Env,
+  fn: 'add_seeds' | 'remove_seeds',
+  userId: string,
+  amount: number,
+): Promise<void> {
+  const res = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method:  'POST',
+    headers: {
+      'Content-Type':  'application/json',
+      'apikey':        env.SUPABASE_SERVICE_KEY,
+      'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+    },
+    body: JSON.stringify({ p_user_id: userId, p_amount: amount }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Supabase RPC ${fn} failed: ${text}`);
+  }
 }
 
 // ─── Nutrients to grant per product ──────────────────────────────────────────
@@ -75,8 +99,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
       console.log(`[webhook] order.paid — product=${productId} user=${externalUserId} nutrients=+${nutrients}`);
 
-      // TODO: credit Nutrients to the user in Supabase
-      // await supabase.rpc('add_nutrients', { user_id: externalUserId, amount: nutrients });
+      if (externalUserId && nutrients && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
+        await callSeedsRpc(env, 'add_seeds', externalUserId, nutrients);
+        console.log(`[webhook] seeds credited: user=${externalUserId} +${nutrients}`);
+      }
 
       if (customerEmail && productId && orderId && env.RESEND_API_KEY) {
         const { subject, html } = purchaseEmail(customerEmail, productId, orderId);
@@ -114,8 +140,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       const nutrients      = productId ? (NUTRIENTS_BY_PRODUCT[productId] ?? 0) : 0;
       console.log(`[webhook] order.refunded — product=${productId} user=${externalUserId} nutrients=-${nutrients}`);
 
-      // TODO: deduct Nutrients from the user in Supabase
-      // await supabase.rpc('remove_nutrients', { user_id: externalUserId, amount: nutrients });
+      if (externalUserId && nutrients && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
+        await callSeedsRpc(env, 'remove_seeds', externalUserId, nutrients);
+        console.log(`[webhook] seeds deducted: user=${externalUserId} -${nutrients}`);
+      }
 
       if (customerEmail && productId && orderId && env.RESEND_API_KEY) {
         const { subject, html } = refundEmail(customerEmail, productId, orderId);
