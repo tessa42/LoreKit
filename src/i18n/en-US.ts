@@ -220,6 +220,7 @@ export const en = {
   pricing_per_month:        '/ mo',
   pricing_one_time:         'one-time',
   pricing_yearly:           '/ yr',
+  pricing_seeds_note:       'Seeds never expire and power every AI feature — LoreCraft, LoreCheck, and Simulator.',
   checkout_success_eyebrow: '✦ LoreKit',
   checkout_success_title:   'Payment Successful',
   checkout_success_desc:    'Your Nutrients have been credited. Start building your world.',

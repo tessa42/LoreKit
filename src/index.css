@@ -2203,6 +2203,22 @@ p  { color: var(--text-secondary); }
   flex: 1;
 }
 .plan-card__cta { margin-top: auto; }
+.plan-card--highlight {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 1px var(--teal), 0 0 24px color-mix(in srgb, var(--teal) 20%, transparent);
+}
+.plan-card__popular {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: var(--teal);
+  letter-spacing: 0.04em;
+}
+.plan-card__price-label {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+}
 
 /* Skeleton */
 .plan-card--skeleton { pointer-events: none; }

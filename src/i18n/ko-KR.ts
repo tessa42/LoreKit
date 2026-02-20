@@ -222,6 +222,7 @@ export const ko: Record<TranslationKey, string> = {
   pricing_per_month:        '/ 월',
   pricing_one_time:         '1회 결제',
   pricing_yearly:           '/ 년',
+  pricing_seeds_note:       '씨앗은 만료되지 않으며 LoreCraft · LoreCheck · Simulator 모든 AI 기능에 사용됩니다.',
   checkout_success_eyebrow: '✦ LoreKit',
   checkout_success_title:   '결제가 완료됐어요',
   checkout_success_desc:    '영양분이 계정에 충전됐어요. 지금 바로 세계관을 만들어 볼까요?',

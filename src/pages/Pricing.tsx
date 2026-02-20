@@ -1,94 +1,77 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLang } from '../i18n';
 import { useAuth } from '../contexts/AuthContext';
 
-interface PolarPrice {
-  id:                 string;
-  price_amount:       number;
-  price_currency:     string;
-  type:               'one_time' | 'recurring';
-  recurring_interval?: 'month' | 'year';
-  is_archived:        boolean;
-}
-
-interface PolarProduct {
-  id:          string;
-  name:        string;
-  description: string | null;
-  prices:      PolarPrice[];
-}
-
-function formatPrice(price: PolarPrice, t: (k: string) => string): string {
-  const amount = (price.price_amount / 100).toLocaleString('en-US', {
-    style:    'currency',
-    currency: price.price_currency.toUpperCase(),
-    maximumFractionDigits: 0,
-  });
-  if (price.type === 'recurring') {
-    return `${amount}${price.recurring_interval === 'year' ? t('pricing_yearly') : t('pricing_per_month')}`;
-  }
-  return `${amount} ${t('pricing_one_time')}`;
-}
-
-function getActivePrice(product: PolarProduct): PolarPrice | undefined {
-  return product.prices.find(p => !p.is_archived);
-}
+// ─── Product catalogue (matches Polar sandbox) ────────────────────────────────
+const PLANS = [
+  {
+    id:          'ecc31cfc-ffe1-4e5c-9432-0ffdac8a0fa3',
+    nameKo:      '세계수 씨앗 5개',
+    nameEn:      '5 World-Tree Seeds',
+    price:       '$4.99',
+    priceLabel:  'one-time',
+    badge:       'badge-violet',
+    highlight:   false,
+  },
+  {
+    id:          '5f9f2e9f-1a05-401d-8257-5391ab39c04c',
+    nameKo:      '세계수 씨앗 12개',
+    nameEn:      '12 World-Tree Seeds',
+    price:       '$9.99',
+    priceLabel:  'one-time',
+    badge:       'badge-teal',
+    highlight:   true,
+  },
+  {
+    id:          '494592b3-c33e-48f3-a88d-c5dc0bad8467',
+    nameKo:      '세계수 씨앗 30개',
+    nameEn:      '30 World-Tree Seeds',
+    price:       '$23.99',
+    priceLabel:  'one-time',
+    badge:       'badge-gold',
+    highlight:   false,
+  },
+] as const;
 
 // ─── Plan card ────────────────────────────────────────────────────────────────
 function PlanCard({
-  product,
+  plan,
   index,
   onBuy,
   busy,
 }: {
-  product: PolarProduct;
-  index:   number;
-  onBuy:   (productId: string) => void;
-  busy:    string | null;
+  plan:  typeof PLANS[number];
+  index: number;
+  onBuy: (id: string) => void;
+  busy:  string | null;
 }) {
-  const { t } = useLang();
-  const price  = getActivePrice(product);
-  const accents = ['badge-violet', 'badge-teal', 'badge-gold'];
-  const accent  = accents[index % accents.length];
+  const { t, lang } = useLang();
+  const name = lang === 'ko-KR' ? plan.nameKo : plan.nameEn;
 
   return (
-    <div className={`plan-card animate-fade-up`} style={{ animationDelay: `${index * 80}ms` }}>
+    <div
+      className={`plan-card animate-fade-up${plan.highlight ? ' plan-card--highlight' : ''}`}
+      style={{ animationDelay: `${index * 80}ms` }}
+    >
       <div className="plan-card__header">
-        <span className={`badge ${accent}`}>{product.name}</span>
+        <span className={`badge ${plan.badge}`}>{name}</span>
+        {plan.highlight && <span className="plan-card__popular">✦ Best value</span>}
       </div>
 
-      {price && (
-        <div className="plan-card__price">
-          {formatPrice(price, t as (k: string) => string)}
-        </div>
-      )}
-
-      {product.description && (
-        <p className="plan-card__desc">{product.description}</p>
-      )}
+      <div className="plan-card__price">
+        {plan.price}
+        <span className="plan-card__price-label">&nbsp;{plan.priceLabel}</span>
+      </div>
 
       <button
         type="button"
         className="btn btn-teal btn-lg plan-card__cta"
-        onClick={() => onBuy(product.id)}
+        onClick={() => onBuy(plan.id)}
         disabled={!!busy}
       >
-        {busy === product.id ? '🌀 …' : t('pricing_cta')}
+        {busy === plan.id ? '🌀 …' : t('pricing_cta')}
       </button>
-    </div>
-  );
-}
-
-// ─── Skeleton card ────────────────────────────────────────────────────────────
-function SkeletonCard({ delay }: { delay: number }) {
-  return (
-    <div className="plan-card plan-card--skeleton animate-fade-up" style={{ animationDelay: `${delay}ms` }}>
-      <div className="skeleton skeleton--badge" />
-      <div className="skeleton skeleton--price" />
-      <div className="skeleton skeleton--line" />
-      <div className="skeleton skeleton--line skeleton--line-short" />
-      <div className="skeleton skeleton--btn" />
     </div>
   );
 }
@@ -98,48 +81,29 @@ export default function Pricing() {
   const { t }    = useLang();
   const { user } = useAuth();
   const navigate = useNavigate();
-
-  const [products, setProducts] = useState<PolarProduct[]>([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState<string | null>(null);
-  const [busy,     setBusy]     = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch('/api/products')
-      .then(r => r.json())
-      .then((data: unknown) => {
-        if (Array.isArray(data)) {
-          setProducts(data as PolarProduct[]);
-        } else {
-          setError(t('pricing_error'));
-        }
-      })
-      .catch(() => setError(t('pricing_error')))
-      .finally(() => setLoading(false));
-  }, [t]);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleBuy(productId: string) {
     setBusy(productId);
+    setError(null);
     try {
       const res = await fetch('/api/checkout', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productId,
-          customerEmail: user?.email,
-        }),
+        body: JSON.stringify({ productId, customerEmail: user?.email }),
       });
 
       const data = await res.json() as { url?: string; error?: string };
 
       if (!res.ok || !data.url) {
-        alert(data.error ?? t('pricing_error'));
+        setError(data.error ?? t('pricing_error'));
         return;
       }
 
       window.location.href = data.url;
     } catch {
-      alert(t('pricing_error'));
+      setError(t('pricing_error'));
     } finally {
       setBusy(null);
     }
@@ -154,31 +118,23 @@ export default function Pricing() {
         <p>{t('pricing_desc')}</p>
       </section>
 
-      {loading && (
-        <div className="plan-grid">
-          {[0, 1, 2].map(i => <SkeletonCard key={i} delay={i * 80} />)}
-        </div>
-      )}
+      <div className="plan-grid">
+        {PLANS.map((p, i) => (
+          <PlanCard key={p.id} plan={p} index={i} onBuy={handleBuy} busy={busy} />
+        ))}
+      </div>
 
-      {error && !loading && (
-        <div className="card animate-fade-up" style={{ textAlign: 'center', color: 'var(--rose)' }}>
+      {error && (
+        <div className="card animate-fade-up" style={{ textAlign: 'center', color: 'var(--rose)', marginTop: '1.5rem' }}>
           <p>{error}</p>
-          <button className="btn btn-ghost btn-sm" style={{ marginTop: '1rem' }} onClick={() => navigate(0)}>
+          <button className="btn btn-ghost btn-sm" style={{ marginTop: '0.75rem' }} onClick={() => { setError(null); navigate(0); }}>
             ↺ Retry
           </button>
         </div>
       )}
 
-      {!loading && !error && (
-        <div className="plan-grid">
-          {products.map((p, i) => (
-            <PlanCard key={p.id} product={p} index={i} onBuy={handleBuy} busy={busy} />
-          ))}
-        </div>
-      )}
-
       <p className="pricing-note animate-fade-up">
-        🐱 &nbsp;Nutrients power LoreCraft, LoreCheck, and Simulator. They never expire.
+        🌱 &nbsp;{t('pricing_seeds_note')}
       </p>
 
     </div>
