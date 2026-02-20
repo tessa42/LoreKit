@@ -41,7 +41,7 @@ export default function Home() {
   return (
     <div className="page-wrapper--wide">
       <section className="hero animate-fade-in">
-        <img src="/cat-mascot.png" className="hero__cat" alt="" aria-hidden="true" />
+        <img src="/cat-hero.png" className="hero__cat" alt="" aria-hidden="true" />
         <h1 className="hero__title">LoreKit</h1>
         <p className="hero__subtitle">{t('home_subtitle')}</p>
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
