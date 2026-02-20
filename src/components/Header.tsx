@@ -8,7 +8,7 @@ export default function Header() {
     <header className="site-header">
       <div className="site-header__inner">
         <NavLink to="/" className="site-header__logo">
-          <img src="/cat-mascot.svg" className="site-header__logo-cat" alt="" aria-hidden="true" />
+          <img src="/cat-mascot.png" className="site-header__logo-cat" alt="" aria-hidden="true" />
           <span className="site-header__logo-text">LoreKit</span>
         </NavLink>
 
