@@ -552,6 +552,15 @@ p  { color: var(--text-secondary); }
   white-space: nowrap;
   flex-shrink: 0;
 }
+.nutrients-badge--btn {
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.nutrients-badge--btn:hover,
+.nutrients-badge--btn.active {
+  background: rgba(212,175,55,0.18);
+  border-color: var(--gold);
+}
 .nutrients-badge__icon {
   color: var(--gold);
   font-size: 0.7rem;

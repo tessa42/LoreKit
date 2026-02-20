@@ -1,11 +1,13 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useLang } from '../i18n';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Header() {
   const { lang, setLang, t } = useLang();
   const { user, loading, signOut } = useAuth();
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const onPricing = location.pathname === '/pricing';
 
   async function handleSignOut() {
     await signOut();
@@ -39,12 +41,6 @@ export default function Header() {
           >
             Simulator
           </NavLink>
-          <NavLink
-            to="/pricing"
-            className={({ isActive }) => 'nav-link nav-link--pricing' + (isActive ? ' active' : '')}
-          >
-            {t('nav_pricing')}
-          </NavLink>
         </nav>
 
         <div className="site-header__right">
@@ -69,6 +65,19 @@ export default function Header() {
             </button>
           </div>
 
+          {/* Seeds button — shows balance, navigates to /pricing */}
+          <button
+            type="button"
+            className={`nutrients-badge nutrients-badge--btn${onPricing ? ' active' : ''}`}
+            onClick={() => navigate('/pricing')}
+            title={t('nutrients_title')}
+            aria-label={t('nutrients_title')}
+          >
+            <span className="nutrients-badge__icon">🌱</span>
+            <span className="nutrients-badge__value">250</span>
+            <span className="nutrients-badge__label">{t('nutrients_label')}</span>
+          </button>
+
           {/* Auth icon */}
           {!loading && (
             <button
@@ -81,13 +90,6 @@ export default function Header() {
               👤
             </button>
           )}
-
-          {/* Nutrients balance */}
-          <div className="nutrients-badge" title={t('nutrients_title')}>
-            <span className="nutrients-badge__icon">✦</span>
-            <span className="nutrients-badge__value">250</span>
-            <span className="nutrients-badge__label">{t('nutrients_label')}</span>
-          </div>
 
         </div>
       </div>

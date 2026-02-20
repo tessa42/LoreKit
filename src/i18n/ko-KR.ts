@@ -11,8 +11,8 @@ export const ko: Record<TranslationKey, string> = {
   nav_lorecraft:   'LoreCraft',
   nav_lorecheck:   'LoreCheck',
   nav_simulator:   '시뮬레이터',
-  nutrients_label: '영양분',
-  nutrients_title: '영양분 — 세계관 기능 AI 사용 크레딧',
+  nutrients_label: '씨앗',
+  nutrients_title: '세계수 씨앗 — 클릭하여 구매',
 
   // ── Home ─────────────────────────────────────────────────────────────────────
   home_subtitle:           '창작자를 위한 AI 세계관 툴킷. 지혜로운 고양이와 함께 당신만의 세계를 빚고, 검증하고, 탐험해 볼 수 있어요.',

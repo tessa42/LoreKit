@@ -9,8 +9,8 @@ export const en = {
   nav_lorecraft:    'LoreCraft',
   nav_lorecheck:    'LoreCheck',
   nav_simulator:    'Simulator',
-  nutrients_label:  'Nutrients',
-  nutrients_title:  'Nutrients — AI usage credits for worldbuilding features',
+  nutrients_label:  'Seeds',
+  nutrients_title:  'World-Tree Seeds — click to get more',
 
   // ── Home ─────────────────────────────────────────────────────────────────────
   home_subtitle:           'Your AI-powered worldbuilding toolkit — craft, verify, and explore fictional worlds with a wise cat at your side.',
