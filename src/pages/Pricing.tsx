@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useLang } from '../i18n';
 import { useAuth } from '../contexts/AuthContext';
 
-// ─── Product catalogue (matches Polar sandbox) ────────────────────────────────
+// ─── Product catalogue (production Polar) ─────────────────────────────────────
 const PLANS = [
   {
-    id:          'ecc31cfc-ffe1-4e5c-9432-0ffdac8a0fa3',
+    id:          'b297051d-b196-4c47-8d1d-438b2f625d58',
     nameKo:      '세계수 씨앗 5개',
     nameEn:      '5 World-Tree Seeds',
     price:       '$4.99',
@@ -15,7 +15,7 @@ const PLANS = [
     highlight:   false,
   },
   {
-    id:          '5f9f2e9f-1a05-401d-8257-5391ab39c04c',
+    id:          'eb7df972-16ef-4d6f-8955-492eb8521a39',
     nameKo:      '세계수 씨앗 12개',
     nameEn:      '12 World-Tree Seeds',
     price:       '$9.99',
@@ -24,7 +24,7 @@ const PLANS = [
     highlight:   true,
   },
   {
-    id:          '494592b3-c33e-48f3-a88d-c5dc0bad8467',
+    id:          'ece78c7b-fb38-4c50-9338-2926a8ab2f8f',
     nameKo:      '세계수 씨앗 30개',
     nameEn:      '30 World-Tree Seeds',
     price:       '$23.99',

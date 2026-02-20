@@ -2,7 +2,7 @@
  * GET /api/products
  *
  * Returns Polar product details for the three LoreKit Nutrients plans.
- * Calls the Polar sandbox API and forwards the relevant fields to the
+ * Calls the Polar API and forwards the relevant fields to the
  * frontend so the Pricing page can render real names, prices, and
  * descriptions without hardcoding them.
  */
@@ -11,11 +11,11 @@ interface Env {
   POLAR_ACCESS_TOKEN: string;
 }
 
-const POLAR_API   = 'https://sandbox-api.polar.sh/v1';
+const POLAR_API   = 'https://api.polar.sh/v1';
 const PRODUCT_IDS = [
-  'ecc31cfc-ffe1-4e5c-9432-0ffdac8a0fa3',
-  '5f9f2e9f-1a05-401d-8257-5391ab39c04c',
-  '494592b3-c33e-48f3-a88d-c5dc0bad8467',
+  'b297051d-b196-4c47-8d1d-438b2f625d58',
+  'eb7df972-16ef-4d6f-8955-492eb8521a39',
+  'ece78c7b-fb38-4c50-9338-2926a8ab2f8f',
 ] as const;
 
 export const onRequestGet: PagesFunction<Env> = async ({ env }) => {

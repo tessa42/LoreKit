@@ -2,17 +2,19 @@
  * POST /api/webhook
  *
  * Receives and verifies Polar webhook events.
- * Register this URL in the Polar sandbox dashboard:
- *   https://sandbox.polar.sh → Settings → Webhooks → Add Endpoint
+ * Register this URL in the Polar dashboard:
+ *   https://polar.sh → Settings → Webhooks → Add Endpoint
  *   URL: https://<your-deployment>.pages.dev/api/webhook
  *
  * Required env var: POLAR_WEBHOOK_SECRET  (from the Polar dashboard)
  *
  * Handled events
  * ──────────────
- * order.paid           → one-time purchase confirmed  (grant Nutrients)
- * subscription.active  → subscription started         (grant Nutrients)
- * subscription.updated → plan changed
+ * order.paid            → one-time purchase confirmed  (grant Nutrients)
+ * order.refunded        → purchase refunded            (revoke Nutrients)
+ * refund.created        → refund initiated
+ * subscription.active   → subscription started         (grant Nutrients)
+ * subscription.updated  → plan changed
  * subscription.canceled → subscription ended
  */
 
@@ -25,9 +27,9 @@ interface Env {
 
 // ─── Nutrients to grant per product ──────────────────────────────────────────
 const NUTRIENTS_BY_PRODUCT: Record<string, number> = {
-  'ecc31cfc-ffe1-4e5c-9432-0ffdac8a0fa3': 500,
-  '5f9f2e9f-1a05-401d-8257-5391ab39c04c': 2000,
-  '494592b3-c33e-48f3-a88d-c5dc0bad8467': 999999, // unlimited tier
+  'b297051d-b196-4c47-8d1d-438b2f625d58': 500,    //  5 seeds
+  'eb7df972-16ef-4d6f-8955-492eb8521a39': 2000,   // 12 seeds
+  'ece78c7b-fb38-4c50-9338-2926a8ab2f8f': 999999, // 30 seeds (unlimited)
 };
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
@@ -89,6 +91,24 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       console.log(`[webhook] subscription.canceled — user=${externalUserId}`);
 
       // TODO: revoke subscription benefits in Supabase
+      break;
+    }
+
+    case 'order.refunded': {
+      const productId      = (data?.['product'] as Record<string, unknown>)?.['id'] as string | undefined;
+      const externalUserId = (data?.['customer'] as Record<string, unknown>)?.['external_id'] as string | undefined;
+      const nutrients      = productId ? (NUTRIENTS_BY_PRODUCT[productId] ?? 0) : 0;
+      console.log(`[webhook] order.refunded — product=${productId} user=${externalUserId} nutrients=-${nutrients}`);
+
+      // TODO: deduct Nutrients from the user in Supabase
+      // await supabase.rpc('remove_nutrients', { user_id: externalUserId, amount: nutrients });
+      break;
+    }
+
+    case 'refund.created': {
+      const orderId = data?.['order_id'] as string | undefined;
+      const amount  = data?.['amount']   as number | undefined;
+      console.log(`[webhook] refund.created — order=${orderId} amount=${amount}`);
       break;
     }
 
