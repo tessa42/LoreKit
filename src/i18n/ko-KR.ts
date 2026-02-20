@@ -12,10 +12,10 @@ export const ko: Record<TranslationKey, string> = {
   nav_lorecheck:   'LoreCheck',
   nav_simulator:   '시뮬레이터',
   nutrients_label: '영양분',
-  nutrients_title: '영양분 — 세계관 크레딧',
+  nutrients_title: '영양분 — 세계관 기능 AI 사용 크레딧',
 
   // ── Home ─────────────────────────────────────────────────────────────────────
-  home_subtitle:           '세계관 창작자를 위한 마법의 동반자. 지혜로운 고양이와 함께 당신만의 세계를 빚고, 검증하고, 탐험해 볼 수 있어요.',
+  home_subtitle:           '소설 작가를 위한 AI 세계관 툴킷. 지혜로운 고양이와 함께 당신만의 세계를 빚고, 검증하고, 탐험해 볼 수 있어요.',
   home_start_building:     '지금 시작하기',
   home_try_simulator:      '시뮬레이터 체험하기',
   home_lorecraft_subtitle: '나만의 세계관 창조',
@@ -25,7 +25,7 @@ export const ko: Record<TranslationKey, string> = {
   home_lorecheck_desc:     '설정, 장면, 시놉시스를 붙여넣으면 LoreKit이 개연성의 틈을 잡아냅니다. 독자가 느끼지만 말로 표현하지 못하는 것들이에요.',
   home_lorecheck_cta:      '세계관 검증하기 →',
   home_simulator_subtitle: '이야기 미리보기',
-  home_simulator_desc:     '이름을 입력하고 분위기를 선택하면 LoreKit이 고대 세계에서 당신의 캐릭터 카드를 소환합니다.',
+  home_simulator_desc:     '이름과 분위기를 선택하면 LoreKit이 12개의 창작 세계 중 한 곳에 당신의 캐릭터를 배치한 픽션 카드를 생성합니다.',
   home_simulator_cta:      '포털 입장하기 →',
   home_cat_quote:          '"어떤 세계든 나름의 논리가 있어요. 제 일은 그 논리가 어디서 꺾이는지 찾는 거랍니다." — LoreKit',
 
@@ -210,6 +210,11 @@ export const ko: Record<TranslationKey, string> = {
   auth_go_login:                 '로그인',
   auth_signup_done_title:        '이메일을 확인해 주세요',
   auth_signup_done_desc:         '인증 링크를 보내드렸어요. 클릭해서 계정을 활성화하고 로그인해 볼까요?',
+
+  // ── Footer ───────────────────────────────────────────────────────────────────
+  footer_tagline:  '소설 작가를 위한 AI 세계관 툴킷 · 만 13세 이상',
+  footer_terms:    '서비스 이용약관',
+  footer_privacy:  '개인정보 처리방침',
 
   // ── ReportView ───────────────────────────────────────────────────────────────
   report_world_overview:     '세계관 개요',

@@ -10,10 +10,10 @@ export const en = {
   nav_lorecheck:    'LoreCheck',
   nav_simulator:    'Simulator',
   nutrients_label:  'Nutrients',
-  nutrients_title:  'Nutrients — your worldbuilding credits',
+  nutrients_title:  'Nutrients — AI usage credits for worldbuilding features',
 
   // ── Home ─────────────────────────────────────────────────────────────────────
-  home_subtitle:           'Your enchanted companion for worldbuilding — craft, verify, and explore fictional worlds with a wise cat at your side.',
+  home_subtitle:           'Your AI-powered worldbuilding toolkit — craft, verify, and explore fictional worlds with a wise cat at your side.',
   home_start_building:     'Start Building',
   home_try_simulator:      'Try the Simulator',
   home_lorecraft_subtitle: 'Create Your World',
@@ -23,7 +23,7 @@ export const en = {
   home_lorecheck_desc:     'Paste any lore, scene, or worldbuilding passage. LoreKit scans for plausibility tensions and serves up crisp, actionable insights.',
   home_lorecheck_cta:      'Check your lore →',
   home_simulator_subtitle: 'Preview Your Story',
-  home_simulator_desc:     'Drop your name and a vibe. Receive a character-story card pulled from the ancient worlds.',
+  home_simulator_desc:     'Drop your name and a vibe. Receive a fictional character card placed in one of twelve handcrafted worlds.',
   home_simulator_cta:      'Enter the portal →',
   home_cat_quote:          '"Every world has a logic. My job is to find where yours bends." — LoreKit',
 
@@ -152,7 +152,7 @@ export const en = {
   // ── Simulator ────────────────────────────────────────────────────────────────
   sim_eyebrow:          '✨ Simulator',
   sim_title:            'Step Through the Portal',
-  sim_desc:             'Enter your name, choose a vibe, add a portrait. LoreKit will summon your character card from one of the ancient worlds.',
+  sim_desc:             'A creative fiction tool. Enter your name, choose a vibe, add a portrait — LoreKit places your character in one of twelve handcrafted worlds.',
   sim_name_label:       'Your Name',
   sim_name_placeholder: 'What shall we call you, wanderer?',
   sim_vibe_label:       'Vibe',
@@ -208,6 +208,11 @@ export const en = {
   auth_go_login:                 'Sign in',
   auth_signup_done_title:        'Check Your Email',
   auth_signup_done_desc:         'A confirmation link is on its way. Click it to activate your account, then sign in.',
+
+  // ── Footer ───────────────────────────────────────────────────────────────────
+  footer_tagline:  'AI worldbuilding toolkit for fiction writers · Ages 13+',
+  footer_terms:    'Terms of Service',
+  footer_privacy:  'Privacy Policy',
 
   // ── ReportView ───────────────────────────────────────────────────────────────
   report_world_overview:      'World Overview',

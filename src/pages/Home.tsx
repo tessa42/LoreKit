@@ -74,9 +74,10 @@ export default function Home() {
         ))}
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: '4rem', paddingBottom: '2rem' }}>
-        <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
-          🐱 &nbsp; {t('home_cat_quote')}
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '4rem', paddingBottom: '2rem' }}>
+        <p style={{ display: 'flex', alignItems: 'center', gap: '0.4em', fontSize: '0.78rem', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
+          <img src="/icon.png" alt="" aria-hidden="true" style={{ width: '2rem', height: '2rem', flexShrink: 0 }} />
+          {t('home_cat_quote')}
         </p>
       </div>
     </div>

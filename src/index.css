@@ -461,8 +461,9 @@ p  { color: var(--text-secondary); }
   letter-spacing: 0.04em;
 }
 .site-header__logo-cat {
-  font-size: 1.4rem;
-  line-height: 1;
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
 }
 .site-header__nav {
   display: flex;
@@ -2144,4 +2145,90 @@ p  { color: var(--text-secondary); }
 }
 .auth-icon-btn:hover          { filter: brightness(3.5); }
 .auth-icon-btn--active        { filter: brightness(1) drop-shadow(0 0 6px var(--teal)); color: var(--teal); }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Site Footer
+   ════════════════════════════════════════════════════════════════════════════ */
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: var(--sp-xl) var(--sp-lg);
+  margin-top: var(--sp-3xl);
+}
+.site-footer__inner {
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-xs);
+  text-align: center;
+}
+.site-footer__tagline {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+.site-footer__links {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  font-size: 0.72rem;
+}
+.site-footer__links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.site-footer__links a:hover { color: var(--text-secondary); }
+.site-footer__sep { color: var(--border); }
+.site-footer__copy {
+  font-size: 0.68rem;
+  color: var(--border);
+  margin: 0;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Legal pages (Terms / Privacy)
+   ════════════════════════════════════════════════════════════════════════════ */
+.legal-page {
+  max-width: 680px;
+  margin: var(--sp-3xl) auto;
+  padding: 0 var(--sp-md);
+}
+.legal-page h1 {
+  font-size: 2rem;
+  color: var(--text-primary);
+  margin-bottom: var(--sp-xs);
+}
+.legal-page__updated {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: var(--sp-xl);
+}
+.legal-page section {
+  margin-bottom: var(--sp-xl);
+}
+.legal-page h2 {
+  font-size: 1rem;
+  color: var(--teal);
+  margin-bottom: var(--sp-sm);
+  letter-spacing: 0.03em;
+}
+.legal-page p,
+.legal-page li {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+}
+.legal-page ul {
+  padding-left: 1.4em;
+  margin: var(--sp-sm) 0;
+}
+.legal-page li { margin-bottom: var(--sp-xs); }
+.legal-page a {
+  color: var(--teal);
+  text-decoration: none;
+}
+.legal-page a:hover { text-decoration: underline; }
 .auth-icon-btn--active:hover  { opacity: 0.8; }
