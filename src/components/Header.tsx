@@ -63,39 +63,17 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Auth cluster */}
+          {/* Auth icon */}
           {!loading && (
-            user ? (
-              <div className="auth-cluster">
-                <span className="auth-cluster__email" title={user.email}>
-                  {user.email}
-                </span>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={handleSignOut}
-                >
-                  {t('auth_signout_btn')}
-                </button>
-              </div>
-            ) : (
-              <div className="auth-cluster">
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => navigate('/login')}
-                >
-                  {t('auth_login_btn')}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-teal btn-sm"
-                  onClick={() => navigate('/signup')}
-                >
-                  {t('auth_signup_btn')}
-                </button>
-              </div>
-            )
+            <button
+              type="button"
+              className={`auth-icon-btn ${user ? 'auth-icon-btn--active' : ''}`}
+              onClick={user ? handleSignOut : () => navigate('/login')}
+              title={user ? `${user.email} — ${t('auth_signout_btn')}` : t('auth_login_btn')}
+              aria-label={user ? t('auth_signout_btn') : t('auth_login_btn')}
+            >
+              👤
+            </button>
           )}
 
           {/* Nutrients balance */}

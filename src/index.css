@@ -2128,25 +2128,19 @@ p  { color: var(--text-secondary); }
   color: var(--rose);
 }
 
-/* ─── Header auth cluster ─────────────────────────────────────────────────── */
-.auth-cluster {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-xs);
+/* ─── Header auth icon ────────────────────────────────────────────────────── */
+.auth-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0.25rem;
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
+  transition: color 0.15s, opacity 0.15s;
   flex-shrink: 0;
 }
-.auth-cluster__email {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  max-width: 130px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-@media (max-width: 768px) {
-  .auth-cluster__email { display: none; }
-}
-@media (max-width: 480px) {
-  .auth-cluster { display: none; }
-}
+.auth-icon-btn:hover          { color: var(--text-primary); }
+.auth-icon-btn--active        { color: var(--teal); }
+.auth-icon-btn--active:hover  { opacity: 0.75; }
