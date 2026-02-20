@@ -221,7 +221,7 @@ export default function Terms() {
           <h2>16. Contact</h2>
           <p>
             For questions about these Terms, please contact us at{' '}
-            <a href="mailto:support@lorekit.app">support@lorekit.app</a>.
+            <a href="mailto:tessaxlii@gmail.com">tessaxlii@gmail.com</a>.
           </p>
         </section>
       </div>

@@ -165,7 +165,7 @@ export default function Privacy() {
             LoreKit is not directed at children under 13. We do not knowingly collect personal
             information from children under 13. If you are a parent or guardian and believe
             your child has provided us with personal data, please contact us at{' '}
-            <a href="mailto:support@lorekit.app">support@lorekit.app</a> and we will promptly
+            <a href="mailto:tessaxlii@gmail.com">tessaxlii@gmail.com</a> and we will promptly
             delete the information and terminate the account.
           </p>
         </section>
@@ -185,7 +185,7 @@ export default function Privacy() {
           </ul>
           <p>
             To exercise any of these rights, contact us at{' '}
-            <a href="mailto:support@lorekit.app">support@lorekit.app</a>. We will respond
+            <a href="mailto:tessaxlii@gmail.com">tessaxlii@gmail.com</a>. We will respond
             within 30 days.
           </p>
           <p>
@@ -228,7 +228,7 @@ export default function Privacy() {
           <p>
             For privacy-related inquiries, data requests, or to report a concern, please
             contact us at{' '}
-            <a href="mailto:support@lorekit.app">support@lorekit.app</a>.
+            <a href="mailto:tessaxlii@gmail.com">tessaxlii@gmail.com</a>.
           </p>
         </section>
       </div>

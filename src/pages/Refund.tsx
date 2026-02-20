@@ -70,7 +70,7 @@ export default function Refund() {
           <h2>4. How to Request a Refund</h2>
           <p>
             To request a refund, please email us at{' '}
-            <a href="mailto:support@lorekit.app">support@lorekit.app</a> with the following
+            <a href="mailto:tessaxlii@gmail.com">tessaxlii@gmail.com</a> with the following
             information:
           </p>
           <ul>
@@ -91,7 +91,7 @@ export default function Refund() {
           <p>
             If you believe a charge was made in error or you did not authorize a transaction,
             please contact us at{' '}
-            <a href="mailto:support@lorekit.app">support@lorekit.app</a> before initiating a
+            <a href="mailto:tessaxlii@gmail.com">tessaxlii@gmail.com</a> before initiating a
             chargeback with your bank. Chargebacks that are later found to be unwarranted may
             result in account suspension.
           </p>
@@ -114,7 +114,7 @@ export default function Refund() {
           <h2>7. Contact</h2>
           <p>
             For refund requests or billing questions, contact us at{' '}
-            <a href="mailto:support@lorekit.app">support@lorekit.app</a>.
+            <a href="mailto:tessaxlii@gmail.com">tessaxlii@gmail.com</a>.
           </p>
         </section>
       </div>
