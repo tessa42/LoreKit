@@ -62,7 +62,7 @@ function base(title: string, body: string): string {
         <td style="padding:20px 40px 28px;border-top:1px solid #2a2440;">
           <p style="margin:0;font-size:12px;color:#6b6880;line-height:1.6;">
             You're receiving this because you have a LoreKit account.<br/>
-            <a href="https://lorekit.app" style="color:#2dd4bf;text-decoration:none;">lorekit.app</a>
+            <a href="https://lorekit.cc" style="color:#2dd4bf;text-decoration:none;">lorekit.cc</a>
             &nbsp;·&nbsp;
             <a href="mailto:tessaxlii@gmail.com" style="color:#6b6880;text-decoration:none;">tessaxlii@gmail.com</a>
           </p>
@@ -110,7 +110,7 @@ export function welcomeEmail(email: string): { subject: string; html: string } {
     <table cellpadding="0" cellspacing="0">
       <tr>
         <td style="background:#2dd4bf;border-radius:8px;padding:12px 28px;">
-          <a href="https://lorekit.app" style="color:#07050f;font-size:14px;font-weight:700;text-decoration:none;">Start Building →</a>
+          <a href="https://lorekit.cc" style="color:#07050f;font-size:14px;font-weight:700;text-decoration:none;">Start Building →</a>
         </td>
       </tr>
     </table>
@@ -156,13 +156,13 @@ export function purchaseEmail(
     <table cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
       <tr>
         <td style="background:#2dd4bf;border-radius:8px;padding:12px 28px;">
-          <a href="https://lorekit.app/lorecraft" style="color:#07050f;font-size:14px;font-weight:700;text-decoration:none;">Start Building →</a>
+          <a href="https://lorekit.cc/lorecraft" style="color:#07050f;font-size:14px;font-weight:700;text-decoration:none;">Start Building →</a>
         </td>
       </tr>
     </table>
 
     <p style="margin:0;font-size:12px;color:#6b6880;line-height:1.6;">
-      Seeds never expire. Questions? Reply to this email or visit our <a href="https://lorekit.app/refund" style="color:#2dd4bf;text-decoration:none;">Refund Policy</a>.
+      Seeds never expire. Questions? Reply to this email or visit our <a href="https://lorekit.cc/refund" style="color:#2dd4bf;text-decoration:none;">Refund Policy</a>.
     </p>
   `);
   return { subject, html };
