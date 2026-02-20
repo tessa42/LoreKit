@@ -59,7 +59,7 @@ export default function Header() {
               onClick={() => setLang('ko-KR')}
               aria-pressed={lang === 'ko-KR'}
             >
-              한국어
+              KR
             </button>
           </div>
 
