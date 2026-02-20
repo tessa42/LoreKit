@@ -6,7 +6,7 @@
 const RESEND_API = 'https://api.resend.com/emails';
 
 // ── Update this to your verified Resend sender domain ──────────────────────
-export const FROM = 'LoreKit <hello@lorekit.app>';
+export const FROM = 'LoreKit <hello@lorekit.cc>';
 
 interface SendEmailOptions {
   to:      string;
