@@ -474,21 +474,16 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // ── Spend seeds ────────────────────────────────────────────────────────────
   let userId: string | undefined;
   if (env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
-    try {
-      const seedResult = await spendSeeds(
-        env.SUPABASE_URL,
-        env.SUPABASE_SERVICE_KEY,
-        request.headers.get('Authorization'),
-        SEEDS_COST,
-      );
-      if (!seedResult.ok) {
-        return jsonError(seedResult.error ?? 'Seeds error.', seedResult.status ?? 400);
-      }
-      userId = seedResult.userId;
-    } catch (e) {
-      console.error('[lorecraft] spendSeeds error:', e);
-      return jsonError('Failed to process seeds. Please try again.', 500);
+    const seedResult = await spendSeeds(
+      env.SUPABASE_URL,
+      env.SUPABASE_SERVICE_KEY,
+      request.headers.get('Authorization'),
+      SEEDS_COST,
+    );
+    if (!seedResult.ok) {
+      return jsonError(seedResult.error ?? 'Seeds error.', seedResult.status ?? 400);
     }
+    userId = seedResult.userId;
   }
 
   // ── AI call (refund seeds on failure) ──────────────────────────────────────

@@ -30,13 +30,17 @@ interface Env {
 }
 
 // ─── Supabase seed helpers ────────────────────────────────────────────────────
+function supabaseBase(url: string): string {
+  return url.replace(/\/+$/, '');
+}
+
 async function callSeedsRpc(
   env: Env,
   fn: 'add_seeds' | 'remove_seeds',
   userId: string,
   amount: number,
 ): Promise<void> {
-  const res = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+  const res = await fetch(`${supabaseBase(env.SUPABASE_URL)}/rest/v1/rpc/${fn}`, {
     method:  'POST',
     headers: {
       'Content-Type':  'application/json',
