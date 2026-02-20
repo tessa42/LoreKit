@@ -1,9 +1,10 @@
 /**
  * POST /api/lorecraft
  *
- * Accepts a structured worldbuilding form and returns a deep verification
- * report as a typed JSON object so the frontend can render each section
- * independently without parsing markdown.
+ * Accepts a structured worldbuilding form and returns a deep worldbuilding
+ * research dossier as a typed JSON object. Each section contains scholarly
+ * prose paragraphs describing the world as if it exists — not a validation
+ * or critique, not advice to the creator.
  *
  * Input
  * ─────
@@ -16,7 +17,7 @@
  *     genre?: string, techLevel?: string, environmentCondition?: string,
  *     // hybrid
  *     baseTimePeriod?: string, baseLocation?: string, genreLayer?: string,
- *     deviations?: Record<string, string>,   // e.g. { supernatural: "major" }
+ *     deviations?: Record<string, string>,
  *     motif?: string,
  *   },
  *   extraContext?: string,
@@ -28,10 +29,9 @@
  * {
  *   title: string,
  *   overview: string,
- *   sections: Array<{ id, title, paragraphs, bullets?, table? }>,
- *   assumptions: string[],
- *   uncertaintyFlags: string[],
- *   suggestedNextChecks: string[],
+ *   sections: Array<{ id, title, paragraphs: string[] }>,
+ *   sourcesAndAssumptions?: string[],
+ *   uncertaintyNotes?: string[],
  * }
  */
 
@@ -62,7 +62,6 @@ interface HybridFields {
   baseTimePeriod: string;
   baseLocation:   string;
   genreLayer:     string;
-  /** e.g. { climate: "minor", supernatural: "major" } */
   deviations?:    Record<string, string>;
   motif?:         string;
 }
@@ -80,17 +79,14 @@ interface ReportSection {
   id:         string;
   title:      string;
   paragraphs: string[];
-  bullets?:   string[];
-  table?:     { headers: string[]; rows: string[][] };
 }
 
 interface LoreCraftReport {
-  title:               string;
-  overview:            string;
-  sections:            ReportSection[];
-  assumptions:         string[];
-  uncertaintyFlags:    string[];
-  suggestedNextChecks: string[];
+  title:                  string;
+  overview:               string;
+  sections:               ReportSection[];
+  sourcesAndAssumptions?: string[];
+  uncertaintyNotes?:      string[];
 }
 
 // ─── Validation ───────────────────────────────────────────────────────────────
@@ -152,13 +148,11 @@ function isValidReport(obj: unknown): obj is LoreCraftReport {
     typeof r['title']    === 'string' &&
     typeof r['overview'] === 'string' &&
     Array.isArray(r['sections']) &&
-    Array.isArray(r['assumptions']) &&
-    Array.isArray(r['uncertaintyFlags']) &&
-    Array.isArray(r['suggestedNextChecks'])
+    (r['sections'] as unknown[]).length >= 4
   );
 }
 
-// ─── Shared: world input block ────────────────────────────────────────────────
+// ─── World input block (shared) ───────────────────────────────────────────────
 function worldBlock(body: LoreCraftRequest): string {
   const lines: string[] = [];
   const { worldType, fields } = body;
@@ -166,257 +160,288 @@ function worldBlock(body: LoreCraftRequest): string {
   if (worldType === 'reality') {
     const f = fields as RealityFields;
     lines.push(
-      '## World Type: Historical Reality',
-      `- **Time Period:** ${f.timePeriod}`,
-      `- **Location / Region:** ${f.location}`,
+      '## World Specification: Historical Reality',
+      `- Time Period: ${f.timePeriod}`,
+      `- Location / Region: ${f.location}`,
     );
   } else if (worldType === 'fiction') {
     const f = fields as FictionFields;
-    lines.push('## World Type: Fictional World', `- **Genre:** ${f.genre}`);
-    if (f.techLevel)            lines.push(`- **Technology Level:** ${f.techLevel}`);
-    if (f.environmentCondition) lines.push(`- **Environment / Conditions:** ${f.environmentCondition}`);
+    lines.push('## World Specification: Fictional World', `- Genre: ${f.genre}`);
+    if (f.techLevel)            lines.push(`- Technology Level: ${f.techLevel}`);
+    if (f.environmentCondition) lines.push(`- Environmental Conditions: ${f.environmentCondition}`);
   } else {
     const f = fields as HybridFields;
     lines.push(
-      '## World Type: Hybrid (Reality + Fiction)',
+      '## World Specification: Historical-Speculative Hybrid',
       '',
-      '### Reality Anchor — these rules ALWAYS hold, never bend them:',
-      `- **Base Time Period:** ${f.baseTimePeriod}`,
-      `- **Base Location:** ${f.baseLocation}`,
+      '### Historical Foundation:',
+      `- Base Time Period: ${f.baseTimePeriod}`,
+      `- Base Location: ${f.baseLocation}`,
       '',
-      '### Fictional Divergence Layer — these break or bend reality:',
-      `- **Genre Layer:** ${f.genreLayer}`,
+      '### Speculative Divergence Layer:',
+      `- Genre / Divergence Character: ${f.genreLayer}`,
     );
     if (f.deviations && Object.keys(f.deviations).length > 0) {
-      lines.push('- **Allowed Deviations (domain → severity):**');
+      lines.push('- Divergence Domains and Magnitude:');
       for (const [domain, severity] of Object.entries(f.deviations)) {
         lines.push(`  - ${domain}: ${severity}`);
       }
     }
-    if (f.motif) lines.push(`- **Core Motif / Themes:** ${f.motif}`);
+    if (f.motif) lines.push(`- Central Motif / Thematic Core: ${f.motif}`);
   }
 
   if (body.extraContext) {
-    lines.push('', '### Additional Context from the Creator:', body.extraContext);
+    lines.push('', '### Additional Research Notes:', body.extraContext);
   }
 
   return lines.join('\n');
 }
 
-// ─── English prompt ───────────────────────────────────────────────────────────
+// ─── Detect whether supernatural/fantasy elements are present ─────────────────
+function hasFantasyElements(body: LoreCraftRequest): boolean {
+  if (body.worldType === 'fiction') return true;
+  if (body.worldType === 'hybrid') {
+    const f = body.fields as HybridFields;
+    const devKeys = Object.keys(f.deviations ?? {});
+    if (devKeys.includes('supernatural')) return true;
+    const genre = (f.genreLayer ?? '').toLowerCase();
+    const motif = (f.motif ?? '').toLowerCase();
+    const fantasyTerms = ['fant', 'magic', 'myth', 'supernatural', 'spirit', 'god', 'divine', 'cosmic', 'horror', 'gothic'];
+    return fantasyTerms.some(t => genre.includes(t) || motif.includes(t));
+  }
+  return false;
+}
+
+// ─── English system + prompt ───────────────────────────────────────────────────
 const SYSTEM_EN =
-  'You are LoreKit, a meticulous and slightly mischievous assistant cat who specialises in worldbuilding consistency analysis for writers and creators. ' +
-  'You produce rigorous, well-reasoned reports that balance scholarly depth with creative insight. ' +
-  'You flag every assumption, never confabulate statistics, and mark uncertain estimates as approximations. ' +
-  'You respond ONLY with a valid JSON object — no surrounding prose, no markdown code fences.';
+  'You are a scholarly research analyst specializing in cultural geography, social history, and speculative world studies. ' +
+  'You produce authoritative research dossiers that describe worlds — real, fictional, or hybrid — with academic depth and precision. ' +
+  'Write in continuous prose: dense, confident, third-person analytical paragraphs in the present tense. ' +
+  'Describe the world as if it exists and has been studied. Do not reference "the author", "the story", "the creator", or "the fiction". ' +
+  'If supernatural or fantastical elements are present, treat them as internal reality and analyze their social, spatial, and material consequences as a scholar would. ' +
+  'Never evaluate, advise, or critique. Never use words such as "fragile", "inconsistency", "verdict", "rating", "you should", "consider fixing", "strength", or "weakness". ' +
+  'Avoid bullet points and tables entirely. Write in connected prose paragraphs only. ' +
+  'Output only a valid JSON object — no surrounding prose, no markdown code fences.';
 
 function buildPromptEN(body: LoreCraftRequest): string {
-  const hybridNote = body.worldType === 'hybrid'
-    ? '- HYBRID RULE: The Reality Anchor is immutable ground truth. Only the domains listed under Allowed Deviations may diverge, and only up to the stated severity. Do not invent additional deviations.\n'
-    : '';
+  const mythSection = hasFantasyElements(body) ? `,
+    {
+      "id": "myth-supernatural-system",
+      "title": "Cosmology and Supernatural Systems",
+      "paragraphs": [
+        "Describe the cosmological order and how metaphysical or supernatural forces are understood to operate within this world. Two or more full paragraphs.",
+        "Describe how these forces manifest materially: their institutional expressions, spatial presences, ritual economies, and consequences for social organization."
+      ]
+    }` : '';
 
   return `\
 ${worldBlock(body)}
 
 ---
 
-Generate a comprehensive worldbuilding verification report as a single JSON object matching EXACTLY this structure (output raw JSON only, no markdown fences):
+Produce a deep worldbuilding research dossier for the world described above.
+Output a single JSON object matching EXACTLY this schema (raw JSON only, no markdown fences):
 
 {
-  "title": "Short evocative world title, 3–6 words",
-  "overview": "2–3 paragraphs synthesising the world's essence, atmosphere, and what makes it distinctive.",
+  "title": "An evocative, scholarly dossier title — 4–8 words, naming the world, civilisation, or epoch under study",
+  "overview": "2–4 dense prose paragraphs synthesizing the world's spatial situation, historical moment, dominant social forces, environmental character, and defining atmosphere. Present tense, third person, scholarly register.",
   "sections": [
     {
-      "id": "internal-logic",
-      "title": "Internal Logic Assessment",
-      "paragraphs": ["Evaluative paragraph on overall coherence — what holds together and what is fragile."],
-      "bullets": [
-        "Strength: <observation>",
-        "Strength: <observation>",
-        "Fragility: <observation>",
-        "Fragility: <observation>"
-      ]
-    },
-    {
-      "id": "world-laws",
-      "title": "Key World Laws",
-      "paragraphs": [],
-      "table": {
-        "headers": ["Law", "Strength", "Note"],
-        "rows": [
-          ["Concise law statement", "Strong | Moderate | Fragile", "One-sentence implication for stories set here"]
-        ]
-      }
-    },
-    {
-      "id": "tensions",
-      "title": "Potential Tensions & Paradoxes",
-      "paragraphs": [],
-      "table": {
-        "headers": ["Tension", "Severity", "Suggested Resolution"],
-        "rows": [
-          ["Tension name — brief description of the contradiction or unresolved question", "Low | Medium | High", "One concrete path the creator could take"]
-        ]
-      }
-    },
-    {
-      "id": "narrative-hooks",
-      "title": "Narrative Opportunities",
-      "paragraphs": [],
-      "bullets": [
-        "Hook title: 2–3 sentence description of the story possibility this world naturally generates."
-      ]
-    },
-    {
-      "id": "checklist",
-      "title": "Worldbuilder's Checklist",
-      "paragraphs": [],
-      "bullets": [
-        "Question phrased as something the creator must decide before writing (e.g. 'Have you defined what happens when …?')"
-      ]
-    },
-    {
-      "id": "verdict",
-      "title": "LoreKit's Verdict",
+      "id": "spatial-morphology",
+      "title": "Spatial Morphology and Settlement Patterns",
       "paragraphs": [
-        "In-character paragraph from LoreKit the assistant cat — knowledgeable, a little witty, warm and honest.",
-        "✦✦✦✦☆ 4/5 — One-sentence summary of the rating rationale."
+        "Paragraph 1 (4–6 sentences): Describe macro-geography — territorial extent, topographic character, dominant landscape types, relationship between land and population distribution.",
+        "Paragraph 2 (4–6 sentences): Describe micro-spatial logic — how settlements are organized, how people orient themselves, how space is divided between public, private, sacred, and productive uses."
       ]
-    }
+    },
+    {
+      "id": "climate-environment",
+      "title": "Climate, Ecology, and Environmental Forces",
+      "paragraphs": [
+        "Paragraph 1 (4–6 sentences): Describe prevailing climate systems, seasonal rhythms, ecological zones, and how the environment conditions agriculture, movement, and shelter.",
+        "Paragraph 2 (4–6 sentences): Describe resource distribution, environmental pressures — scarcity or abundance — and how the natural world figures in the collective imagination and cosmology."
+      ]
+    },
+    {
+      "id": "built-environment-architecture",
+      "title": "Built Environment and Architecture",
+      "paragraphs": [
+        "Paragraph 1 (4–6 sentences): Describe the character of settlements — their scale, materials, density, and spatial organization. What do structures communicate about power, hierarchy, and communal life?",
+        "Paragraph 2 (4–6 sentences): Describe vernacular versus monumental building traditions, the spatial grammar of public space, and how the built world mediates between social order and natural environment."
+      ]
+    },
+    {
+      "id": "economy-industry",
+      "title": "Economy, Production, and Trade",
+      "paragraphs": [
+        "Paragraph 1 (4–6 sentences): Describe the dominant mode of production — agricultural, extractive, industrial, or otherwise — its scale, geography, and labor organization.",
+        "Paragraph 2 (4–6 sentences): Describe trade flows, market structures, currency or exchange systems, and how economic activity structures space and social relations."
+      ]
+    },
+    {
+      "id": "demographics-social-hierarchy",
+      "title": "Demographics and Social Hierarchy",
+      "paragraphs": [
+        "Paragraph 1 (4–6 sentences): Describe population composition, settlement density, demographic dynamics, and patterns of mobility or migration.",
+        "Paragraph 2 (4–6 sentences): Describe the structure of social hierarchy — its organizing axes (class, caste, lineage, ability, species), mechanisms of reproduction, and characteristic expressions in everyday life."
+      ]
+    },
+    {
+      "id": "culture-norms-collective-psychology",
+      "title": "Culture, Norms, and Collective Psychology",
+      "paragraphs": [
+        "Paragraph 1 (4–6 sentences): Describe dominant value systems, cultural practices, ritual life, aesthetic sensibilities, and the role of art, story, or performance in social reproduction.",
+        "Paragraph 2 (4–6 sentences): Describe the collective emotional register — what this society fears, desires, celebrates, and suppresses; how individual psychology is shaped by collective life."
+      ]
+    },
+    {
+      "id": "infrastructure-technology-everyday-life",
+      "title": "Infrastructure, Technology, and Everyday Life",
+      "paragraphs": [
+        "Paragraph 1 (4–6 sentences): Describe the technological substrate of the world — energy sources, communication systems, transport networks, food and water infrastructure.",
+        "Paragraph 2 (4–6 sentences): Describe the texture of ordinary daily life: what people do, how they move, what they consume, what rhythms and institutions structure their days."
+      ]
+    },
+    {
+      "id": "history-transition",
+      "title": "Historical Formation and Ongoing Transitions",
+      "paragraphs": [
+        "Paragraph 1 (4–6 sentences): Describe the world's historical trajectory — the formative events, ruptures, migrations, and continuities that produced its present condition.",
+        "Paragraph 2 (4–6 sentences): Describe current transformations, structural pressures, and the historical forces — economic, environmental, political, cultural — that are actively reshaping the world at the moment of study."
+      ]
+    }${mythSection}
   ],
-  "assumptions": [
-    "Every factual assumption you made that the creator did not explicitly state. Tag real-world claims as '[Historical]' or '(approximation)'."
+  "sourcesAndAssumptions": [
+    "List every inference or assumption made to complete the dossier — geographic, historical, social. Tag real-world claims as [Historical] where applicable. Be exhaustive."
   ],
-  "uncertaintyFlags": [
-    "Anything ambiguous or potentially contradictory in the creator's inputs that they should clarify."
-  ],
-  "suggestedNextChecks": [
-    "Concrete follow-up action phrased as a recommendation, e.g. 'Run a LoreCheck on the economic model to test market plausibility.'"
+  "uncertaintyNotes": [
+    "List any aspects of the world where the input was ambiguous or insufficient for a confident analysis. Describe what was assumed in each case."
   ]
 }
 
 STRICT CONSTRAINTS:
-- Output ONLY the JSON object — no prose before or after.
-- world-laws table: exactly 5–7 rows.
-- tensions table: exactly 3–5 rows.
-- narrative-hooks bullets: 4–6 items.
-- checklist bullets: 5–8 items, each a question.
-- assumptions: list every inference you made. Never omit one.
-- uncertaintyFlags: flag ambiguity; do NOT silently resolve it by inventing details.
-- Do NOT fabricate statistics, population figures, or historical claims. If you must estimate, write "(approximation)" inline.
-${hybridNote}`;
+- Each section must have at least 2 paragraphs. Each paragraph must be substantive (minimum 4 sentences).
+- Write entirely in scholarly, analytical, present-tense prose. Never address the reader.
+- Zero evaluation language: no "fragile", "inconsistent", "strength", "weakness", "verdict", "rating", "fix", "consider", "you should", "the author should".
+- Zero reference to LoreKit, LoreCheck, or any external tool.
+- Output ONLY the JSON object — no text before or after.`;
 }
 
-// ─── Korean prompt ────────────────────────────────────────────────────────────
+// ─── Korean system + prompt ────────────────────────────────────────────────────
 const SYSTEM_KO =
-  '당신은 로어킷(LoreKit)입니다. 작가와 창작자를 위한 세계관 일관성 분석을 전문으로 하는 치밀하고 약간 장난스러운 고양이 조수입니다. ' +
-  '학문적 깊이와 창의적 통찰의 균형 잡힌 엄격한 보고서를 작성합니다. ' +
-  '모든 가정을 명시하고, 통계를 날조하지 않으며, 불확실한 추정은 "(추정)"으로 표시합니다. ' +
-  'JSON 내 산문은 반드시 존댓말(공손한 제안형)로 통일하며, 반말과 존댓말을 섞지 않습니다. ' +
-  '반드시 유효한 JSON 객체만 응답합니다 — 앞뒤 산문이나 마크다운 코드 펜스 없이.';
+  '당신은 문화지리학, 사회사, 사변적 세계 연구를 전문으로 하는 학술 연구 분석가입니다. ' +
+  '실재하는, 허구적인, 또는 혼합된 세계를 학문적 깊이와 정밀함으로 기술하는 권위 있는 연구 도서를 작성합니다. ' +
+  '연속된 산문으로 작성합니다 — 밀도 있고 자신감 있는 3인칭 분석적 단락, 현재 시제. ' +
+  '세계를 실제로 존재하고 연구된 대상처럼 기술합니다. "작가", "이야기", "창작자", "허구"를 절대 언급하지 않습니다. ' +
+  '초자연적이거나 환상적 요소가 있다면 내적 현실로 취급하며, 학자처럼 사회적·공간적·물질적 결과를 분석합니다. ' +
+  '절대 평가하거나 조언하거나 비판하지 않습니다. "취약함", "불일치", "평결", "평점", "해야 한다", "고려해야", "강점", "약점" 같은 단어를 사용하지 않습니다. ' +
+  '글머리표와 표를 완전히 배제합니다. 오직 연결된 산문 단락으로만 작성합니다. ' +
+  '유효한 JSON 객체만 출력합니다 — 앞뒤 산문이나 마크다운 코드 펜스 없이.';
 
 function buildPromptKO(body: LoreCraftRequest): string {
-  const hybridNote = body.worldType === 'hybrid'
-    ? '- 하이브리드 규칙: Reality Anchor는 불변의 기반 진실입니다. Allowed Deviations에 나열된 도메인만 벗어날 수 있으며, 명시된 심각도 이내로만 허용됩니다. 추가 이탈을 만들어내지 마세요.\n'
-    : '';
+  const mythSection = hasFantasyElements(body) ? `,
+    {
+      "id": "myth-supernatural-system",
+      "title": "우주론과 초자연 체계",
+      "paragraphs": [
+        "이 세계에서 형이상학적 또는 초자연적 힘이 어떻게 작동하는 것으로 이해되는지 우주론적 질서를 기술하는 2개 이상의 완전한 단락.",
+        "이러한 힘이 물질적으로 어떻게 나타나는지 — 제도적 표현, 공간적 현존, 의례적 경제, 사회 조직에 대한 결과."
+      ]
+    }` : '';
 
   return `\
 ${worldBlock(body)}
 
 ---
 
-아래 구조에 정확히 맞는 포괄적인 세계관 검증 보고서를 단일 JSON 객체로 생성하세요 (원시 JSON만 출력, 마크다운 펜스 없음).
-모든 산문 내용(title, overview, paragraphs, bullets의 내용, assumptions, uncertaintyFlags, suggestedNextChecks)은 한국어로 작성하세요.
+위에 기술된 세계에 대한 심층 세계관 연구 도서를 작성하세요.
+아래 스키마에 정확히 일치하는 단일 JSON 객체를 출력하세요 (원시 JSON만, 마크다운 펜스 없음).
+모든 산문 내용(title, overview, paragraphs, sourcesAndAssumptions, uncertaintyNotes)은 자연스러운 한국어 학술 문체로 작성하세요.
+section의 "id" 값은 반드시 아래 명시된 영어 그대로 유지하세요.
 
 {
-  "title": "3–6단어의 간결하고 인상적인 세계 제목 (한국어)",
-  "overview": "세계의 본질, 분위기, 독특한 특성을 종합하는 2–3개의 단락 (한국어)",
+  "title": "연구 대상 세계, 문명, 또는 시대를 명명하는 4–8단어의 인상적이고 학술적인 도서 제목 (한국어)",
+  "overview": "세계의 공간적 상황, 역사적 국면, 지배적 사회 세력, 환경적 특성, 그리고 고유한 분위기를 종합하는 2–4개의 밀도 있는 산문 단락. 현재 시제, 3인칭, 학술적 문체.",
   "sections": [
     {
-      "id": "internal-logic",
-      "title": "내부 논리 평가",
-      "paragraphs": ["전반적인 일관성 평가 단락 — 무엇이 유지되고 무엇이 취약한지 (한국어)"],
-      "bullets": [
-        "Strength: <한국어 관찰 내용>",
-        "Strength: <한국어 관찰 내용>",
-        "Fragility: <한국어 관찰 내용>",
-        "Fragility: <한국어 관찰 내용>"
-      ]
-    },
-    {
-      "id": "world-laws",
-      "title": "핵심 세계 법칙",
-      "paragraphs": [],
-      "table": {
-        "headers": ["Law", "Strength", "Note"],
-        "rows": [
-          ["간결한 법칙 서술 (한국어)", "Strong | Moderate | Fragile", "이야기에 미치는 함의 한 문장 (한국어)"]
-        ]
-      }
-    },
-    {
-      "id": "tensions",
-      "title": "잠재적 긴장과 역설",
-      "paragraphs": [],
-      "table": {
-        "headers": ["Tension", "Severity", "Suggested Resolution"],
-        "rows": [
-          ["긴장 이름 — 모순 또는 미해결 질문 간략 서술 (한국어)", "Low | Medium | High", "창작자가 취할 수 있는 구체적인 방향 한 가지 (한국어)"]
-        ]
-      }
-    },
-    {
-      "id": "narrative-hooks",
-      "title": "서사 기회",
-      "paragraphs": [],
-      "bullets": [
-        "후크 제목: 이 세계가 자연스럽게 생성하는 이야기 가능성 2–3문장 설명 (한국어)"
-      ]
-    },
-    {
-      "id": "checklist",
-      "title": "세계 건설자 체크리스트",
-      "paragraphs": [],
-      "bullets": [
-        "글쓰기 전에 창작자가 결정해야 할 사항을 질문 형식으로 (한국어, 예: '…일 때 어떤 일이 일어나는지 정했나요?')"
-      ]
-    },
-    {
-      "id": "verdict",
-      "title": "LoreKit의 평결",
+      "id": "spatial-morphology",
+      "title": "공간 형태와 정주 패턴",
       "paragraphs": [
-        "LoreKit 고양이 조수 캐릭터로 — 지식이 풍부하고 약간 재치 있으며 따뜻하고 솔직하게 (한국어)",
-        "✦✦✦✦☆ 4/5 — 평점 근거 한 문장 요약 (한국어)"
+        "단락 1 (4–6문장): 거시 지리학 — 영토적 범위, 지형적 특성, 지배적 경관 유형, 토지와 인구 분포의 관계.",
+        "단락 2 (4–6문장): 미시 공간 논리 — 정주지 조직, 방향 감각 체계, 공공·사적·신성·생산 공간의 구분."
       ]
-    }
+    },
+    {
+      "id": "climate-environment",
+      "title": "기후, 생태, 환경적 힘",
+      "paragraphs": [
+        "단락 1 (4–6문장): 지배적 기후 체계, 계절적 리듬, 생태 지대, 그리고 환경이 농업·이동·주거를 어떻게 조건 짓는가.",
+        "단락 2 (4–6문장): 자원 분포, 환경적 압력 — 결핍 또는 풍요 — 그리고 자연 세계가 집단적 상상력과 우주론에서 차지하는 위치."
+      ]
+    },
+    {
+      "id": "built-environment-architecture",
+      "title": "건조 환경과 건축",
+      "paragraphs": [
+        "단락 1 (4–6문장): 정주지의 특성 — 규모, 재료, 밀도, 공간 조직. 구조물이 권력, 위계, 공동체적 삶에 대해 무엇을 말하는가.",
+        "단락 2 (4–6문장): 토착적 건축과 기념비적 건축 전통, 공공 공간의 공간 문법, 건조 세계가 사회 질서와 자연 환경을 매개하는 방식."
+      ]
+    },
+    {
+      "id": "economy-industry",
+      "title": "경제, 생산, 교역",
+      "paragraphs": [
+        "단락 1 (4–6문장): 지배적 생산 양식 — 농업, 추출, 산업, 또는 기타 — 그 규모, 지리, 노동 조직.",
+        "단락 2 (4–6문장): 교역 흐름, 시장 구조, 화폐 또는 교환 체계, 경제 활동이 공간과 사회적 관계를 구조화하는 방식."
+      ]
+    },
+    {
+      "id": "demographics-social-hierarchy",
+      "title": "인구와 사회 위계",
+      "paragraphs": [
+        "단락 1 (4–6문장): 인구 구성, 정주 밀도, 인구 동태, 이동 또는 이주 패턴.",
+        "단락 2 (4–6문장): 사회 위계의 구조 — 조직 축(계급, 카스트, 혈통, 능력, 종족), 재생산 메커니즘, 일상생활에서의 특징적 표현."
+      ]
+    },
+    {
+      "id": "culture-norms-collective-psychology",
+      "title": "문화, 규범, 집단 심리",
+      "paragraphs": [
+        "단락 1 (4–6문장): 지배적 가치 체계, 문화적 실천, 의례 생활, 미적 감수성, 사회적 재생산에서 예술·이야기·공연의 역할.",
+        "단락 2 (4–6문장): 집단적 정서적 레지스터 — 이 사회가 두려워하고, 욕망하고, 기념하고, 억압하는 것; 집단적 삶이 개인 심리를 형성하는 방식."
+      ]
+    },
+    {
+      "id": "infrastructure-technology-everyday-life",
+      "title": "인프라, 기술, 일상생활",
+      "paragraphs": [
+        "단락 1 (4–6문장): 세계의 기술적 기반 — 에너지 원천, 통신 체계, 교통 네트워크, 식량 및 수자원 인프라.",
+        "단락 2 (4–6문장): 평범한 일상의 질감: 사람들이 하는 일, 이동 방식, 소비하는 것, 그들의 하루를 구조화하는 리듬과 제도."
+      ]
+    },
+    {
+      "id": "history-transition",
+      "title": "역사적 형성과 진행 중인 전환",
+      "paragraphs": [
+        "단락 1 (4–6문장): 세계의 역사적 궤적 — 현재의 상태를 만들어 낸 형성적 사건, 단절, 이주, 연속성.",
+        "단락 2 (4–6문장): 현재의 변환, 구조적 압력, 그리고 연구 시점에 세계를 적극적으로 재형성하고 있는 역사적 힘 — 경제적, 환경적, 정치적, 문화적."
+      ]
+    }${mythSection}
   ],
-  "assumptions": [
-    "창작자가 명시적으로 언급하지 않은 모든 사실적 가정 (한국어). 실제 역사적 주장은 '[Historical]' 또는 '(추정)'로 태그하세요."
+  "sourcesAndAssumptions": [
+    "도서를 완성하기 위해 이루어진 모든 추론 또는 가정 — 지리적, 역사적, 사회적. 실제 역사적 주장에는 [Historical] 태그 사용. 빠짐없이 나열할 것."
   ],
-  "uncertaintyFlags": [
-    "창작자 입력에서 모호하거나 잠재적으로 모순되어 명확히 해야 할 사항 (한국어)"
-  ],
-  "suggestedNextChecks": [
-    "권고 형식의 구체적인 후속 조치 (한국어, 예: '경제 모델에 대해 LoreCheck를 실행하여 시장 개연성을 테스트하세요.')"
+  "uncertaintyNotes": [
+    "입력이 모호하거나 자신 있는 분석에 불충분했던 세계의 측면을 나열하고, 각 경우 무엇을 가정했는지 기술하세요."
   ]
 }
 
 엄격한 제약:
-- JSON 객체만 출력 — 앞뒤 산문 없음.
-- 반드시 영어로 유지할 항목 (프론트엔드 파싱에 필수):
-  * section의 "id" 값: "internal-logic", "world-laws", "tensions", "narrative-hooks", "checklist", "verdict"
-  * table "headers" 배열: ["Law", "Strength", "Note"] 및 ["Tension", "Severity", "Suggested Resolution"]
-  * "Strength" 열 셀 값: 반드시 "Strong", "Moderate", "Fragile" 중 하나 (정확히 이 단어)
-  * "Severity" 열 셀 값: 반드시 "Low", "Medium", "High" 중 하나 (정확히 이 단어)
-  * internal-logic bullets의 접두사: 정확히 "Strength:" 또는 "Fragility:" (콜론 포함)
-- world-laws 테이블: 정확히 5–7행.
-- tensions 테이블: 정확히 3–5행.
-- narrative-hooks bullets: 4–6개.
-- checklist bullets: 5–8개, 각각 질문 형식.
-- assumptions: 모든 추론을 빠짐없이 나열하세요.
-- uncertaintyFlags: 모호함을 표시하되, 세부 사항을 만들어내어 조용히 해결하지 마세요.
-- 통계, 인구 수치, 역사적 주장을 날조하지 마세요. 추정 필요 시 "(추정)"를 인라인으로 표기하세요.
-${hybridNote}`;
+- 각 섹션은 최소 2개의 단락을 포함해야 합니다. 각 단락은 실질적이어야 합니다 (최소 4문장).
+- 완전히 학술적이고 분석적이며 현재 시제의 산문으로 작성하세요. 절대로 독자를 직접 언급하지 마세요.
+- 평가적 언어 금지: "취약함", "불일치", "강점", "약점", "평결", "평점", "수정", "고려", "해야 한다", "작가가 해야".
+- LoreKit, LoreCheck, 또는 외부 도구에 대한 언급 금지.
+- JSON 객체만 출력 — 앞뒤에 어떤 텍스트도 없이.`;
 }
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
@@ -441,8 +466,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (err) return jsonError(err, 400);
 
   const body = sanitise(raw as LoreCraftRequest);
-
-  const ko = isKorean(lang);
+  const ko   = isKorean(lang);
 
   let report: unknown;
   try {
@@ -451,8 +475,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       user:        ko ? buildPromptKO(body) : buildPromptEN(body),
       jsonSchema:  {},
       model:       'gpt-4o',
-      temperature: 0.55,
-      maxTokens:   2_800,
+      temperature: 0.35,
+      maxTokens:   4_500,
     });
   } catch (e) {
     if (e instanceof LLMError) {

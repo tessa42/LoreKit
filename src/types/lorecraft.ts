@@ -10,17 +10,14 @@ export interface ReportSection {
   id:         string;
   title:      string;
   paragraphs: string[];
-  bullets?:   string[];
-  table?:     { headers: string[]; rows: string[][] };
 }
 
 export interface LoreCraftReport {
-  title:               string;
-  overview:            string;
-  sections:            ReportSection[];
-  assumptions:         string[];
-  uncertaintyFlags:    string[];
-  suggestedNextChecks: string[];
+  title:                  string;
+  overview:               string;
+  sections:               ReportSection[];
+  sourcesAndAssumptions?: string[];
+  uncertaintyNotes?:      string[];
 }
 
 // ─── Form state (frontend only) ───────────────────────────────────────────────
