@@ -39,6 +39,12 @@ export default function Header() {
           >
             Simulator
           </NavLink>
+          <NavLink
+            to="/pricing"
+            className={({ isActive }) => 'nav-link nav-link--pricing' + (isActive ? ' active' : '')}
+          >
+            {t('nav_pricing')}
+          </NavLink>
         </nav>
 
         <div className="site-header__right">

@@ -209,6 +209,23 @@ export const en = {
   auth_signup_done_title:        'Check Your Email',
   auth_signup_done_desc:         'A confirmation link is on its way. Click it to activate your account, then sign in.',
 
+  // ── Pricing ──────────────────────────────────────────────────────────────────
+  nav_pricing:              'Pricing',
+  pricing_eyebrow:          '✦ Nutrients Plans',
+  pricing_title:            'Power Up Your Worlds',
+  pricing_desc:             'Choose a plan and fuel your worldbuilding with AI-powered LoreCraft, LoreCheck, and Simulator.',
+  pricing_loading:          'Loading plans…',
+  pricing_error:            'Could not load pricing. Please try again.',
+  pricing_cta:              'Get started',
+  pricing_per_month:        '/ mo',
+  pricing_one_time:         'one-time',
+  pricing_yearly:           '/ yr',
+  checkout_success_eyebrow: '✦ LoreKit',
+  checkout_success_title:   'Payment Successful',
+  checkout_success_desc:    'Your Nutrients have been credited. Start building your world.',
+  checkout_success_cta:     'Start building →',
+  checkout_success_orders:  'View your orders',
+
   // ── Footer ───────────────────────────────────────────────────────────────────
   footer_tagline:  'AI worldbuilding toolkit for creators · Ages 13+',
   footer_terms:    'Terms of Service',

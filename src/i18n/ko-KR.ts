@@ -211,6 +211,23 @@ export const ko: Record<TranslationKey, string> = {
   auth_signup_done_title:        '이메일을 확인해 주세요',
   auth_signup_done_desc:         '인증 링크를 보내드렸어요. 클릭해서 계정을 활성화하고 로그인해 볼까요?',
 
+  // ── Pricing ──────────────────────────────────────────────────────────────────
+  nav_pricing:              '요금제',
+  pricing_eyebrow:          '✦ 영양분 플랜',
+  pricing_title:            '세계를 더 깊이 파고들어요',
+  pricing_desc:             '플랜을 선택하고, AI 기반의 LoreCraft · LoreCheck · Simulator로 세계관 창작에 힘을 실어보세요.',
+  pricing_loading:          '플랜을 불러오는 중…',
+  pricing_error:            '요금제를 불러올 수 없어요. 다시 시도해 볼까요?',
+  pricing_cta:              '시작하기',
+  pricing_per_month:        '/ 월',
+  pricing_one_time:         '1회 결제',
+  pricing_yearly:           '/ 년',
+  checkout_success_eyebrow: '✦ LoreKit',
+  checkout_success_title:   '결제가 완료됐어요',
+  checkout_success_desc:    '영양분이 계정에 충전됐어요. 지금 바로 세계관을 만들어 볼까요?',
+  checkout_success_cta:     '시작하기 →',
+  checkout_success_orders:  '주문 내역 보기',
+
   // ── Footer ───────────────────────────────────────────────────────────────────
   footer_tagline:  '창작자를 위한 AI 세계관 툴킷 · 만 13세 이상',
   footer_terms:    '서비스 이용약관',
