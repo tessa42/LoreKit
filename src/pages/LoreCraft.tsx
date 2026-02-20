@@ -158,9 +158,8 @@ function FictionalFields({
 }
 
 function DeviationRow({
-  item, label, description, selected, level, onToggle, onLevel,
+  label, description, selected, level, onToggle, onLevel,
 }: {
-  item:        typeof DEVIATIONS[number];
   label:       string;
   description: string;
   selected:    boolean;
@@ -264,7 +263,6 @@ function HybridFields({
             {DEVIATIONS.map(item => (
               <DeviationRow
                 key={item.key}
-                item={item}
                 label={t(item.labelKey)}
                 description={t(item.descKey)}
                 selected={item.key in form.deviations}
