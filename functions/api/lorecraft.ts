@@ -493,9 +493,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       system:      ko ? SYSTEM_KO : SYSTEM_EN,
       user:        ko ? buildPromptKO(body) : buildPromptEN(body),
       jsonSchema:  {},
-      model:       'gpt-4o',
-      temperature: 0.35,
-      maxTokens:   4_500,
+      model:       'gpt-5.2-thinking',
+      temperature: 0.4,
+      maxTokens:   6_000,
     });
   } catch (e) {
     if (userId && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
