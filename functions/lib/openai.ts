@@ -76,7 +76,6 @@ export async function callLLM(
   const model   = opts.model ?? DEFAULTS.model;
   const isMini  = model === 'gpt-5-mini';
 
-  const textFormat = opts.jsonSchema ? 'json_object' : 'text';
   const body: Record<string, unknown> = {
     model,
     input: [
@@ -90,8 +89,8 @@ export async function callLLM(
       },
     ],
     text:              isMini
-      ? { format: { type: textFormat }, verbosity: 'medium' }
-      : { format: { type: textFormat } },
+      ? { format: { type: 'text' }, verbosity: 'medium' }
+      : { format: { type: 'text' } },
     max_output_tokens: opts.maxTokens ?? DEFAULTS.maxTokens,
     reasoning:         opts.reasoning ?? (isMini ? { effort: 'medium' } : {}),
     tools:             [],
