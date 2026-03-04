@@ -163,101 +163,78 @@ function worldList(): string {
 // ─── English prompt ───────────────────────────────────────────────────────────
 const SYSTEM_EN =
   'You are LoreKit, a magical assistant cat who assigns wanderers to interdimensional worlds and writes their character cards. ' +
-  'Your writing is mythic, poetic, and precise — like the opening page of a fantasy novel. ' +
-  'You make every visitor feel chosen. ' +
+  'Your writing is mythic, poetic, and precise. ' +
   'You respond ONLY with a valid JSON object — no surrounding prose, no markdown fences.';
 
 function buildPromptEN(name: string, vibe?: Vibe): string {
   const vibeNote = vibe
-    ? `Their vibe is **${vibe}** — weight your world choice and the card's tone toward worlds tagged "${vibe}".`
-    : 'No vibe was chosen — let the name alone guide the world choice and surprise them.';
+    ? `Vibe: **${vibe}** — favour worlds tagged "${vibe}" and match the card's tone.`
+    : 'No vibe — let the name guide the world choice.';
 
   return `\
-A visitor named **${name}** has stepped through the LoreKit portal.
-${vibeNote}
+Visitor: **${name}**. ${vibeNote}
 
 ### Available Worlds:
 ${worldList()}
 
-Pick the single best-fit world from the list above. Then write their character card.
-
-Return a single JSON object with EXACTLY this structure (raw JSON only, no markdown fences):
+Pick the best-fit world and write the character card as a JSON object (raw JSON only, no markdown fences):
 
 {
   "name": "${name}",
-  "assignedWorld": "The exact world name from the list — copied verbatim",
-  "roleArchetype": "A specific, evocative title unique to this world. Never a generic class. Examples: 'Cartographer of Unwritten Maps', 'Ember-Keeper of the Last Hearth', 'Debt-Collector of Borrowed Hours'.",
+  "assignedWorld": "Exact world name from the list — verbatim",
+  "roleArchetype": "Specific, evocative title unique to this world. Never a generic class (warrior/mage/rogue/hero).",
   "storyHookLines": [
-    "Line 1: set the scene of their arrival — cinematic, immediate, specific.",
-    "Line 2: reveal something unexpected they notice or feel in this world.",
-    "Line 3: introduce the gift or tension that marks them as different.",
-    "Line 4: hint at what they must face, choose, or sacrifice.",
-    "Line 5 (optional): deepen the mystery or raise the stakes one notch.",
-    "Line 6 (optional): a beat of quiet significance before the journey begins."
+    "Line 1: cinematic arrival — immediate and specific.",
+    "Line 2: something unexpected they notice or feel.",
+    "Line 3: the gift or tension that marks them as different.",
+    "Line 4: what they must face, choose, or sacrifice.",
+    "Line 5 (optional): raised stakes or deepened mystery.",
+    "Line 6 (optional): a beat of quiet significance."
   ],
-  "fateQuote": "One archaic-register sentence — a prophecy, a warning, or a promise. Memorable. No clichés."
+  "fateQuote": "One archaic-register sentence — prophecy, warning, or promise. Memorable, no clichés."
 }
 
-CONSTRAINTS:
-- assignedWorld: verbatim from the list. No paraphrasing.
-- roleArchetype: vivid and world-specific. Never "warrior", "mage", "rogue", "hero".
-- storyHookLines: 4–6 items. One sentence each. Lyrical but grounded.
-- fateQuote: exactly 1 sentence.
-- Tone matches the vibe: dark → tense/ominous; cozy → warm/gentle; tragic → elegiac/bittersweet; whimsical → playful-eerie.
-- Output ONLY the JSON object. No prose before or after.`;
+assignedWorld: verbatim. storyHookLines: 4–6 items, one sentence each, lyrical. fateQuote: exactly 1 sentence. Tone: dark→ominous, cozy→warm, tragic→elegiac, whimsical→playful-eerie. Output ONLY the JSON object.`;
 }
 
 // ─── Korean prompt ────────────────────────────────────────────────────────────
 const SYSTEM_KO =
-  '당신은 로어킷(LoreKit)입니다. 방문자들을 이차원 세계에 배정하고 그들의 캐릭터 카드를 작성하는 마법의 고양이 조수입니다. ' +
-  '당신의 글쓰기는 신화적이고, 시적이며, 정확합니다 — 판타지 소설의 첫 페이지처럼. ' +
-  '모든 방문자를 선택받은 느낌이 들게 합니다. ' +
+  '당신은 로어킷(LoreKit)입니다. 방문자들을 이차원 세계에 배정하고 캐릭터 카드를 작성하는 마법의 고양이 조수입니다. ' +
+  '글쓰기는 신화적이고 시적이며 정확합니다. ' +
   '반드시 유효한 JSON 객체만 응답합니다 — 앞뒤 산문이나 마크다운 펜스 없이.';
 
 function buildPromptKO(name: string, vibe?: Vibe): string {
   const vibeMap: Record<string, string> = {
-    dark:      '어두운 (tense/ominous 톤)',
-    cozy:      '아늑한 (warm/gentle 톤)',
-    tragic:    '비극적인 (elegiac/bittersweet 톤)',
-    whimsical: '환상적인 (playful-eerie 톤)',
+    dark: '어두운', cozy: '아늑한', tragic: '비극적인', whimsical: '환상적인',
   };
   const vibeNote = vibe
-    ? `방문자의 분위기는 **${vibe}** (${vibeMap[vibe]})입니다 — "${vibe}"로 태그된 세계를 우선하고 카드의 톤도 그에 맞춰주세요.`
-    : '분위기가 선택되지 않았습니다 — 이름만으로 세계 선택을 안내하고 방문자를 놀라게 해주세요.';
+    ? `분위기: **${vibe}** (${vibeMap[vibe]}) — "${vibe}" 태그 세계를 우선하고 카드 톤도 맞춰주세요.`
+    : '분위기 미선택 — 이름만으로 세계를 안내하세요.';
 
   return `\
-**${name}**이라는 방문자가 LoreKit 포털을 통해 들어왔습니다.
-${vibeNote}
+방문자: **${name}**. ${vibeNote}
 
-### 이용 가능한 세계 (영어 이름을 정확히 그대로 사용해야 함):
+### 이용 가능한 세계 (영어 이름 그대로 사용):
 ${worldList()}
 
-위 목록에서 가장 적합한 세계 하나를 선택하세요. 그런 다음 캐릭터 카드를 작성하세요.
-
-다음 구조에 정확히 맞는 단일 JSON 객체를 반환하세요 (원시 JSON만, 마크다운 펜스 없음).
-roleArchetype, storyHookLines, fateQuote는 한국어로 작성하세요.
+가장 적합한 세계를 선택하고 캐릭터 카드를 JSON으로 반환하세요 (원시 JSON만, 마크다운 펜스 없음). roleArchetype, storyHookLines, fateQuote는 한국어로, assignedWorld는 영어 그대로:
 
 {
   "name": "${name}",
-  "assignedWorld": "목록에 있는 정확한 세계 이름 — 영어 그대로 복사 (번역 금지)",
-  "roleArchetype": "이 세계에 특화된 구체적이고 인상적인 직함 (한국어). 일반적인 클래스명 금지. 예: '기록되지 않은 지도의 제도사', '마지막 난로의 불씨 수호자', '빌린 시간의 채권 추심인'",
+  "assignedWorld": "목록의 영어 이름 그대로 — 번역 금지",
+  "roleArchetype": "이 세계 특화 직함 (한국어). 전사·마법사·도적·영웅 같은 일반 클래스 금지.",
   "storyHookLines": [
-    "1번 줄: 도착 장면 설정 — 영화적이고 즉각적이며 구체적으로 (한국어)",
-    "2번 줄: 이 세계에서 예상치 못하게 느끼거나 알아채는 무언가 (한국어)",
-    "3번 줄: 그들을 다르게 만드는 선물 또는 긴장감 소개 (한국어)",
-    "4번 줄: 직면해야 할 것, 선택해야 할 것, 또는 희생해야 할 것에 대한 암시 (한국어)",
-    "5번 줄 (선택): 미스터리를 깊게 하거나 판돈을 한 단계 높이기 (한국어)",
-    "6번 줄 (선택): 여정이 시작되기 전의 조용한 의미의 순간 (한국어)"
+    "1번: 영화적 도착 장면 (한국어)",
+    "2번: 예상치 못한 발견 (한국어)",
+    "3번: 그들을 다르게 만드는 선물 또는 긴장감 (한국어)",
+    "4번: 직면해야 할 것 (한국어)",
+    "5번(선택): 판돈 상승 (한국어)",
+    "6번(선택): 조용한 의미의 순간 (한국어)"
   ],
-  "fateQuote": "고어체의 단 한 문장 — 예언, 경고, 또는 약속. 기억에 남도록. 클리셰 금지 (한국어)"
+  "fateQuote": "고어체 1문장 — 예언, 경고, 또는 약속 (한국어)"
 }
 
-제약:
-- assignedWorld: 목록의 영어 이름을 그대로 사용. 번역하거나 바꿔 쓰지 마세요.
-- roleArchetype: 생생하고 세계 특화적. "전사", "마법사", "도적", "영웅" 같은 단어 금지.
-- storyHookLines: 4–6개 항목. 각각 한 문장. 서정적이지만 현실적으로.
-- fateQuote: 정확히 1문장.
-- JSON 객체만 출력하세요. 앞뒤 산문 없음.`;
+assignedWorld: 영어 그대로. storyHookLines: 4–6개, 각 1문장, 서정적. fateQuote: 정확히 1문장. JSON 객체만 출력하세요.`;
 }
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
@@ -293,9 +270,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       system:      ko ? SYSTEM_KO : SYSTEM_EN,
       user:        ko ? buildPromptKO(name, vibe) : buildPromptEN(name, vibe),
       jsonSchema:  {},
-      model:       'gpt-4o-mini',
-      temperature: 0.88,
-      maxTokens:   420,
+      model:      'gpt-5-mini',
+      maxTokens:  1_200,
     });
   } catch (e) {
     if (e instanceof LLMError) {

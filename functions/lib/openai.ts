@@ -1,33 +1,23 @@
 /**
- * Thin server-side wrapper around the OpenAI Chat Completions API.
+ * Thin server-side wrapper around the OpenAI Chat Completions and Responses APIs.
  *
- * The OPENAI_API_KEY is read from the Cloudflare environment and is NEVER
- * returned to the browser — all calls happen inside Pages Functions.
+ * Model routing:
+ * • gpt-4o / gpt-4o-mini  →  /v1/chat/completions  (Chat Completions)
+ * • gpt-5.2 / gpt-5-mini  →  /v1/responses          (Responses API, reasoning)
  */
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+export type LLMModel = 'gpt-4o' | 'gpt-4o-mini' | 'gpt-5.2' | 'gpt-5-mini';
+
 export interface CallLLMOptions {
-  system:      string;
-  user:        string;
-  /** When provided the API is called in JSON mode and the response is parsed. */
-  jsonSchema?: Record<string, unknown>;
-  model?:      'gpt-4o' | 'gpt-4o-mini';
-  temperature?:number;
-  maxTokens?:  number;
-}
-
-interface OpenAIMessage {
-  role:    'system' | 'user' | 'assistant';
-  content: string;
-}
-
-interface OpenAIChoice {
-  message: { content: string };
-}
-
-interface OpenAIResponse {
-  choices?: OpenAIChoice[];
-  error?:   { message: string; code?: string };
+  system:       string;
+  user:         string;
+  /** When provided, response text is parsed as JSON and returned as an object. */
+  jsonSchema?:  Record<string, unknown>;
+  model?:       LLMModel;
+  /** Used only for Chat Completions models. Silently ignored for reasoning models. */
+  temperature?: number;
+  maxTokens?:   number;
 }
 
 // ─── Error class ──────────────────────────────────────────────────────────────
@@ -42,30 +32,18 @@ export class LLMError extends Error {
   }
 }
 
-// ─── Defaults ─────────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 const DEFAULTS = {
-  model:       'gpt-4o',
+  model:       'gpt-4o'  as LLMModel,
   temperature: 0.3,
   maxTokens:   1_500,
 } as const;
 
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
+const COMPLETIONS_URL  = 'https://api.openai.com/v1/chat/completions';
+const RESPONSES_URL    = 'https://api.openai.com/v1/responses';
+const RESPONSES_MODELS = new Set<string>(['gpt-5.2', 'gpt-5-mini']);
 
 // ─── Overloads ────────────────────────────────────────────────────────────────
-/**
- * Calls the OpenAI Chat Completions API.
- *
- * • With `jsonSchema` → enables JSON mode; returns the parsed object.
- * • Without `jsonSchema` → returns the raw text string.
- *
- * Throws {@link LLMError} on HTTP or API-level failures.
- *
- * @example — plain text
- *   const story = await callLLM(env.OPENAI_API_KEY, { system, user });
- *
- * @example — structured JSON
- *   const report = await callLLM(env.OPENAI_API_KEY, { system, user, jsonSchema: { ... } });
- */
 export async function callLLM(
   apiKey: string,
   opts:   CallLLMOptions & { jsonSchema: Record<string, unknown> },
@@ -80,34 +58,51 @@ export async function callLLM(
   apiKey: string,
   opts:   CallLLMOptions,
 ): Promise<string | unknown> {
-  const messages: OpenAIMessage[] = [
-    { role: 'system', content: opts.system },
-    { role: 'user',   content: opts.user   },
-  ];
+  const model        = opts.model ?? DEFAULTS.model;
+  const useResponses = RESPONSES_MODELS.has(model);
 
-  const body: Record<string, unknown> = {
-    model:       opts.model       ?? DEFAULTS.model,
-    temperature: opts.temperature ?? DEFAULTS.temperature,
-    max_tokens:  opts.maxTokens   ?? DEFAULTS.maxTokens,
-    messages,
-  };
+  // ── Build request body ─────────────────────────────────────────────────────
+  let reqBody: Record<string, unknown>;
 
-  if (opts.jsonSchema) {
-    body['response_format'] = { type: 'json_object' };
+  if (useResponses) {
+    reqBody = {
+      model,
+      input: [{
+        type:    'message',
+        role:    'user',
+        content: [{ type: 'input_text', text: opts.user }],
+      }],
+      instructions: opts.system,
+      text:         { format: { type: 'text' } },
+      reasoning:    { effort: 'medium' },
+    };
+    if (opts.maxTokens) reqBody['max_output_tokens'] = opts.maxTokens;
+  } else {
+    reqBody = {
+      model,
+      temperature: opts.temperature ?? DEFAULTS.temperature,
+      max_tokens:  opts.maxTokens   ?? DEFAULTS.maxTokens,
+      messages: [
+        { role: 'system', content: opts.system },
+        { role: 'user',   content: opts.user   },
+      ],
+    };
+    if (opts.jsonSchema) reqBody['response_format'] = { type: 'json_object' };
   }
 
+  // ── Fetch with 25 s abort ──────────────────────────────────────────────────
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 25_000);
+  const timer      = setTimeout(() => controller.abort(), 25_000);
 
   let res: Response;
   try {
-    res = await fetch(OPENAI_URL, {
+    res = await fetch(useResponses ? RESPONSES_URL : COMPLETIONS_URL, {
       method:  'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization:  `Bearer ${apiKey}`,
       },
-      body:   JSON.stringify(body),
+      body:   JSON.stringify(reqBody),
       signal: controller.signal,
     });
   } catch (err) {
@@ -119,17 +114,29 @@ export async function callLLM(
     clearTimeout(timer);
   }
 
-  const data = (await res.json()) as OpenAIResponse;
+  // ── Parse response ─────────────────────────────────────────────────────────
+  const data = await res.json() as Record<string, unknown>;
 
   if (!res.ok) {
+    const e = (data['error'] ?? {}) as Record<string, unknown>;
     throw new LLMError(
-      data.error?.message ?? 'OpenAI returned an error.',
+      (e['message'] as string) || `HTTP ${res.status}`,
       res.status,
-      data.error?.code,
+      e['code'] as string | undefined,
     );
   }
 
-  const content = data.choices?.[0]?.message?.content ?? '';
+  let content: string;
+  if (useResponses) {
+    const output     = (data['output']  as Array<Record<string, unknown>> | undefined) ?? [];
+    const msgItem    = output.find(o => o['type'] === 'message');
+    const contentArr = (msgItem?.['content'] as Array<Record<string, unknown>> | undefined) ?? [];
+    const textItem   = contentArr.find(c => c['type'] === 'output_text') ?? contentArr[0];
+    content          = (textItem?.['text'] as string) ?? '';
+  } else {
+    const choices = (data['choices'] as Array<{ message: { content: string } }> | undefined) ?? [];
+    content       = choices[0]?.message?.content ?? '';
+  }
 
   if (opts.jsonSchema) {
     try {

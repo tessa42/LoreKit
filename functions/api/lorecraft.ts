@@ -218,233 +218,84 @@ function hasFantasyElements(body: LoreCraftRequest): boolean {
 // ─── English system + prompt ───────────────────────────────────────────────────
 const SYSTEM_EN =
   'You are a scholarly research analyst specializing in cultural geography, social history, and speculative world studies. ' +
-  'You produce authoritative research dossiers that describe worlds — real, fictional, or hybrid — with academic depth and precision. ' +
-  'Write in continuous prose: dense, confident, third-person analytical paragraphs in the present tense. ' +
-  'Describe the world as if it exists and has been studied. Do not reference "the author", "the story", "the creator", or "the fiction". ' +
-  'If supernatural or fantastical elements are present, treat them as internal reality and analyze their social, spatial, and material consequences as a scholar would. ' +
-  'Never evaluate, advise, or critique. Never use words such as "fragile", "inconsistency", "verdict", "rating", "you should", "consider fixing", "strength", or "weakness". ' +
-  'Avoid bullet points and tables entirely. Write in connected prose paragraphs only. ' +
+  'Produce authoritative research dossiers describing worlds — real, fictional, or hybrid — with academic depth. ' +
+  'Write in dense, third-person, present-tense analytical prose. ' +
+  'Describe the world as if it exists and has been studied. Never reference "the author", "the story", "the creator", or "the fiction". ' +
+  'Treat supernatural elements as internal reality. Never evaluate, advise, or critique. ' +
+  'No evaluation language ("fragile", "inconsistency", "verdict", "rating", "strength", "weakness"). ' +
+  'No bullet points or tables — continuous prose paragraphs only. ' +
   'Output only a valid JSON object — no surrounding prose, no markdown code fences.';
 
 function buildPromptEN(body: LoreCraftRequest): string {
-  const mythSection = hasFantasyElements(body) ? `,
-    {
-      "id": "myth-supernatural-system",
-      "title": "Cosmology and Supernatural Systems",
-      "paragraphs": [
-        "Describe the cosmological order and how metaphysical or supernatural forces are understood to operate within this world. Two or more full paragraphs.",
-        "Describe how these forces manifest materially: their institutional expressions, spatial presences, ritual economies, and consequences for social organization."
-      ]
-    }` : '';
+  const mythSection = hasFantasyElements(body) ?
+    `,\n    {"id":"myth-supernatural-system","title":"Cosmology and Supernatural Systems","paragraphs":["Cosmological order: how supernatural or metaphysical forces are understood to operate in this world — their nature, logic, and the belief systems that have formed around them.","Material manifestations of these forces: institutional expressions, spatial presences, ritual economies, and consequences for social organization."]}` : '';
 
   return `\
 ${worldBlock(body)}
 
 ---
 
-Produce a deep worldbuilding research dossier for the world described above.
-Output a single JSON object matching EXACTLY this schema (raw JSON only, no markdown fences):
+Produce a deep worldbuilding research dossier as a single JSON object (raw JSON only, no markdown fences). Replace each paragraph placeholder with 4–6 sentences of dense scholarly prose.
 
 {
-  "title": "An evocative, scholarly dossier title — 4–8 words, naming the world, civilisation, or epoch under study",
-  "overview": "2–4 dense prose paragraphs synthesizing the world's spatial situation, historical moment, dominant social forces, environmental character, and defining atmosphere. Present tense, third person, scholarly register.",
+  "title": "4–8 word scholarly dossier title naming the world or epoch under study",
+  "overview": "2–4 dense prose paragraphs: the world's spatial situation, historical moment, dominant forces, environment, and defining atmosphere",
   "sections": [
-    {
-      "id": "spatial-morphology",
-      "title": "Spatial Morphology and Settlement Patterns",
-      "paragraphs": [
-        "Paragraph 1 (4–6 sentences): Describe macro-geography — territorial extent, topographic character, dominant landscape types, relationship between land and population distribution.",
-        "Paragraph 2 (4–6 sentences): Describe micro-spatial logic — how settlements are organized, how people orient themselves, how space is divided between public, private, sacred, and productive uses."
-      ]
-    },
-    {
-      "id": "climate-environment",
-      "title": "Climate, Ecology, and Environmental Forces",
-      "paragraphs": [
-        "Paragraph 1 (4–6 sentences): Describe prevailing climate systems, seasonal rhythms, ecological zones, and how the environment conditions agriculture, movement, and shelter.",
-        "Paragraph 2 (4–6 sentences): Describe resource distribution, environmental pressures — scarcity or abundance — and how the natural world figures in the collective imagination and cosmology."
-      ]
-    },
-    {
-      "id": "built-environment-architecture",
-      "title": "Built Environment and Architecture",
-      "paragraphs": [
-        "Paragraph 1 (4–6 sentences): Describe the character of settlements — their scale, materials, density, and spatial organization. What do structures communicate about power, hierarchy, and communal life?",
-        "Paragraph 2 (4–6 sentences): Describe vernacular versus monumental building traditions, the spatial grammar of public space, and how the built world mediates between social order and natural environment."
-      ]
-    },
-    {
-      "id": "economy-industry",
-      "title": "Economy, Production, and Trade",
-      "paragraphs": [
-        "Paragraph 1 (4–6 sentences): Describe the dominant mode of production — agricultural, extractive, industrial, or otherwise — its scale, geography, and labor organization.",
-        "Paragraph 2 (4–6 sentences): Describe trade flows, market structures, currency or exchange systems, and how economic activity structures space and social relations."
-      ]
-    },
-    {
-      "id": "demographics-social-hierarchy",
-      "title": "Demographics and Social Hierarchy",
-      "paragraphs": [
-        "Paragraph 1 (4–6 sentences): Describe population composition, settlement density, demographic dynamics, and patterns of mobility or migration.",
-        "Paragraph 2 (4–6 sentences): Describe the structure of social hierarchy — its organizing axes (class, caste, lineage, ability, species), mechanisms of reproduction, and characteristic expressions in everyday life."
-      ]
-    },
-    {
-      "id": "culture-norms-collective-psychology",
-      "title": "Culture, Norms, and Collective Psychology",
-      "paragraphs": [
-        "Paragraph 1 (4–6 sentences): Describe dominant value systems, cultural practices, ritual life, aesthetic sensibilities, and the role of art, story, or performance in social reproduction.",
-        "Paragraph 2 (4–6 sentences): Describe the collective emotional register — what this society fears, desires, celebrates, and suppresses; how individual psychology is shaped by collective life."
-      ]
-    },
-    {
-      "id": "infrastructure-technology-everyday-life",
-      "title": "Infrastructure, Technology, and Everyday Life",
-      "paragraphs": [
-        "Paragraph 1 (4–6 sentences): Describe the technological substrate of the world — energy sources, communication systems, transport networks, food and water infrastructure.",
-        "Paragraph 2 (4–6 sentences): Describe the texture of ordinary daily life: what people do, how they move, what they consume, what rhythms and institutions structure their days."
-      ]
-    },
-    {
-      "id": "history-transition",
-      "title": "Historical Formation and Ongoing Transitions",
-      "paragraphs": [
-        "Paragraph 1 (4–6 sentences): Describe the world's historical trajectory — the formative events, ruptures, migrations, and continuities that produced its present condition.",
-        "Paragraph 2 (4–6 sentences): Describe current transformations, structural pressures, and the historical forces — economic, environmental, political, cultural — that are actively reshaping the world at the moment of study."
-      ]
-    }${mythSection}
+    {"id":"spatial-morphology","title":"Spatial Morphology and Settlement Patterns","paragraphs":["Macro-geography: territorial extent, topographic character, dominant landscape types, and land-population distribution.","Micro-spatial logic: settlement organization, orientation systems, and division of public, private, sacred, and productive space."]},
+    {"id":"climate-environment","title":"Climate, Ecology, and Environmental Forces","paragraphs":["Prevailing climate systems, seasonal rhythms, ecological zones, and how the environment conditions agriculture, movement, and shelter.","Resource distribution, environmental pressures, and how the natural world figures in collective imagination and cosmology."]},
+    {"id":"built-environment-architecture","title":"Built Environment and Architecture","paragraphs":["Settlement character — scale, materials, density, spatial organization — and what structures communicate about power, hierarchy, and communal life.","Vernacular vs monumental building traditions, grammar of public space, and how the built world mediates social order and natural environment."]},
+    {"id":"economy-industry","title":"Economy, Production, and Trade","paragraphs":["Dominant mode of production — agricultural, extractive, industrial, or otherwise — its scale, geography, and labor organization.","Trade flows, market structures, exchange systems, and how economic activity structures space and social relations."]},
+    {"id":"demographics-social-hierarchy","title":"Demographics and Social Hierarchy","paragraphs":["Population composition, settlement density, demographic dynamics, and patterns of mobility or migration.","Social hierarchy: organizing axes (class, caste, lineage, ability, species), mechanisms of reproduction, and characteristic expressions in everyday life."]},
+    {"id":"culture-norms-collective-psychology","title":"Culture, Norms, and Collective Psychology","paragraphs":["Dominant values, cultural practices, ritual life, aesthetics, and the role of art and performance in social reproduction.","Collective emotional register — fears, desires, celebrations, suppressions — and how collective life shapes individual psychology."]},
+    {"id":"infrastructure-technology-everyday-life","title":"Infrastructure, Technology, and Everyday Life","paragraphs":["Technological substrate: energy sources, communication systems, transport networks, food and water infrastructure.","Texture of ordinary daily life: routines, consumption patterns, and the rhythms and institutions that structure people's days."]},
+    {"id":"history-transition","title":"Historical Formation and Ongoing Transitions","paragraphs":["Historical trajectory: formative events, ruptures, migrations, and continuities that produced the present condition.","Current transformations and structural pressures — economic, environmental, political, cultural — actively reshaping the world."]}${mythSection}
   ],
-  "sourcesAndAssumptions": [
-    "List every inference or assumption made to complete the dossier — geographic, historical, social. Tag real-world claims as [Historical] where applicable. Be exhaustive."
-  ],
-  "uncertaintyNotes": [
-    "List any aspects of the world where the input was ambiguous or insufficient for a confident analysis. Describe what was assumed in each case."
-  ]
+  "sourcesAndAssumptions": ["Every inference or assumption made to complete the dossier. Tag real-world claims as [Historical]."],
+  "uncertaintyNotes": ["Aspects where input was ambiguous or insufficient for confident analysis, and what was assumed in each case."]
 }
 
-STRICT CONSTRAINTS:
-- Each section must have at least 2 paragraphs. Each paragraph must be substantive (minimum 4 sentences).
-- Write entirely in scholarly, analytical, present-tense prose. Never address the reader.
-- Zero evaluation language: no "fragile", "inconsistent", "strength", "weakness", "verdict", "rating", "fix", "consider", "you should", "the author should".
-- Zero reference to LoreKit, LoreCheck, or any external tool.
-- Output ONLY the JSON object — no text before or after.`;
+Output ONLY the JSON object.`;
 }
 
 // ─── Korean system + prompt ────────────────────────────────────────────────────
 const SYSTEM_KO =
   '당신은 문화지리학, 사회사, 사변적 세계 연구를 전문으로 하는 학술 연구 분석가입니다. ' +
-  '실재하는, 허구적인, 또는 혼합된 세계를 학문적 깊이와 정밀함으로 기술하는 권위 있는 연구 도서를 작성합니다. ' +
-  '연속된 산문으로 작성합니다 — 밀도 있고 자신감 있는 3인칭 분석적 단락, 현재 시제. ' +
+  '실재·허구·혼합 세계를 학문적 깊이와 정밀함으로 기술하는 권위 있는 연구 도서를 작성합니다. ' +
+  '밀도 있고 자신감 있는 3인칭 분석적 산문, 현재 시제. ' +
   '세계를 실제로 존재하고 연구된 대상처럼 기술합니다. "작가", "이야기", "창작자", "허구"를 절대 언급하지 않습니다. ' +
-  '초자연적이거나 환상적 요소가 있다면 내적 현실로 취급하며, 학자처럼 사회적·공간적·물질적 결과를 분석합니다. ' +
-  '절대 평가하거나 조언하거나 비판하지 않습니다. "취약함", "불일치", "평결", "평점", "해야 한다", "고려해야", "강점", "약점" 같은 단어를 사용하지 않습니다. ' +
-  '글머리표와 표를 완전히 배제합니다. 오직 연결된 산문 단락으로만 작성합니다. ' +
+  '초자연적 요소는 내적 현실로 취급하여 학자처럼 분석합니다. 절대 평가·조언·비판하지 않습니다. ' +
+  '글머리표와 표 금지 — 오직 연결된 산문 단락만. ' +
   '유효한 JSON 객체만 출력합니다 — 앞뒤 산문이나 마크다운 코드 펜스 없이.';
 
 function buildPromptKO(body: LoreCraftRequest): string {
-  const mythSection = hasFantasyElements(body) ? `,
-    {
-      "id": "myth-supernatural-system",
-      "title": "우주론과 초자연 체계",
-      "paragraphs": [
-        "이 세계에서 형이상학적 또는 초자연적 힘이 어떻게 작동하는 것으로 이해되는지 우주론적 질서를 기술하는 2개 이상의 완전한 단락.",
-        "이러한 힘이 물질적으로 어떻게 나타나는지 — 제도적 표현, 공간적 현존, 의례적 경제, 사회 조직에 대한 결과."
-      ]
-    }` : '';
+  const mythSection = hasFantasyElements(body) ?
+    `,\n    {"id":"myth-supernatural-system","title":"우주론과 초자연 체계","paragraphs":["우주론적 질서: 이 세계에서 초자연적·형이상학적 힘이 어떻게 이해되고 작동하는지 — 그 본질, 논리, 그리고 이를 둘러싼 신앙 체계.","이러한 힘의 물질적 현현: 제도적 표현, 공간적 현존, 의례 경제, 사회 조직에 대한 결과."]}` : '';
 
   return `\
 ${worldBlock(body)}
 
 ---
 
-위에 기술된 세계에 대한 심층 세계관 연구 도서를 작성하세요.
-아래 스키마에 정확히 일치하는 단일 JSON 객체를 출력하세요 (원시 JSON만, 마크다운 펜스 없음).
-모든 산문 내용(title, overview, paragraphs, sourcesAndAssumptions, uncertaintyNotes)은 자연스러운 한국어 학술 문체로 작성하세요.
-section의 "id" 값은 반드시 아래 명시된 영어 그대로 유지하세요.
+위에 기술된 세계에 대한 심층 세계관 연구 도서를 JSON 객체로 작성하세요 (원시 JSON만, 마크다운 펜스 없음). 각 단락 자리에 4–6문장의 학술 산문을 작성하세요. 모든 산문은 한국어로, section의 "id" 값은 영어 그대로 유지하세요.
 
 {
-  "title": "연구 대상 세계, 문명, 또는 시대를 명명하는 4–8단어의 인상적이고 학술적인 도서 제목 (한국어)",
-  "overview": "세계의 공간적 상황, 역사적 국면, 지배적 사회 세력, 환경적 특성, 그리고 고유한 분위기를 종합하는 2–4개의 밀도 있는 산문 단락. 현재 시제, 3인칭, 학술적 문체.",
+  "title": "연구 대상 세계·문명·시대를 명명하는 4–8 단어의 학술적 제목 (한국어)",
+  "overview": "세계의 공간적 상황, 역사적 국면, 지배적 세력, 환경적 특성, 분위기를 종합하는 2–4개의 밀도 있는 산문 단락",
   "sections": [
-    {
-      "id": "spatial-morphology",
-      "title": "공간 형태와 정주 패턴",
-      "paragraphs": [
-        "단락 1 (4–6문장): 거시 지리학 — 영토적 범위, 지형적 특성, 지배적 경관 유형, 토지와 인구 분포의 관계.",
-        "단락 2 (4–6문장): 미시 공간 논리 — 정주지 조직, 방향 감각 체계, 공공·사적·신성·생산 공간의 구분."
-      ]
-    },
-    {
-      "id": "climate-environment",
-      "title": "기후, 생태, 환경적 힘",
-      "paragraphs": [
-        "단락 1 (4–6문장): 지배적 기후 체계, 계절적 리듬, 생태 지대, 그리고 환경이 농업·이동·주거를 어떻게 조건 짓는가.",
-        "단락 2 (4–6문장): 자원 분포, 환경적 압력 — 결핍 또는 풍요 — 그리고 자연 세계가 집단적 상상력과 우주론에서 차지하는 위치."
-      ]
-    },
-    {
-      "id": "built-environment-architecture",
-      "title": "건조 환경과 건축",
-      "paragraphs": [
-        "단락 1 (4–6문장): 정주지의 특성 — 규모, 재료, 밀도, 공간 조직. 구조물이 권력, 위계, 공동체적 삶에 대해 무엇을 말하는가.",
-        "단락 2 (4–6문장): 토착적 건축과 기념비적 건축 전통, 공공 공간의 공간 문법, 건조 세계가 사회 질서와 자연 환경을 매개하는 방식."
-      ]
-    },
-    {
-      "id": "economy-industry",
-      "title": "경제, 생산, 교역",
-      "paragraphs": [
-        "단락 1 (4–6문장): 지배적 생산 양식 — 농업, 추출, 산업, 또는 기타 — 그 규모, 지리, 노동 조직.",
-        "단락 2 (4–6문장): 교역 흐름, 시장 구조, 화폐 또는 교환 체계, 경제 활동이 공간과 사회적 관계를 구조화하는 방식."
-      ]
-    },
-    {
-      "id": "demographics-social-hierarchy",
-      "title": "인구와 사회 위계",
-      "paragraphs": [
-        "단락 1 (4–6문장): 인구 구성, 정주 밀도, 인구 동태, 이동 또는 이주 패턴.",
-        "단락 2 (4–6문장): 사회 위계의 구조 — 조직 축(계급, 카스트, 혈통, 능력, 종족), 재생산 메커니즘, 일상생활에서의 특징적 표현."
-      ]
-    },
-    {
-      "id": "culture-norms-collective-psychology",
-      "title": "문화, 규범, 집단 심리",
-      "paragraphs": [
-        "단락 1 (4–6문장): 지배적 가치 체계, 문화적 실천, 의례 생활, 미적 감수성, 사회적 재생산에서 예술·이야기·공연의 역할.",
-        "단락 2 (4–6문장): 집단적 정서적 레지스터 — 이 사회가 두려워하고, 욕망하고, 기념하고, 억압하는 것; 집단적 삶이 개인 심리를 형성하는 방식."
-      ]
-    },
-    {
-      "id": "infrastructure-technology-everyday-life",
-      "title": "인프라, 기술, 일상생활",
-      "paragraphs": [
-        "단락 1 (4–6문장): 세계의 기술적 기반 — 에너지 원천, 통신 체계, 교통 네트워크, 식량 및 수자원 인프라.",
-        "단락 2 (4–6문장): 평범한 일상의 질감: 사람들이 하는 일, 이동 방식, 소비하는 것, 그들의 하루를 구조화하는 리듬과 제도."
-      ]
-    },
-    {
-      "id": "history-transition",
-      "title": "역사적 형성과 진행 중인 전환",
-      "paragraphs": [
-        "단락 1 (4–6문장): 세계의 역사적 궤적 — 현재의 상태를 만들어 낸 형성적 사건, 단절, 이주, 연속성.",
-        "단락 2 (4–6문장): 현재의 변환, 구조적 압력, 그리고 연구 시점에 세계를 적극적으로 재형성하고 있는 역사적 힘 — 경제적, 환경적, 정치적, 문화적."
-      ]
-    }${mythSection}
+    {"id":"spatial-morphology","title":"공간 형태와 정주 패턴","paragraphs":["거시 지리학: 영토적 범위, 지형적 특성, 지배적 경관 유형, 토지와 인구 분포의 관계.","미시 공간 논리: 정주지 조직, 방향 체계, 공공·사적·신성·생산 공간의 구분."]},
+    {"id":"climate-environment","title":"기후, 생태, 환경적 힘","paragraphs":["지배적 기후 체계, 계절적 리듬, 생태 지대, 환경이 농업·이동·주거를 조건 짓는 방식.","자원 분포, 환경적 압력, 자연 세계가 집단적 상상력과 우주론에서 차지하는 위치."]},
+    {"id":"built-environment-architecture","title":"건조 환경과 건축","paragraphs":["정주지 특성 — 규모, 재료, 밀도, 공간 조직 — 과 구조물이 권력·위계·공동체적 삶에 대해 말하는 것.","토착 건축과 기념비적 건축 전통, 공공 공간의 공간 문법, 건조 세계가 사회 질서와 자연 환경을 매개하는 방식."]},
+    {"id":"economy-industry","title":"경제, 생산, 교역","paragraphs":["지배적 생산 양식 — 규모, 지리, 노동 조직.","교역 흐름, 시장 구조, 교환 체계, 경제 활동이 공간과 사회적 관계를 구조화하는 방식."]},
+    {"id":"demographics-social-hierarchy","title":"인구와 사회 위계","paragraphs":["인구 구성, 정주 밀도, 인구 동태, 이동 또는 이주 패턴.","사회 위계의 구조 — 조직 축(계급, 카스트, 혈통, 능력, 종족), 재생산 메커니즘, 일상생활에서의 특징적 표현."]},
+    {"id":"culture-norms-collective-psychology","title":"문화, 규범, 집단 심리","paragraphs":["지배적 가치 체계, 문화적 실천, 의례 생활, 미적 감수성, 사회적 재생산에서 예술의 역할.","집단적 정서 — 이 사회가 두려워하고 욕망하고 기념하고 억압하는 것 — 과 집단적 삶이 개인 심리를 형성하는 방식."]},
+    {"id":"infrastructure-technology-everyday-life","title":"인프라, 기술, 일상생활","paragraphs":["기술적 기반: 에너지 원천, 통신 체계, 교통 네트워크, 식량 및 수자원 인프라.","평범한 일상의 질감: 사람들이 하는 일, 이동 방식, 소비, 하루를 구조화하는 리듬과 제도."]},
+    {"id":"history-transition","title":"역사적 형성과 진행 중인 전환","paragraphs":["역사적 궤적: 현재를 만들어 낸 형성적 사건, 단절, 이주, 연속성.","현재의 변환과 구조적 압력 — 경제적, 환경적, 정치적, 문화적 — 이 세계를 재형성하고 있는 힘."]}${mythSection}
   ],
-  "sourcesAndAssumptions": [
-    "도서를 완성하기 위해 이루어진 모든 추론 또는 가정 — 지리적, 역사적, 사회적. 실제 역사적 주장에는 [Historical] 태그 사용. 빠짐없이 나열할 것."
-  ],
-  "uncertaintyNotes": [
-    "입력이 모호하거나 자신 있는 분석에 불충분했던 세계의 측면을 나열하고, 각 경우 무엇을 가정했는지 기술하세요."
-  ]
+  "sourcesAndAssumptions": ["도서 완성을 위한 모든 추론 또는 가정. 실제 역사적 주장에는 [Historical] 태그."],
+  "uncertaintyNotes": ["자신 있는 분석에 불충분했던 측면과 각 경우 가정한 내용."]
 }
 
-엄격한 제약:
-- 각 섹션은 최소 2개의 단락을 포함해야 합니다. 각 단락은 실질적이어야 합니다 (최소 4문장).
-- 완전히 학술적이고 분석적이며 현재 시제의 산문으로 작성하세요. 절대로 독자를 직접 언급하지 마세요.
-- 평가적 언어 금지: "취약함", "불일치", "강점", "약점", "평결", "평점", "수정", "고려", "해야 한다", "작가가 해야".
-- LoreKit, LoreCheck, 또는 외부 도구에 대한 언급 금지.
-- JSON 객체만 출력 — 앞뒤에 어떤 텍스트도 없이.`;
+JSON 객체만 출력하세요.`;
 }
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
@@ -493,9 +344,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       system:      ko ? SYSTEM_KO : SYSTEM_EN,
       user:        ko ? buildPromptKO(body) : buildPromptEN(body),
       jsonSchema:  {},
-      model:       'gpt-4o-mini',
-      temperature: 0.35,
-      maxTokens:   3_000,
+      model:      'gpt-5.2',
+      maxTokens:  5_000,
     });
   } catch (e) {
     if (userId && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
