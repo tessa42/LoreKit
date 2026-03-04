@@ -14,7 +14,7 @@ export interface CallLLMOptions {
   user:        string;
   /** When provided the API is called in JSON mode and the response is parsed. */
   jsonSchema?: Record<string, unknown>;
-  model?:      'gpt-5.2';
+  model?:      'gpt-5.2' | 'gpt-5-mini';
   maxTokens?:  number;
   reasoning?:  { effort: 'low' | 'medium' | 'high' };
 }
