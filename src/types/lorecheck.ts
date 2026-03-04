@@ -9,8 +9,9 @@ export interface TensionPoint {
   fixes:     string[];
 }
 
-// ─── Full LoreCheck report — matches /api/lorecheck output ───────────────────
+// ─── Full LoreCheck Quick Scan report — matches /api/lorecheck quick output ───
 export interface LoreCheckReport {
+  mode?:                'quick';
   overallImpression:    string;
   tensionPoints:        TensionPoint[];
   stability:            RiskLevel;
@@ -18,6 +19,34 @@ export interface LoreCheckReport {
   extractedAssumptions: string[];
   missingInfoQuestions: string[];
 }
+
+// ─── Deep Audit types ─────────────────────────────────────────────────────────
+export interface DeepFinding {
+  title:     string;
+  why:       string;
+  riskLevel: RiskLevel;
+  evidence?: string;
+  fixes:     string[];
+}
+
+export interface DeepReport {
+  mode:             'deep';
+  executiveSummary: string;
+  layerFindings: {
+    structural:   DeepFinding[];
+    behavioral:   DeepFinding[];
+    cultural:     DeepFinding[];
+    occupational: DeepFinding[];
+    motivational: DeepFinding[];
+  };
+  topRisks:             Array<{ title: string; riskLevel: RiskLevel; why: string; fixes: string[] }>;
+  assumptions:          string[];
+  uncertaintyFlags:     string[];
+  researchGapQuestions: string[];
+}
+
+// ─── Union type for result rendering ─────────────────────────────────────────
+export type LoreCheckResult = (LoreCheckReport & { mode: 'quick' }) | DeepReport;
 
 // ─── Input form state (frontend only) ────────────────────────────────────────
 export interface LoreCheckForm {
