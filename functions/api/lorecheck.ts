@@ -39,7 +39,7 @@ import { checkRateLimit, getClientIp } from '../lib/ratelimit';
 import { getLang, isKorean } from '../_shared/i18n';
 import { spendSeeds, refundSeeds } from '../_shared/seeds';
 
-const SEEDS_COST = 1;
+const SEEDS_COST = 2;
 
 // ─── Input types ──────────────────────────────────────────────────────────────
 interface OptionalMeta {
