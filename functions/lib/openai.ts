@@ -73,8 +73,11 @@ export async function callLLM(
   apiKey: string,
   opts:   CallLLMOptions,
 ): Promise<string | unknown> {
+  const model   = opts.model ?? DEFAULTS.model;
+  const isMini  = model === 'gpt-5-mini';
+
   const body: Record<string, unknown> = {
-    model: opts.model ?? DEFAULTS.model,
+    model,
     input: [
       {
         role:    'developer',
@@ -86,12 +89,15 @@ export async function callLLM(
       },
     ],
     max_output_tokens: opts.maxTokens ?? DEFAULTS.maxTokens,
-    reasoning:         opts.reasoning ?? {},
+    reasoning:         opts.reasoning ?? (isMini ? { effort: 'medium' } : {}),
+    store:             true,
     stream:            false,
   };
 
   if (opts.jsonSchema) {
-    body['text'] = { format: { type: 'json_object' } };
+    body['text'] = isMini
+      ? { format: { type: 'json_object' }, verbosity: 'medium' }
+      : { format: { type: 'json_object' } };
   }
 
   let res: Response;
