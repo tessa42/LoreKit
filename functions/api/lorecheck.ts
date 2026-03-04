@@ -600,6 +600,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         user:        ko ? buildPromptDeepKO(body) : buildPromptDeepEN(body),
         jsonSchema:  {},
         model:       'gpt-5.2-pro',
+        reasoning:   { effort: 'low' },
         maxTokens:   4_500,
       });
     } else {
@@ -608,6 +609,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         user:        ko ? buildPromptQuickKO(body) : buildPromptQuickEN(body),
         jsonSchema:  {},
         model:       'gpt-5.2-pro',
+        reasoning:   { effort: 'low' },
         maxTokens:   1_400,
       });
     }
@@ -628,7 +630,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       }
       return jsonError(
         'The AI returned an unexpected response shape. Please try again.',
-        502,
+        500,
       );
     }
     return jsonOk({ ...(report as DeepReport), mode: 'deep' });
@@ -639,7 +641,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       }
       return jsonError(
         'The AI returned an unexpected response shape. Please try again.',
-        502,
+        500,
       );
     }
     return jsonOk({ ...(report as LoreCheckReport), mode: 'quick' });

@@ -494,6 +494,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       user:        ko ? buildPromptKO(body) : buildPromptEN(body),
       jsonSchema:  {},
       model:       'gpt-5.2-pro',
+      reasoning:   { effort: 'low' },
       maxTokens:   6_000,
     });
   } catch (e) {
@@ -512,7 +513,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     }
     return jsonError(
       'The AI returned an unexpected response shape. Please try again.',
-      502,
+      500,
     );
   }
 
