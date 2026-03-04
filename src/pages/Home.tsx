@@ -41,7 +41,10 @@ export default function Home() {
   return (
     <div className="page-wrapper--wide">
       <section className="hero animate-fade-in">
-        <img src="/cat-hero.png" className="hero__cat" alt="" aria-hidden="true" />
+        <picture>
+          <source srcSet="/cat-hero.webp" type="image/webp" />
+          <img src="/cat-hero.png" className="hero__cat" alt="" aria-hidden="true" width="260" height="221" fetchPriority="high" />
+        </picture>
         <h1 className="hero__title">LoreKit</h1>
         <p className="hero__subtitle">{t('home_subtitle')}</p>
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -76,7 +79,10 @@ export default function Home() {
 
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '4rem', paddingBottom: '2rem' }}>
         <p style={{ display: 'flex', alignItems: 'center', gap: '0.4em', fontSize: '0.78rem', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
-          <img src="/icon.png" alt="" aria-hidden="true" style={{ width: '2rem', height: '2rem', flexShrink: 0 }} />
+          <picture>
+            <source srcSet="/icon.webp" type="image/webp" />
+            <img src="/icon.png" alt="" aria-hidden="true" width="32" height="32" style={{ width: '2rem', height: '2rem', flexShrink: 0 }} />
+          </picture>
           {t('home_cat_quote')}
         </p>
       </div>

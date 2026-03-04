@@ -13,7 +13,10 @@ export default function Header() {
     <header className="site-header">
       <div className="site-header__inner">
         <NavLink to="/" className="site-header__logo">
-          <img src="/icon.png" className="site-header__logo-cat" alt="" aria-hidden="true" />
+          <picture>
+            <source srcSet="/icon.webp" type="image/webp" />
+            <img src="/icon.png" className="site-header__logo-cat" alt="" aria-hidden="true" width="34" height="40" />
+          </picture>
           <span className="site-header__logo-text">LoreKit</span>
         </NavLink>
 
