@@ -5,7 +5,7 @@
  * world from a hardcoded list of 12 presets, and returns a short character
  * story card as structured JSON.
  *
- * Token budget is kept deliberately small — gpt-5-mini, max 420 tokens.
+ * Token budget is kept deliberately small — gpt-5.2-mini, max 420 tokens.
  *
  * Input
  * ─────
@@ -293,7 +293,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       system:      ko ? SYSTEM_KO : SYSTEM_EN,
       user:        ko ? buildPromptKO(name, vibe) : buildPromptEN(name, vibe),
       jsonSchema:  {},
-      model:       'gpt-5-mini',
+      model:       'gpt-5.2-mini',
+      temperature: 0.88,
       maxTokens:   420,
     });
   } catch (e) {
