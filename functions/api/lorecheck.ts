@@ -600,7 +600,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         user:        ko ? buildPromptDeepKO(body) : buildPromptDeepEN(body),
         jsonSchema:  {},
         model:       'gpt-5.2-pro',
-        reasoning:   { effort: 'medium' },
+
         maxTokens:   4_500,
       });
     } else {
@@ -609,7 +609,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         user:        ko ? buildPromptQuickKO(body) : buildPromptQuickEN(body),
         jsonSchema:  {},
         model:       'gpt-5.2-pro',
-        reasoning:   { effort: 'medium' },
+
         maxTokens:   1_400,
       });
     }
