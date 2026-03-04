@@ -445,9 +445,7 @@ export default function LoreCraft() {
         setError(t('err_insufficient_seeds'));
         setView('form');
       } else if (!res.ok) {
-        const msg     = (data['error']   as string | undefined) ?? t('err_generic');
-        const details = (data['details'] as string | undefined);
-        setError(details ? `${msg} — ${details}` : msg);
+        setError((data['error'] as string | undefined) ?? t('err_generic'));
         setView('form');
       } else {
         setReport(data as unknown as LoreCraftReport);

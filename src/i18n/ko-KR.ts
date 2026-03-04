@@ -155,21 +155,6 @@ export const ko: Record<TranslationKey, string> = {
   lorecheck_copy_stability:     '안정성',
   lorecheck_copy_eyebrow_risk:  '독자 의구심',
 
-  // Deep Audit
-  lorecheck_deep_results_title:      '심층 점검 결과',
-  lorecheck_deep_executive:          '종합 요약',
-  lorecheck_deep_layer_structural:   '구조적 개연성',
-  lorecheck_deep_layer_behavioral:   '행동 확률',
-  lorecheck_deep_layer_cultural:     '문화적 정합성',
-  lorecheck_deep_layer_occupational: '직업적 논리',
-  lorecheck_deep_layer_motivational: '동기의 일관성',
-  lorecheck_deep_top_risks:          '주요 리스크',
-  lorecheck_deep_uncertainty:        '불확실성 플래그',
-  lorecheck_deep_research_gaps:      '리서치 갭 질문',
-  lorecheck_deep_scanning:           '🔬 심층 분석 중…',
-  lorecheck_deep_evidence:           '근거',
-  lorecheck_deep_assumptions:        '암묵적 가정',
-
   // ── Simulator ────────────────────────────────────────────────────────────────
   sim_eyebrow:          '✨ 시뮬레이터',
   sim_title:            '포털 속으로',

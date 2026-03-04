@@ -1,14 +1,13 @@
 /**
  * POST /api/lorecheck
  *
- * Performs a Quick Scan or Deep Audit across five plausibility layers and
- * returns a structured JSON report — no checkbox selection required.
+ * Performs an automatic Quick Scan across five plausibility layers and returns
+ * a structured JSON report — no checkbox selection required from the user.
  *
  * Input
  * ─────
  * {
  *   text: string,                  // the passage to analyse (30–4000 chars)
- *   mode?: 'quick' | 'deep',       // default: 'quick'
  *   optionalMeta?: {
  *     timePeriod?: string,
  *     region?:     string,
@@ -18,34 +17,15 @@
  *   lang?: 'en-US' | 'ko-KR',
  * }
  *
- * Output — Quick Scan (200)
- * ─────────────────────────
+ * Output (200)
+ * ────────────
  * {
- *   mode:                 'quick',
  *   overallImpression:    string,
  *   tensionPoints:        Array<{ title, why, riskLevel, fixes }>,
  *   stability:            "low" | "medium" | "high",
  *   eyebrowRaiseRisk:     "low" | "medium" | "high",
  *   extractedAssumptions: string[],
  *   missingInfoQuestions: string[],
- * }
- *
- * Output — Deep Audit (200)
- * ─────────────────────────
- * {
- *   mode:             'deep',
- *   executiveSummary: string,
- *   layerFindings: {
- *     structural:   Array<DeepFinding>,
- *     behavioral:   Array<DeepFinding>,
- *     cultural:     Array<DeepFinding>,
- *     occupational: Array<DeepFinding>,
- *     motivational: Array<DeepFinding>,
- *   },
- *   topRisks:             Array<{ title, riskLevel, why, fixes }>,
- *   assumptions:          string[],
- *   uncertaintyFlags:     string[],
- *   researchGapQuestions: string[],
  * }
  */
 
@@ -59,8 +39,7 @@ import { checkRateLimit, getClientIp } from '../lib/ratelimit';
 import { getLang, isKorean } from '../_shared/i18n';
 import { spendSeeds, refundSeeds } from '../_shared/seeds';
 
-const SEEDS_COST_QUICK = 1;
-const SEEDS_COST_DEEP  = 2;
+const SEEDS_COST = 1;
 
 // ─── Input types ──────────────────────────────────────────────────────────────
 interface OptionalMeta {
@@ -73,7 +52,6 @@ interface OptionalMeta {
 interface LoreCheckRequest {
   text:          string;
   optionalMeta?: OptionalMeta;
-  mode?:         'quick' | 'deep';
 }
 
 // ─── Output types ─────────────────────────────────────────────────────────────
@@ -87,37 +65,12 @@ interface TensionPoint {
 }
 
 interface LoreCheckReport {
-  mode:                 'quick';
   overallImpression:    string;
   tensionPoints:        TensionPoint[];
   stability:            RiskLevel;
   eyebrowRaiseRisk:     RiskLevel;
   extractedAssumptions: string[];
   missingInfoQuestions: string[];
-}
-
-interface DeepFinding {
-  title:     string;
-  why:       string;
-  riskLevel: RiskLevel;
-  evidence?: string;
-  fixes:     string[];
-}
-
-interface DeepReport {
-  mode:             'deep';
-  executiveSummary: string;
-  layerFindings: {
-    structural:   DeepFinding[];
-    behavioral:   DeepFinding[];
-    cultural:     DeepFinding[];
-    occupational: DeepFinding[];
-    motivational: DeepFinding[];
-  };
-  topRisks:             Array<{ title: string; riskLevel: RiskLevel; why: string; fixes: string[] }>;
-  assumptions:          string[];
-  uncertaintyFlags:     string[];
-  researchGapQuestions: string[];
 }
 
 // ─── Validation ───────────────────────────────────────────────────────────────
@@ -137,10 +90,6 @@ function validate(body: unknown): string | null {
   if (text.trim().length > 4_000) {
     return 'text must be under 4 000 characters. Split longer passages and scan in sections.';
   }
-  const mode = b['mode'];
-  if (mode !== undefined && mode !== 'quick' && mode !== 'deep') {
-    return 'mode must be "quick" or "deep".';
-  }
   return null;
 }
 
@@ -149,7 +98,6 @@ function sanitise(body: LoreCheckRequest): LoreCheckRequest {
   const m = body.optionalMeta;
   return {
     text: body.text.trim().slice(0, 4_000),
-    mode: body.mode,
     optionalMeta: m
       ? {
           timePeriod: cap(m.timePeriod, 100),
@@ -161,10 +109,10 @@ function sanitise(body: LoreCheckRequest): LoreCheckRequest {
   };
 }
 
-// ─── Runtime shape guards ─────────────────────────────────────────────────────
+// ─── Runtime shape guard ──────────────────────────────────────────────────────
 const RISK_LEVELS = new Set<string>(['low', 'medium', 'high']);
 
-function isValidQuickReport(obj: unknown): obj is LoreCheckReport {
+function isValidReport(obj: unknown): obj is LoreCheckReport {
   if (typeof obj !== 'object' || obj === null) return false;
   const r = obj as Record<string, unknown>;
   return (
@@ -175,27 +123,6 @@ function isValidQuickReport(obj: unknown): obj is LoreCheckReport {
     Array.isArray(r['extractedAssumptions'])          &&
     Array.isArray(r['missingInfoQuestions'])
   );
-}
-
-function isValidDeepReport(obj: unknown): obj is DeepReport {
-  if (typeof obj !== 'object' || obj === null) return false;
-  const r = obj as Record<string, unknown>;
-  if (typeof r['executiveSummary'] !== 'string') return false;
-  const lf = r['layerFindings'];
-  if (typeof lf !== 'object' || lf === null) return false;
-  const layers = lf as Record<string, unknown>;
-  if (
-    !Array.isArray(layers['structural'])   ||
-    !Array.isArray(layers['behavioral'])   ||
-    !Array.isArray(layers['cultural'])     ||
-    !Array.isArray(layers['occupational']) ||
-    !Array.isArray(layers['motivational'])
-  ) return false;
-  if (!Array.isArray(r['topRisks']))             return false;
-  if (!Array.isArray(r['assumptions']))          return false;
-  if (!Array.isArray(r['uncertaintyFlags']))     return false;
-  if (!Array.isArray(r['researchGapQuestions'])) return false;
-  return true;
 }
 
 // ─── Meta context blocks (one per language) ───────────────────────────────────
@@ -221,14 +148,14 @@ function metaBlockKO(meta: OptionalMeta | undefined): string {
   return '\n### 창작자가 제공한 참고 정보:\n' + lines.join('\n');
 }
 
-// ─── English Quick Scan prompt ────────────────────────────────────────────────
-const SYSTEM_QUICK_EN =
+// ─── English prompt ───────────────────────────────────────────────────────────
+const SYSTEM_EN =
   'You are LoreKit, a perceptive and slightly mischievous assistant cat who specialises in narrative and worldbuilding plausibility analysis. ' +
   'You read passages the way a sharp-eyed editor and a cultural historian would — catching what strains credibility before a reader does. ' +
   'You are warm, constructive, and precise. You never dismiss creative choices; you illuminate their risks and offer paths forward. ' +
   'You respond ONLY with a valid JSON object — no surrounding prose, no markdown code fences.';
 
-function buildPromptQuickEN(body: LoreCheckRequest): string {
+function buildPromptEN(body: LoreCheckRequest): string {
   return `\
 Analyse the following worldbuilding or narrative passage. Run a Quick Scan across all five evaluation layers automatically — do NOT ask the creator to select categories. Surface only the most meaningful findings.
 
@@ -282,29 +209,24 @@ Return a single JSON object matching EXACTLY this structure (raw JSON only, no m
 - **eyebrowRaiseRisk**: likelihood an informed reader pauses and questions the passage (high = very likely).
 - **riskLevel per tension**: severity of threat to immersion if left unaddressed.
 
-### Coherence Rule:
-If the passage is internally coherent and believable with no meaningful tension, return tensionPoints as [], stability as "high", eyebrowRaiseRisk as "low", and state in overallImpression that the passage is credible. Do NOT invent minor issues.
-
 ### Strict Constraints:
-- tensionPoints: maximum 3, most impactful only. Do not pad with trivial observations.
-- Each tension why: max 2 sentences.
-- Each tension fixes: max 2 suggestions.
-- missingInfoQuestions: max 3, phrased with curiosity and warmth.
+- Surface exactly 3–5 tension points — the most impactful only. Do not pad with trivial observations.
+- Each tension: exactly 2–3 fix suggestions.
+- missingInfoQuestions: 0–4 items, phrased with curiosity and warmth. Omit the array entry entirely if not needed.
 - extractedAssumptions: list every silent inference. Never omit.
 - Do NOT fabricate statistics or historical facts — mark uncertain claims as "(approximation)".
-- If the response risks exceeding the token budget, compress first rather than expanding.
 - Output ONLY the JSON object. No prose before or after it.`;
 }
 
-// ─── Korean Quick Scan prompt ─────────────────────────────────────────────────
-const SYSTEM_QUICK_KO =
+// ─── Korean prompt ────────────────────────────────────────────────────────────
+const SYSTEM_KO =
   '당신은 로어킷(LoreKit)입니다. 내러티브 및 세계관 개연성 분석을 전문으로 하는 예리하고 약간 장난스러운 고양이 조수입니다. ' +
   '날카로운 편집자와 문화 역사학자처럼 글을 읽어, 독자가 알아채기 전에 신뢰성을 해치는 부분을 잡아냅니다. ' +
   '따뜻하고 건설적이며 정밀합니다. 창의적 선택을 결코 무시하지 않고, 그 위험을 조명하며 나아갈 방향을 제시합니다. ' +
   'JSON 내 산문은 반드시 존댓말(공손한 제안형)로 통일하며, 반말과 존댓말을 섞지 않습니다. ' +
   '반드시 유효한 JSON 객체만 응답합니다 — 앞뒤 산문이나 마크다운 코드 펜스 없이.';
 
-function buildPromptQuickKO(body: LoreCheckRequest): string {
+function buildPromptKO(body: LoreCheckRequest): string {
   return `\
 다음 세계관 또는 내러티브 단락을 분석하세요. 다섯 가지 평가 레이어 전체에 걸쳐 자동으로 Quick Scan을 실행하세요 — 창작자에게 카테고리를 선택하도록 요청하지 마세요. 가장 의미 있는 발견만 제시하세요.
 
@@ -359,207 +281,13 @@ ${metaBlockKO(body.optionalMeta)}
 - **eyebrowRaiseRisk**: 정보에 밝은 독자가 단락을 읽다가 멈추고 의문을 가질 가능성 (high = 매우 높음).
 - **riskLevel**: 해결하지 않을 경우 몰입에 대한 위협의 심각도.
 
-### 일관성 규칙:
-단락이 내부적으로 일관성이 있고 신뢰할 수 있다면, tensionPoints를 []로, stability를 "high"로, eyebrowRaiseRisk를 "low"로 반환하고, overallImpression에서 단락이 신뢰할 수 있다고 기술하세요. 사소한 문제를 만들어내지 마세요.
-
 ### 엄격한 제약:
-- tensionPoints: 최대 3개, 가장 영향력 있는 것만. 사소한 관찰로 채우지 마세요.
-- 각 긴장 요소 why: 최대 2문장.
-- 각 긴장 요소 fixes: 최대 2개 제안.
-- missingInfoQuestions: 최대 3개, 호기심과 따뜻함으로 표현.
+- 정확히 3–5개의 긴장 요소만 제시 — 가장 영향력 있는 것만. 사소한 관찰로 채우지 마세요.
+- 각 긴장 요소: 정확히 2–3개의 수정 제안.
+- missingInfoQuestions: 0–4개 항목, 호기심과 따뜻함으로 표현. 필요 없으면 배열 항목을 완전히 생략하세요.
 - extractedAssumptions: 모든 암묵적 추론을 나열하세요. 절대 생략하지 마세요.
 - 통계나 역사적 사실을 날조하지 마세요 — 불확실한 주장은 "(추정)"으로 표시하세요.
-- 응답이 토큰 예산을 초과할 위험이 있다면, 압축을 우선하세요.
 - riskLevel, stability, eyebrowRaiseRisk 값은 반드시 영어로: "low", "medium", "high" 중 하나.
-- JSON 객체만 출력하세요. 앞뒤 산문 없음.`;
-}
-
-// ─── English Deep Audit prompt ────────────────────────────────────────────────
-const SYSTEM_DEEP_EN =
-  'You are LoreKit, a perceptive and slightly mischievous assistant cat who specialises in narrative and worldbuilding plausibility analysis. ' +
-  'You evaluate like a senior editor AND a cultural researcher with deep subculture knowledge. ' +
-  'You read passages the way a sharp-eyed editor and a cultural historian would — catching what strains credibility before a reader does. ' +
-  'Always look for everyday plausibility issues: how real communities, workplaces, subcultures, fandoms, bands, gaming groups, and generational cohorts actually operate. ' +
-  'You are warm, constructive, and precise. You never dismiss creative choices; you illuminate their risks and offer paths forward. ' +
-  'You respond ONLY with a valid JSON object — no surrounding prose, no markdown code fences.';
-
-function buildPromptDeepEN(body: LoreCheckRequest): string {
-  return `\
-Analyse the following worldbuilding or narrative passage with a Deep Audit — a thorough, multi-layer examination that goes far beyond surface tensions. Evaluate all five layers granularly, surface cross-layer risks, expose every silent assumption, and provide specific research questions the author should investigate.
-
-### Passage:
----
-${body.text}
----
-${metaBlock(body.optionalMeta)}
-
-### Evaluation Layers (evaluate each deeply, then populate layerFindings per layer):
-
-1. **Structural Plausibility** — Physical, logical, and causal consistency. Impossible sequences, contradictory premises, timeline issues.
-
-2. **Behavioral Probability** — Character decisions, reactions, and psychological plausibility under pressure. Unmotivated choices, convenient timing, implausible psychology.
-
-3. **Cultural Alignment** — Norms, values, social dynamics, generational micro-behaviors, subculture specifics. Anachronisms, mismatched social logic, fandom/community behavior, band/workplace/gaming group dynamics.
-
-4. **Occupational Logic** — Skills, access, institutional knowledge, professional hierarchies. Characters knowing too much, too little, or acting outside plausible competence.
-
-5. **Motivational Coherence** — Goals, fears, and actions forming a coherent arc. Hidden motivations, contradictory needs, implausible goal alignment.
-
-### Mandatory Everyday Plausibility Pass:
-Always check for non-obvious issues like: how real bands/music groups actually work, how gamers/fandoms actually behave, how real workplaces operate (especially niche ones), generational micro-behaviors, subcultural norms. Include at least one such finding in the appropriate layerFindings array when detectable.
-
----
-
-Return a single JSON object matching EXACTLY this structure (raw JSON only, no markdown fences):
-
-{
-  "mode": "deep",
-  "executiveSummary": "3–4 sentences synthesizing overall plausibility. Lead with genuine strengths, then characterize the key risk profile. Be warm but honest — this is LoreKit's senior editorial verdict.",
-  "layerFindings": {
-    "structural": [
-      {
-        "title": "Short label for this specific finding",
-        "why": "2–3 sentences: the issue and why it matters for credibility or immersion.",
-        "riskLevel": "low | medium | high",
-        "evidence": "Optional: specific quote or detail from the passage that evidences this finding.",
-        "fixes": [
-          "Concrete, actionable suggestion phrased directly to the creator.",
-          "Alternative fix if a different narrative direction suits."
-        ]
-      }
-    ],
-    "behavioral": [ /* same DeepFinding shape */ ],
-    "cultural": [ /* same DeepFinding shape */ ],
-    "occupational": [ /* same DeepFinding shape */ ],
-    "motivational": [ /* same DeepFinding shape */ ]
-  },
-  "topRisks": [
-    {
-      "title": "Cross-layer risk label",
-      "riskLevel": "low | medium | high",
-      "why": "Why this is the highest-priority issue — which layers it spans and what the reader impact is.",
-      "fixes": [
-        "Primary fix recommendation.",
-        "Alternative approach."
-      ]
-    }
-  ],
-  "assumptions": [
-    "Every silent inference made. Tag uncertain real-world claims as '(approximation)'."
-  ],
-  "uncertaintyFlags": [
-    "Claims that are plausible but uncertain — real-world data points that could go either way. Tagged '(approximation)' if quantitative."
-  ],
-  "researchGapQuestions": [
-    "A specific, targeted research question the author should investigate to strengthen this passage. Phrased as a genuine research prompt, not a critique."
-  ]
-}
-
-### Field Constraints:
-- layerFindings: each layer array has 0–2 findings. If a layer has no meaningful issue, return an empty array. Do not fabricate problems.
-- Each finding why: max 2 sentences. Each finding fixes: max 2 items.
-- topRisks: max 3 items, cross-layer highest-severity only. No duplication of minor findings.
-- assumptions: 4–10 items. List every silent inference — never omit.
-- uncertaintyFlags: only genuinely uncertain real-world claims. 0–5 items.
-- researchGapQuestions: 2–4 specific questions the author should actually research.
-- Do NOT fabricate statistics or historical facts — mark uncertain claims as "(approximation)".
-- riskLevel values must be exactly: "low", "medium", or "high".
-- If the response risks exceeding the token budget, compress first rather than expanding.
-- Output ONLY the JSON object. No prose before or after it.`;
-}
-
-// ─── Korean Deep Audit prompt ─────────────────────────────────────────────────
-const SYSTEM_DEEP_KO =
-  '당신은 로어킷(LoreKit)입니다. 내러티브 및 세계관 개연성 분석을 전문으로 하는 예리하고 약간 장난스러운 고양이 조수입니다. ' +
-  '당신은 시니어 편집자이자 하위문화에 대한 깊은 지식을 가진 문화 연구자처럼 평가합니다. ' +
-  '실제 커뮤니티, 직장, 하위문화, 팬덤, 밴드, 게이머 집단, 세대별 미시 행동이 실제로 어떻게 작동하는지 항상 주의 깊게 살펴봅니다. ' +
-  '따뜻하고 건설적이며 정밀합니다. 창의적 선택을 결코 무시하지 않고, 그 위험을 조명하며 나아갈 방향을 제시합니다. ' +
-  'JSON 내 산문은 반드시 존댓말(공손한 제안형)로 통일하며, 반말과 존댓말을 섞지 않습니다. ' +
-  '반드시 유효한 JSON 객체만 응답합니다 — 앞뒤 산문이나 마크다운 코드 펜스 없이.';
-
-function buildPromptDeepKO(body: LoreCheckRequest): string {
-  return `\
-다음 세계관 또는 내러티브 단락에 대해 심층 점검(Deep Audit)을 수행하세요 — 표면적인 긴장 요소를 넘어서는 철저하고 다층적인 검토입니다. 다섯 개 레이어를 세밀하게 평가하고, 레이어를 넘나드는 위험 요소를 제시하며, 모든 암묵적 가정을 드러내고, 작가가 조사해야 할 구체적인 연구 질문을 제공하세요.
-
-### 단락:
----
-${body.text}
----
-${metaBlockKO(body.optionalMeta)}
-
-### 평가 레이어 (각 레이어를 깊이 평가한 후 layerFindings에 기록):
-
-1. **구조적 개연성** — 물리적, 논리적, 인과적 일관성. 불가능한 시퀀스, 모순된 전제, 타임라인 문제.
-
-2. **행동 확률** — 압박 아래서의 캐릭터 결정, 반응, 심리적 개연성. 동기 없는 선택, 편의적 타이밍, 비현실적 심리.
-
-3. **문화적 정합성** — 규범, 가치관, 사회적 역학, 세대별 미시 행동, 하위문화 특성. 시대착오, 맞지 않는 사회적 논리, 팬덤/커뮤니티 행동, 밴드/직장/게이머 집단의 역학.
-
-4. **직업적 논리** — 기술, 접근권, 기관 지식, 직업적 위계. 너무 많이/너무 적게 아는 캐릭터, 개연성 있는 역량 밖의 행동.
-
-5. **동기의 일관성** — 목표, 두려움, 행동이 일관된 흐름을 형성하는지. 숨겨진 동기, 모순된 욕구, 비현실적인 목표 정렬.
-
-### 일상적 개연성 필수 점검:
-밴드/음악 집단의 실제 작동 방식, 게이머/팬덤의 실제 행동, 실제 직장 운영 방식(특히 틈새 직종), 세대별 미시 행동, 하위문화 규범 등 비자명적인 문제를 항상 확인하세요. 탐지 가능한 경우 해당 layerFindings 배열에 최소 하나의 관련 발견을 포함하세요.
-
----
-
-다음 구조에 정확히 맞는 단일 JSON 객체를 반환하세요 (원시 JSON만, 마크다운 펜스 없음).
-모든 산문 내용은 한국어로 작성하세요.
-
-{
-  "mode": "deep",
-  "executiveSummary": "전반적인 개연성을 종합하는 3–4문장. 진정한 강점을 먼저, 그다음 핵심 위험 프로파일을 특성화하세요. 따뜻하되 솔직하게 — LoreKit의 시니어 편집자적 판단.",
-  "layerFindings": {
-    "structural": [
-      {
-        "title": "이 특정 발견의 짧은 레이블 (한국어)",
-        "why": "2–3문장: 문제와 신뢰도/몰입에 왜 중요한지 (한국어)",
-        "riskLevel": "low | medium | high",
-        "evidence": "선택사항: 이 발견을 뒷받침하는 단락의 특정 인용이나 세부 사항 (한국어)",
-        "fixes": [
-          "창작자에게 직접 전달하는 구체적이고 실행 가능한 제안 (한국어)",
-          "다른 내러티브 방향이 적절한 경우의 대안 (한국어)"
-        ]
-      }
-    ],
-    "behavioral": [],
-    "cultural": [],
-    "occupational": [],
-    "motivational": []
-  },
-  "topRisks": [
-    {
-      "title": "레이어를 넘나드는 위험 레이블 (한국어)",
-      "riskLevel": "low | medium | high",
-      "why": "이것이 최우선 문제인 이유 — 어떤 레이어에 걸쳐 있으며 독자 영향은 무엇인지 (한국어)",
-      "fixes": [
-        "주요 수정 권장 사항 (한국어)",
-        "대안적 접근 방식 (한국어)"
-      ]
-    }
-  ],
-  "assumptions": [
-    "모든 암묵적 추론 (한국어). 불확실한 실제 주장은 '(추정)'으로 태그하세요."
-  ],
-  "uncertaintyFlags": [
-    "개연성은 있지만 불확실한 주장 — 어느 쪽으로도 갈 수 있는 실제 데이터 포인트 (한국어). 수치적인 경우 '(추정)'으로 태그."
-  ],
-  "researchGapQuestions": [
-    "작가가 이 단락을 강화하기 위해 실제로 조사해야 할 구체적이고 타겟화된 연구 질문 (한국어). 비판이 아닌 진정한 연구 방향으로 표현."
-  ]
-}
-
-### 필드 제약:
-- layerFindings: 각 레이어 배열은 0–2개의 발견. 의미 있는 문제가 없는 레이어는 빈 배열로 반환하세요. 문제를 만들어내지 마세요.
-- 각 발견 why: 최대 2문장. 각 발견 fixes: 최대 2개 항목.
-- topRisks: 최대 3개 항목, 레이어를 넘나드는 최고 심각도 문제만. 사소한 발견의 중복 없음.
-- assumptions: 4–10개 항목. 모든 암묵적 추론 — 절대 생략하지 마세요.
-- uncertaintyFlags: 진정으로 불확실한 실제 주장만. 0–5개 항목.
-- researchGapQuestions: 작가가 실제로 조사해야 할 2–4개의 구체적인 질문.
-- 통계나 역사적 사실을 날조하지 마세요 — 불확실한 주장은 "(추정)"으로 표시.
-- riskLevel 값은 반드시 영어로: "low", "medium", "high" 중 하나.
-- 응답이 토큰 예산을 초과할 위험이 있다면, 압축을 우선하세요.
 - JSON 객체만 출력하세요. 앞뒤 산문 없음.`;
 }
 
@@ -585,8 +313,6 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (err) return jsonError(err, 400);
 
   const body = sanitise(raw as LoreCheckRequest);
-  const mode = body.mode === 'deep' ? 'deep' : 'quick';
-  const seedsCost = mode === 'deep' ? SEEDS_COST_DEEP : SEEDS_COST_QUICK;
 
   const ko = isKorean(lang);
 
@@ -597,7 +323,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       env.SUPABASE_URL,
       env.SUPABASE_SERVICE_KEY,
       request.headers.get('Authorization'),
-      seedsCost,
+      SEEDS_COST,
     );
     if (!seedResult.ok) {
       return jsonError(seedResult.error ?? 'Seeds error.', seedResult.status ?? 400);
@@ -608,58 +334,35 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // ── AI call (refund seeds on failure) ──────────────────────────────────────
   let report: unknown;
   try {
-    if (mode === 'deep') {
-      report = await callLLM(env.OPENAI_API_KEY, {
-        system:      ko ? SYSTEM_DEEP_KO : SYSTEM_DEEP_EN,
-        user:        ko ? buildPromptDeepKO(body) : buildPromptDeepEN(body),
-        jsonSchema:  {},
-        model:     'gpt-5.2',
-        reasoning: { effort: 'low' },
-        maxTokens: 6_000,
-      });
-    } else {
-      report = await callLLM(env.OPENAI_API_KEY, {
-        system:    ko ? SYSTEM_QUICK_KO : SYSTEM_QUICK_EN,
-        user:      ko ? buildPromptQuickKO(body) : buildPromptQuickEN(body),
-        jsonSchema: {},
-        model:     'gpt-5.2',
-        reasoning: { effort: 'low' },
-        maxTokens: 2_500,
-      });
-    }
+    report = await callLLM(env.OPENAI_API_KEY, {
+      system:      ko ? SYSTEM_KO : SYSTEM_EN,
+      user:        ko ? buildPromptKO(body) : buildPromptEN(body),
+      jsonSchema:  {},
+      model:       'gpt-4o',
+      temperature: 0.5,
+      maxTokens:   1_800,
+    });
   } catch (e) {
     if (userId && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
-      try { await refundSeeds(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, userId, seedsCost); } catch {}
+      try { await refundSeeds(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, userId, SEEDS_COST); } catch {}
     }
     if (e instanceof LLMError) {
-      return jsonError('AI service returned an error.', e.status, e.message || `HTTP ${e.status}`);
+      return jsonError('AI service returned an error.', e.status, e.message);
     }
     return jsonError('Unexpected server error.', 500, String(e));
   }
 
-  if (mode === 'deep') {
-    if (!isValidDeepReport(report)) {
-      if (userId && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
-        try { await refundSeeds(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, userId, seedsCost); } catch {}
-      }
-      return jsonError(
-        'The AI returned an unexpected response shape. Please try again.',
-        500,
-      );
+  if (!isValidReport(report)) {
+    if (userId && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
+      try { await refundSeeds(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, userId, SEEDS_COST); } catch {}
     }
-    return jsonOk({ ...(report as DeepReport), mode: 'deep' });
-  } else {
-    if (!isValidQuickReport(report)) {
-      if (userId && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
-        try { await refundSeeds(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, userId, seedsCost); } catch {}
-      }
-      return jsonError(
-        'The AI returned an unexpected response shape. Please try again.',
-        500,
-      );
-    }
-    return jsonOk({ ...(report as LoreCheckReport), mode: 'quick' });
+    return jsonError(
+      'The AI returned an unexpected response shape. Please try again.',
+      502,
+    );
   }
+
+  return jsonOk(report);
 };
 
 export const onRequestOptions: PagesFunction = () =>

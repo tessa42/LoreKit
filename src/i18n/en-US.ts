@@ -153,21 +153,6 @@ export const en = {
   lorecheck_copy_stability:     'Stability',
   lorecheck_copy_eyebrow_risk:  'Eyebrow risk',
 
-  // Deep Audit
-  lorecheck_deep_results_title:      'Deep Audit Results',
-  lorecheck_deep_executive:          'Executive Summary',
-  lorecheck_deep_layer_structural:   'Structural Plausibility',
-  lorecheck_deep_layer_behavioral:   'Behavioral Probability',
-  lorecheck_deep_layer_cultural:     'Cultural Alignment',
-  lorecheck_deep_layer_occupational: 'Occupational Logic',
-  lorecheck_deep_layer_motivational: 'Motivational Coherence',
-  lorecheck_deep_top_risks:          'Top Risks',
-  lorecheck_deep_uncertainty:        'Uncertainty Flags',
-  lorecheck_deep_research_gaps:      'Research Gap Questions',
-  lorecheck_deep_scanning:           '🔬 Deep audit in progress…',
-  lorecheck_deep_evidence:           'Evidence',
-  lorecheck_deep_assumptions:        'Silent Assumptions',
-
   // ── Simulator ────────────────────────────────────────────────────────────────
   sim_eyebrow:          '✨ Simulator',
   sim_title:            'Step Through the Portal',

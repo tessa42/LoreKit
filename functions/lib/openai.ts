@@ -1,11 +1,8 @@
 /**
- * Thin server-side wrapper around the OpenAI Responses API.
+ * Thin server-side wrapper around the OpenAI Chat Completions API.
  *
  * The OPENAI_API_KEY is read from the Cloudflare environment and is NEVER
  * returned to the browser — all calls happen inside Pages Functions.
- *
- * gpt-5.2 requires /v1/responses (not /v1/chat/completions).
- * Temperature is not supported for this model.
  */
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -14,26 +11,23 @@ export interface CallLLMOptions {
   user:        string;
   /** When provided the API is called in JSON mode and the response is parsed. */
   jsonSchema?: Record<string, unknown>;
-  model?:      'gpt-5.2' | 'gpt-5-mini';
+  model?:      'gpt-4o' | 'gpt-4o-mini';
+  temperature?: number;
   maxTokens?:  number;
-  reasoning?:  { effort: 'low' | 'medium' | 'high' };
 }
 
-interface ResponseOutputContent {
-  type:  string;
-  text?: string;
+interface OpenAIMessage {
+  role:    'system' | 'user' | 'assistant';
+  content: string;
 }
 
-interface ResponseOutputItem {
-  type:     string;
-  content?: ResponseOutputContent[];
+interface OpenAIChoice {
+  message: { content: string };
 }
 
-interface ResponsesAPIResponse {
-  status?:           string;
-  incomplete_details?: { reason?: string };
-  output?:           ResponseOutputItem[];
-  error?:            { message: string; code?: string };
+interface OpenAIResponse {
+  choices?: OpenAIChoice[];
+  error?:   { message: string; code?: string };
 }
 
 // ─── Error class ──────────────────────────────────────────────────────────────
@@ -50,13 +44,28 @@ export class LLMError extends Error {
 
 // ─── Defaults ─────────────────────────────────────────────────────────────────
 const DEFAULTS = {
-  model:     'gpt-5.2',
-  maxTokens: 1_500,
+  model:       'gpt-4o',
+  temperature: 0.3,
+  maxTokens:   1_500,
 } as const;
 
-const OPENAI_URL = 'https://api.openai.com/v1/responses';
+const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 
 // ─── Overloads ────────────────────────────────────────────────────────────────
+/**
+ * Calls the OpenAI Chat Completions API.
+ *
+ * • With `jsonSchema` → enables JSON mode; returns the parsed object.
+ * • Without `jsonSchema` → returns the raw text string.
+ *
+ * Throws {@link LLMError} on HTTP or API-level failures.
+ *
+ * @example — plain text
+ *   const story = await callLLM(env.OPENAI_API_KEY, { system, user });
+ *
+ * @example — structured JSON
+ *   const report = await callLLM(env.OPENAI_API_KEY, { system, user, jsonSchema: { ... } });
+ */
 export async function callLLM(
   apiKey: string,
   opts:   CallLLMOptions & { jsonSchema: Record<string, unknown> },
@@ -71,30 +80,21 @@ export async function callLLM(
   apiKey: string,
   opts:   CallLLMOptions,
 ): Promise<string | unknown> {
+  const messages: OpenAIMessage[] = [
+    { role: 'system', content: opts.system },
+    { role: 'user',   content: opts.user   },
+  ];
+
   const body: Record<string, unknown> = {
-    model:             opts.model ?? DEFAULTS.model,
-    input: [
-      {
-        type:    'message',
-        role:    'developer',
-        content: [{ type: 'input_text', text: opts.system }],
-      },
-      {
-        type:    'message',
-        role:    'user',
-        content: [{ type: 'input_text', text: opts.user }],
-      },
-    ],
-    text:              { format: { type: 'text' }, verbosity: 'medium' },
-    max_output_tokens: opts.maxTokens ?? DEFAULTS.maxTokens,
-    reasoning:         opts.reasoning ?? { effort: 'medium' },
-    tools:             [],
-    store:             true,
-    include:           ['reasoning.encrypted_content', 'web_search_call.action.sources'],
+    model:       opts.model       ?? DEFAULTS.model,
+    temperature: opts.temperature ?? DEFAULTS.temperature,
+    max_tokens:  opts.maxTokens   ?? DEFAULTS.maxTokens,
+    messages,
   };
 
-  const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 28_000);
+  if (opts.jsonSchema) {
+    body['response_format'] = { type: 'json_object' };
+  }
 
   let res: Response;
   try {
@@ -104,47 +104,29 @@ export async function callLLM(
         'Content-Type': 'application/json',
         Authorization:  `Bearer ${apiKey}`,
       },
-      body:   JSON.stringify(body),
-      signal: controller.signal,
+      body: JSON.stringify(body),
     });
   } catch (err) {
-    const msg = String(err).includes('abort')
-      ? 'Request timed out (model took too long to respond).'
-      : `Network error reaching OpenAI: ${String(err)}`;
-    throw new LLMError(msg, 504);
-  } finally {
-    clearTimeout(timeoutId);
+    throw new LLMError(`Network error reaching OpenAI: ${String(err)}`, 502);
   }
 
-  let data: ResponsesAPIResponse;
-  try {
-    data = (await res.json()) as ResponsesAPIResponse;
-  } catch {
-    throw new LLMError('OpenAI returned a non-JSON response.', 500);
-  }
+  const data = (await res.json()) as OpenAIResponse;
 
   if (!res.ok) {
-    const errMsg = data.error?.message || `HTTP ${res.status}: ${JSON.stringify(data)}`;
-    throw new LLMError(errMsg, res.status, data.error?.code);
-  }
-
-  if (data.status === 'incomplete') {
-    const reason = data.incomplete_details?.reason ?? 'max_output_tokens';
     throw new LLMError(
-      `Response was cut off (${reason}). Try again or reduce your input.`,
-      500,
+      data.error?.message ?? 'OpenAI returned an error.',
+      res.status,
+      data.error?.code,
     );
   }
 
-  const msgOutput   = data.output?.find(o => o.type === 'message');
-  const textContent = msgOutput?.content?.find(c => c.type === 'output_text');
-  const content     = textContent?.text ?? '';
+  const content = data.choices?.[0]?.message?.content ?? '';
 
   if (opts.jsonSchema) {
     try {
       return JSON.parse(content) as unknown;
     } catch {
-      throw new LLMError('OpenAI returned malformed JSON.', 500);
+      throw new LLMError('OpenAI returned malformed JSON.', 502);
     }
   }
 

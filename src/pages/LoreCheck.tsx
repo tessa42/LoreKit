@@ -1,9 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import type {
-  LoreCheckForm, LoreCheckReport, LoreCheckResult,
-  DeepReport, DeepFinding, RiskLevel, TensionPoint,
-} from '../types/lorecheck';
+import type { LoreCheckForm, LoreCheckReport, RiskLevel, TensionPoint } from '../types/lorecheck';
 import { useLang } from '../i18n';
 import { useAuth } from '../contexts/AuthContext';
 import { saveReport } from '../lib/library';
@@ -86,312 +83,6 @@ function TensionCard({ tension, index }: { tension: TensionPoint; index: number 
   );
 }
 
-// ─── Deep Finding card ────────────────────────────────────────────────────────
-function DeepFindingCard({ finding, index }: { finding: DeepFinding; index: number }) {
-  const { t } = useLang();
-  return (
-    <div className="lc-tension animate-fade-up" style={{ animationDelay: `${index * 60}ms` }}>
-      <div className="lc-tension__header">
-        <span className="lc-tension__number">
-          {String(index + 1).padStart(2, '0')}
-        </span>
-        <RiskBadge riskLevel={finding.riskLevel} />
-        <h3 className="lc-tension__title">{finding.title}</h3>
-      </div>
-
-      <p className="lc-tension__explanation">{finding.why}</p>
-
-      {finding.evidence && (
-        <div className="lc-deep-evidence">
-          <span className="lc-deep-evidence__label">{t('lorecheck_deep_evidence')}</span>
-          <p className="lc-deep-evidence__text">"{finding.evidence}"</p>
-        </div>
-      )}
-
-      <div className="lc-tension__fixes">
-        <span className="lc-tension__fixes-label">{t('lorecheck_suggested_fixes')}</span>
-        <ul className="lc-tension__fix-list">
-          {finding.fixes.map((fix, i) => (
-            <li key={i} className="lc-tension__fix-item">
-              <span className="lc-tension__fix-bullet">→</span>
-              <span>{fix}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-// ─── Quick Scan Result ────────────────────────────────────────────────────────
-function QuickScanReport({
-  report,
-  onRefine,
-  onSave,
-  onCopy,
-  onClear,
-  saveState,
-  showSave,
-}: {
-  report:    LoreCheckReport;
-  onRefine:  () => void;
-  onSave:    () => void;
-  onCopy:    () => void;
-  onClear:   () => void;
-  saveState: 'idle' | 'saving' | 'saved' | 'error';
-  showSave:  boolean;
-}) {
-  const { t } = useLang();
-  const count = report.tensionPoints.length;
-
-  return (
-    <section className="lc-report animate-fade-up">
-      {/* Report header */}
-      <div className="lc-report__header">
-        <div>
-          <span className="eyebrow lc-report__eyebrow">{t('lorecheck_notes_eyebrow')}</span>
-          <h2 className="lc-report__title">{t('lorecheck_results_title')}</h2>
-        </div>
-        <div className="lc-report__header-actions">
-          <button className="btn btn-primary btn-sm" onClick={onRefine}>
-            {t('lorecheck_refine')}
-          </button>
-          {showSave && (
-            <button
-              className="btn btn-ghost btn-sm"
-              onClick={onSave}
-              disabled={saveState === 'saving' || saveState === 'saved'}
-            >
-              {saveState === 'saved'
-                ? t('save_to_library_done')
-                : saveState === 'error'
-                ? t('save_to_library_error')
-                : t('save_to_library')}
-            </button>
-          )}
-          <button className="btn btn-ghost btn-sm" onClick={onCopy}>
-            {t('lorecheck_copy')}
-          </button>
-        </div>
-      </div>
-
-      {/* Overall impression */}
-      <div className="lc-impression">
-        <span className="lc-impression__label">{t('lorecheck_overall_impression')}</span>
-        <p className="lc-impression__text">{report.overallImpression}</p>
-      </div>
-
-      {/* Tension points */}
-      <div className="lc-tensions-section">
-        <p className="lc-tensions-section__heading">
-          {t('lorecheck_tensions_found', {
-            n: String(count),
-            s: count !== 1 ? 's' : '',
-          })}
-        </p>
-        {report.tensionPoints.map((tp, i) => (
-          <TensionCard key={i} tension={tp} index={i} />
-        ))}
-      </div>
-
-      {/* Summary bar */}
-      <div className="lc-summary">
-        <span className="lc-summary__label">Summary</span>
-        <div className="lc-summary__meters">
-          <StabilityMeter label="Stability"                 value={report.stability}        invert={false} />
-          <StabilityMeter label="Reader eyebrow-raise risk" value={report.eyebrowRaiseRisk} invert={true}  />
-        </div>
-      </div>
-
-      {/* Extracted assumptions */}
-      {report.extractedAssumptions.length > 0 && (
-        <div className="lc-impression" style={{ marginTop: '1rem' }}>
-          <span className="lc-impression__label">{t('lorecheck_assumptions_label')}</span>
-          <ul className="logic-list" style={{ marginTop: '0.5rem' }}>
-            {report.extractedAssumptions.map((a, i) => <li key={i}>{a}</li>)}
-          </ul>
-        </div>
-      )}
-
-      {/* Clarifying questions */}
-      {report.missingInfoQuestions.length > 0 && (
-        <div className="lc-catnote" style={{ marginTop: '1rem' }}>
-          <span className="lc-catnote__cat">💬</span>
-          <div>
-            <span className="lc-catnote__label">{t('lorecheck_curious_label')}</span>
-            <ul className="logic-list" style={{ marginTop: '0.5rem' }}>
-              {report.missingInfoQuestions.map((q, i) => <li key={i}>{q}</li>)}
-            </ul>
-          </div>
-        </div>
-      )}
-
-      {/* Bottom CTA */}
-      <div className="lc-report__cta">
-        <button className="btn btn-primary" onClick={onRefine}>
-          {t('lorecheck_refine')}
-        </button>
-        <button className="btn btn-ghost btn-sm" onClick={onClear}>
-          {t('lorecheck_run_another')}
-        </button>
-      </div>
-    </section>
-  );
-}
-
-// ─── Deep Audit Result ────────────────────────────────────────────────────────
-const LAYER_KEYS = [
-  { key: 'structural',   labelKey: 'lorecheck_deep_layer_structural'   },
-  { key: 'behavioral',   labelKey: 'lorecheck_deep_layer_behavioral'   },
-  { key: 'cultural',     labelKey: 'lorecheck_deep_layer_cultural'     },
-  { key: 'occupational', labelKey: 'lorecheck_deep_layer_occupational' },
-  { key: 'motivational', labelKey: 'lorecheck_deep_layer_motivational' },
-] as const;
-
-function DeepAuditReport({
-  report,
-  onRefine,
-  onSave,
-  onCopy,
-  onClear,
-  saveState,
-  showSave,
-}: {
-  report:    DeepReport;
-  onRefine:  () => void;
-  onSave:    () => void;
-  onCopy:    () => void;
-  onClear:   () => void;
-  saveState: 'idle' | 'saving' | 'saved' | 'error';
-  showSave:  boolean;
-}) {
-  const { t } = useLang();
-
-  return (
-    <section className="lc-report animate-fade-up">
-      {/* Report header */}
-      <div className="lc-report__header">
-        <div>
-          <span className="eyebrow lc-report__eyebrow">{t('lorecheck_notes_eyebrow')}</span>
-          <h2 className="lc-report__title">{t('lorecheck_deep_results_title')}</h2>
-        </div>
-        <div className="lc-report__header-actions">
-          <button className="btn btn-primary btn-sm" onClick={onRefine}>
-            {t('lorecheck_refine')}
-          </button>
-          {showSave && (
-            <button
-              className="btn btn-ghost btn-sm"
-              onClick={onSave}
-              disabled={saveState === 'saving' || saveState === 'saved'}
-            >
-              {saveState === 'saved'
-                ? t('save_to_library_done')
-                : saveState === 'error'
-                ? t('save_to_library_error')
-                : t('save_to_library')}
-            </button>
-          )}
-          <button className="btn btn-ghost btn-sm" onClick={onCopy}>
-            {t('lorecheck_copy')}
-          </button>
-        </div>
-      </div>
-
-      {/* Executive Summary */}
-      <div className="lc-impression">
-        <span className="lc-impression__label">{t('lorecheck_deep_executive')}</span>
-        <p className="lc-impression__text">{report.executiveSummary}</p>
-      </div>
-
-      {/* Layer Findings */}
-      {LAYER_KEYS.map(({ key, labelKey }) => {
-        const findings = report.layerFindings[key];
-        if (findings.length === 0) return null;
-        return (
-          <div key={key} className="lc-tensions-section" style={{ marginTop: '1.5rem' }}>
-            <p className="lc-tensions-section__heading">{t(labelKey)}</p>
-            {findings.map((f, i) => (
-              <DeepFindingCard key={i} finding={f} index={i} />
-            ))}
-          </div>
-        );
-      })}
-
-      {/* Top Risks */}
-      {report.topRisks.length > 0 && (
-        <div className="lc-tensions-section" style={{ marginTop: '1.5rem' }}>
-          <p className="lc-tensions-section__heading">{t('lorecheck_deep_top_risks')}</p>
-          {report.topRisks.map((risk, i) => (
-            <div key={i} className="lc-tension animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
-              <div className="lc-tension__header">
-                <span className="lc-tension__number">{String(i + 1).padStart(2, '0')}</span>
-                <RiskBadge riskLevel={risk.riskLevel} />
-                <h3 className="lc-tension__title">{risk.title}</h3>
-              </div>
-              <p className="lc-tension__explanation">{risk.why}</p>
-              <div className="lc-tension__fixes">
-                <span className="lc-tension__fixes-label">{t('lorecheck_suggested_fixes')}</span>
-                <ul className="lc-tension__fix-list">
-                  {risk.fixes.map((fix, j) => (
-                    <li key={j} className="lc-tension__fix-item">
-                      <span className="lc-tension__fix-bullet">→</span>
-                      <span>{fix}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Silent Assumptions */}
-      {report.assumptions.length > 0 && (
-        <div className="lc-impression" style={{ marginTop: '1rem' }}>
-          <span className="lc-impression__label">{t('lorecheck_deep_assumptions')}</span>
-          <ul className="logic-list" style={{ marginTop: '0.5rem' }}>
-            {report.assumptions.map((a, i) => <li key={i}>{a}</li>)}
-          </ul>
-        </div>
-      )}
-
-      {/* Uncertainty Flags */}
-      {report.uncertaintyFlags.length > 0 && (
-        <div className="lc-impression" style={{ marginTop: '1rem' }}>
-          <span className="lc-impression__label">{t('lorecheck_deep_uncertainty')}</span>
-          <ul className="logic-list" style={{ marginTop: '0.5rem' }}>
-            {report.uncertaintyFlags.map((f, i) => <li key={i}>{f}</li>)}
-          </ul>
-        </div>
-      )}
-
-      {/* Research Gap Questions */}
-      {report.researchGapQuestions.length > 0 && (
-        <div className="lc-catnote" style={{ marginTop: '1rem' }}>
-          <span className="lc-catnote__cat">🔬</span>
-          <div>
-            <span className="lc-catnote__label">{t('lorecheck_deep_research_gaps')}</span>
-            <ul className="logic-list" style={{ marginTop: '0.5rem' }}>
-              {report.researchGapQuestions.map((q, i) => <li key={i}>{q}</li>)}
-            </ul>
-          </div>
-        </div>
-      )}
-
-      {/* Bottom CTA */}
-      <div className="lc-report__cta">
-        <button className="btn btn-primary" onClick={onRefine}>
-          {t('lorecheck_refine')}
-        </button>
-        <button className="btn btn-ghost btn-sm" onClick={onClear}>
-          {t('lorecheck_run_another')}
-        </button>
-      </div>
-    </section>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 interface LocationState {
   prefill?: { worldText?: string };
@@ -418,8 +109,7 @@ export default function LoreCheck() {
   });
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [view,       setView]       = useState<'form' | 'loading' | 'result'>('form');
-  const [report,     setReport]     = useState<LoreCheckResult | null>(null);
-  const [reportMode, setReportMode] = useState<'quick' | 'deep'>('quick');
+  const [report,     setReport]     = useState<LoreCheckReport | null>(null);
   const [error,      setError]      = useState<string | null>(null);
   const [needsSeeds, setNeedsSeeds] = useState(false);
   const [saveState,  setSaveState]  = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -432,13 +122,13 @@ export default function LoreCheck() {
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm(prev => ({ ...prev, [k]: e.target.value }));
 
-  async function runLoreCheck(mode: 'quick' | 'deep') {
+  async function handleQuickScan(e: React.FormEvent) {
+    e.preventDefault();
     if (!canScan || view === 'loading') return;
     setView('loading');
     setReport(null);
     setError(null);
     setNeedsSeeds(false);
-    setReportMode(mode);
 
     try {
       const headers: Record<string, string> = {
@@ -452,7 +142,6 @@ export default function LoreCheck() {
         headers,
         body: JSON.stringify({
           text: form.worldText.trim(),
-          mode,
           optionalMeta: {
             timePeriod: form.timePeriod          || undefined,
             region:     form.countryRegion        || undefined,
@@ -472,12 +161,10 @@ export default function LoreCheck() {
         setError(t('err_insufficient_seeds'));
         setView('form');
       } else if (!res.ok) {
-        const msg     = (data['error']   as string | undefined) ?? t('err_generic');
-        const details = (data['details'] as string | undefined);
-        setError(details ? `${msg} — ${details}` : msg);
+        setError((data['error'] as string | undefined) ?? t('err_generic'));
         setView('form');
       } else {
-        setReport(data as unknown as LoreCheckResult);
+        setReport(data as unknown as LoreCheckReport);
         refetchSeeds();
         setView('result');
       }
@@ -487,48 +174,22 @@ export default function LoreCheck() {
     }
   }
 
-  function handleQuickScan(e: React.FormEvent) {
-    e.preventDefault();
-    void runLoreCheck('quick');
-  }
-
-  function handleDeepAudit() {
-    void runLoreCheck('deep');
-  }
-
   function handleRefineLoreCraft() {
     if (!report) return;
-    let payload: string;
-    if (report.mode === 'deep') {
-      const deep = report as DeepReport;
-      payload = [
-        '## Issues flagged by LoreCheck (Deep Audit)',
-        '',
-        deep.executiveSummary,
-        '',
-        '### Top Risks:',
-        ...deep.topRisks.map(
-          (r, i) =>
-            `${i + 1}. **${r.title}** (${r.riskLevel} risk) — ${r.why.slice(0, 120)}…`,
-        ),
-      ].join('\n');
-    } else {
-      const quick = report as LoreCheckReport;
-      payload = [
-        '## Issues flagged by LoreCheck',
-        '',
-        `Stability: ${quick.stability} | Reader eyebrow-raise risk: ${quick.eyebrowRaiseRisk}`,
-        '',
-        '### Key tensions to address:',
-        ...quick.tensionPoints.map(
-          (tp, i) =>
-            `${i + 1}. **${tp.title}** (${tp.riskLevel} risk) — ${tp.why.slice(0, 120)}…`,
-        ),
-        '',
-        '### Overall impression:',
-        quick.overallImpression,
-      ].join('\n');
-    }
+    const payload = [
+      '## Issues flagged by LoreCheck',
+      '',
+      `Stability: ${report.stability} | Reader eyebrow-raise risk: ${report.eyebrowRaiseRisk}`,
+      '',
+      '### Key tensions to address:',
+      ...report.tensionPoints.map(
+        (tp, i) =>
+          `${i + 1}. **${tp.title}** (${tp.riskLevel} risk) — ${tp.why.slice(0, 120)}…`,
+      ),
+      '',
+      '### Overall impression:',
+      report.overallImpression,
+    ].join('\n');
 
     navigate('/lorecraft', { state: { prefill: { extraContext: payload } } });
   }
@@ -551,7 +212,7 @@ export default function LoreCheck() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function buildCopyTextQuick(r: LoreCheckReport): string {
+  function buildCopyText(r: LoreCheckReport): string {
     return [
       t('lorecheck_copy_title') + '\n',
       `${t('lorecheck_copy_overall')}: ${r.overallImpression}\n`,
@@ -563,32 +224,7 @@ export default function LoreCheck() {
     ].join('\n\n');
   }
 
-  function buildCopyTextDeep(r: DeepReport): string {
-    const layerLines: string[] = [];
-    for (const { key, labelKey } of LAYER_KEYS) {
-      const findings = r.layerFindings[key];
-      if (findings.length === 0) continue;
-      layerLines.push(`\n### ${t(labelKey)}`);
-      findings.forEach((f, i) => {
-        layerLines.push(`${i + 1}. ${f.title} [${f.riskLevel} risk]\n${f.why}`);
-      });
-    }
-    return [
-      'LORECHECK DEEP AUDIT\n',
-      r.executiveSummary,
-      ...layerLines,
-      '\n### Top Risks:',
-      ...r.topRisks.map((risk, i) => `${i + 1}. ${risk.title} [${risk.riskLevel}] — ${risk.why}`),
-    ].join('\n\n');
-  }
-
-  function handleCopy() {
-    if (!report) return;
-    const text = report.mode === 'deep'
-      ? buildCopyTextDeep(report as DeepReport)
-      : buildCopyTextQuick(report as LoreCheckReport);
-    void navigator.clipboard.writeText(text);
-  }
+  const count = report?.tensionPoints.length ?? 0;
 
   return (
     <div className="page-wrapper">
@@ -602,11 +238,7 @@ export default function LoreCheck() {
 
       {/* ── Loading screen ───────────────────────────────────────────────── */}
       {view === 'loading' && (
-        <LoadingScreen message={
-          reportMode === 'deep'
-            ? t('lorecheck_deep_scanning')
-            : t('lorecheck_reading')
-        } />
+        <LoadingScreen message={t('lorecheck_reading')} />
       )}
 
       {/* ── Input card (form state only) ─────────────────────────────────── */}
@@ -739,14 +371,12 @@ export default function LoreCheck() {
                 <button
                   type="button"
                   className="btn btn-ghost btn-lg lc-deep-audit-btn"
-                  disabled={!canScan}
-                  onClick={handleDeepAudit}
+                  disabled
+                  title={t('coming_soon')}
                 >
                   {t('lorecheck_deep_audit')}
+                  <span className="lc-coming-soon">{t('coming_soon')}</span>
                 </button>
-                <span className="nutrients-cost-label">
-                  {t('lorecheck_seeds_cost', { n: 2 })}
-                </span>
               </div>
             </div>
 
@@ -773,29 +403,102 @@ export default function LoreCheck() {
 
       {/* ── Report (result state) ────────────────────────────────────────── */}
       {view === 'result' && report && (
-        report.mode === 'deep'
-          ? (
-            <DeepAuditReport
-              report={report as DeepReport}
-              onRefine={handleRefineLoreCraft}
-              onSave={handleSave}
-              onCopy={handleCopy}
-              onClear={handleClear}
-              saveState={saveState}
-              showSave={!!user}
-            />
-          )
-          : (
-            <QuickScanReport
-              report={report as LoreCheckReport}
-              onRefine={handleRefineLoreCraft}
-              onSave={handleSave}
-              onCopy={handleCopy}
-              onClear={handleClear}
-              saveState={saveState}
-              showSave={!!user}
-            />
-          )
+        <section className="lc-report animate-fade-up">
+
+          {/* Report header */}
+          <div className="lc-report__header">
+            <div>
+              <span className="eyebrow lc-report__eyebrow">{t('lorecheck_notes_eyebrow')}</span>
+              <h2 className="lc-report__title">{t('lorecheck_results_title')}</h2>
+            </div>
+            <div className="lc-report__header-actions">
+              <button className="btn btn-primary btn-sm" onClick={handleRefineLoreCraft}>
+                {t('lorecheck_refine')}
+              </button>
+              {user && (
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={handleSave}
+                  disabled={saveState === 'saving' || saveState === 'saved'}
+                >
+                  {saveState === 'saved'
+                    ? t('save_to_library_done')
+                    : saveState === 'error'
+                    ? t('save_to_library_error')
+                    : t('save_to_library')}
+                </button>
+              )}
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => navigator.clipboard.writeText(buildCopyText(report))}
+              >
+                {t('lorecheck_copy')}
+              </button>
+            </div>
+          </div>
+
+          {/* Overall impression */}
+          <div className="lc-impression">
+            <span className="lc-impression__label">{t('lorecheck_overall_impression')}</span>
+            <p className="lc-impression__text">{report.overallImpression}</p>
+          </div>
+
+          {/* Tension points */}
+          <div className="lc-tensions-section">
+            <p className="lc-tensions-section__heading">
+              {t('lorecheck_tensions_found', {
+                n: String(count),
+                s: count !== 1 ? 's' : '',
+              })}
+            </p>
+            {report.tensionPoints.map((tp, i) => (
+              <TensionCard key={i} tension={tp} index={i} />
+            ))}
+          </div>
+
+          {/* Summary bar */}
+          <div className="lc-summary">
+            <span className="lc-summary__label">Summary</span>
+            <div className="lc-summary__meters">
+              <StabilityMeter label="Stability"                 value={report.stability}        invert={false} />
+              <StabilityMeter label="Reader eyebrow-raise risk" value={report.eyebrowRaiseRisk} invert={true}  />
+            </div>
+          </div>
+
+          {/* Extracted assumptions */}
+          {report.extractedAssumptions.length > 0 && (
+            <div className="lc-impression" style={{ marginTop: '1rem' }}>
+              <span className="lc-impression__label">{t('lorecheck_assumptions_label')}</span>
+              <ul className="logic-list" style={{ marginTop: '0.5rem' }}>
+                {report.extractedAssumptions.map((a, i) => <li key={i}>{a}</li>)}
+              </ul>
+            </div>
+          )}
+
+          {/* Clarifying questions */}
+          {report.missingInfoQuestions.length > 0 && (
+            <div className="lc-catnote" style={{ marginTop: '1rem' }}>
+              <span className="lc-catnote__cat">💬</span>
+              <div>
+                <span className="lc-catnote__label">{t('lorecheck_curious_label')}</span>
+                <ul className="logic-list" style={{ marginTop: '0.5rem' }}>
+                  {report.missingInfoQuestions.map((q, i) => <li key={i}>{q}</li>)}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Bottom CTA */}
+          <div className="lc-report__cta">
+            <button className="btn btn-primary" onClick={handleRefineLoreCraft}>
+              {t('lorecheck_refine')}
+            </button>
+            <button className="btn btn-ghost btn-sm" onClick={handleClear}>
+              {t('lorecheck_run_another')}
+            </button>
+          </div>
+
+        </section>
       )}
     </div>
   );
