@@ -600,7 +600,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         user:        ko ? buildPromptDeepKO(body) : buildPromptDeepEN(body),
         jsonSchema:  {},
         model:     'gpt-5.2-pro',
-        maxTokens: 4_500,
+        maxTokens: 10_000,
       });
     } else {
       report = await callLLM(env.OPENAI_API_KEY, {
@@ -608,7 +608,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         user:      ko ? buildPromptQuickKO(body) : buildPromptQuickEN(body),
         jsonSchema: {},
         model:     'gpt-5.2-pro',
-        maxTokens: 1_400,
+        maxTokens: 4_000,
       });
     }
   } catch (e) {
