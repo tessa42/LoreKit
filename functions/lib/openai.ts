@@ -12,7 +12,7 @@ export interface CallLLMOptions {
   /** When provided the API is called in JSON mode and the response is parsed. */
   jsonSchema?: Record<string, unknown>;
   model?:      'gpt-4o' | 'gpt-4o-mini';
-  temperature?: number;
+  temperature?:number;
   maxTokens?:  number;
 }
 
@@ -96,6 +96,9 @@ export async function callLLM(
     body['response_format'] = { type: 'json_object' };
   }
 
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 25_000);
+
   let res: Response;
   try {
     res = await fetch(OPENAI_URL, {
@@ -104,10 +107,16 @@ export async function callLLM(
         'Content-Type': 'application/json',
         Authorization:  `Bearer ${apiKey}`,
       },
-      body: JSON.stringify(body),
+      body:   JSON.stringify(body),
+      signal: controller.signal,
     });
   } catch (err) {
-    throw new LLMError(`Network error reaching OpenAI: ${String(err)}`, 502);
+    const msg = err instanceof Error && err.name === 'AbortError'
+      ? 'OpenAI request timed out (25 s).'
+      : `Network error reaching OpenAI: ${String(err)}`;
+    throw new LLMError(msg, 504);
+  } finally {
+    clearTimeout(timer);
   }
 
   const data = (await res.json()) as OpenAIResponse;
