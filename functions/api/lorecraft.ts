@@ -501,7 +501,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       try { await refundSeeds(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, userId, SEEDS_COST); } catch {}
     }
     if (e instanceof LLMError) {
-      return jsonError('AI service returned an error.', e.status, e.message);
+      return jsonError('AI service returned an error.', e.status, e.message || `HTTP ${e.status}`);
     }
     return jsonError('Unexpected server error.', 500, String(e));
   }

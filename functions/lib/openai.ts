@@ -120,7 +120,7 @@ export async function callLLM(
   }
 
   if (!res.ok) {
-    const errMsg = data.error?.message ?? JSON.stringify(data);
+    const errMsg = data.error?.message || `HTTP ${res.status}: ${JSON.stringify(data)}`;
     throw new LLMError(errMsg, res.status, data.error?.code);
   }
 
