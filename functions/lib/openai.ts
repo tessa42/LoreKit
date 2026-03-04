@@ -17,8 +17,8 @@ export interface CallLLMOptions {
   jsonSchema?: Record<string, unknown>;
   model?:      'gpt-5.2-pro' | 'gpt-5-mini';
   maxTokens?:  number;
-  /** Controls reasoning depth. Use { effort: 'none' } to disable thinking overhead. */
-  reasoning?:  { effort: 'minimal' | 'medium' | 'high' | 'xhigh' };
+  /** Controls reasoning depth. Use { effort: 'none' } to disable thinking overhead for gpt-5-mini. */
+  reasoning?:  { effort: 'none' | 'low' | 'medium' | 'high' };
 }
 
 interface ResponseOutputContent {
@@ -74,16 +74,21 @@ export async function callLLM(
   opts:   CallLLMOptions,
 ): Promise<string | unknown> {
   const body: Record<string, unknown> = {
-    model:             opts.model    ?? DEFAULTS.model,
-    instructions:      opts.system,
-    input:             opts.user,
+    model: opts.model ?? DEFAULTS.model,
+    input: [
+      {
+        role:    'developer',
+        content: [{ type: 'input_text', text: opts.system }],
+      },
+      {
+        role:    'user',
+        content: [{ type: 'input_text', text: opts.user }],
+      },
+    ],
     max_output_tokens: opts.maxTokens ?? DEFAULTS.maxTokens,
+    reasoning:         opts.reasoning ?? {},
     stream:            false,
   };
-
-  if (opts.reasoning) {
-    body['reasoning'] = opts.reasoning;
-  }
 
   if (opts.jsonSchema) {
     body['text'] = { format: { type: 'json_object' } };
