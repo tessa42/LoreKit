@@ -120,11 +120,8 @@ export async function callLLM(
   }
 
   if (!res.ok) {
-    throw new LLMError(
-      data.error?.message ?? 'OpenAI returned an error.',
-      res.status,
-      data.error?.code,
-    );
+    const errMsg = data.error?.message ?? JSON.stringify(data);
+    throw new LLMError(errMsg, res.status, data.error?.code);
   }
 
   if (data.status === 'incomplete') {
