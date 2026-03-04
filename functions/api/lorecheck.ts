@@ -599,8 +599,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         system:      ko ? SYSTEM_DEEP_KO : SYSTEM_DEEP_EN,
         user:        ko ? buildPromptDeepKO(body) : buildPromptDeepEN(body),
         jsonSchema:  {},
-        model:       'gpt-5.2-thinking',
-        temperature: 0.4,
+        model:       'gpt-5.2-pro',
         maxTokens:   4_500,
       });
     } else {
@@ -608,8 +607,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         system:      ko ? SYSTEM_QUICK_KO : SYSTEM_QUICK_EN,
         user:        ko ? buildPromptQuickKO(body) : buildPromptQuickEN(body),
         jsonSchema:  {},
-        model:       'gpt-5.2-thinking',
-        temperature: 0.5,
+        model:       'gpt-5.2-pro',
         maxTokens:   1_400,
       });
     }
