@@ -494,7 +494,6 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       user:        ko ? buildPromptKO(body) : buildPromptEN(body),
       jsonSchema:  {},
       model:       'gpt-5.2-pro',
-      temperature: 0.4,
       maxTokens:   6_000,
     });
   } catch (e) {
