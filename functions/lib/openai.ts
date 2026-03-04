@@ -4,9 +4,8 @@
  * The OPENAI_API_KEY is read from the Cloudflare environment and is NEVER
  * returned to the browser — all calls happen inside Pages Functions.
  *
- * gpt-5.2-pro and gpt-5-mini require /v1/responses (not /v1/chat/completions).
- * Temperature is not supported for these models.
- * For gpt-5-mini, pass reasoning: { effort: 'none' } to disable thinking overhead.
+ * gpt-5.2 requires /v1/responses (not /v1/chat/completions).
+ * Temperature is not supported for this model.
  */
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -15,10 +14,9 @@ export interface CallLLMOptions {
   user:        string;
   /** When provided the API is called in JSON mode and the response is parsed. */
   jsonSchema?: Record<string, unknown>;
-  model?:      'gpt-5.2-pro' | 'gpt-5-mini';
+  model?:      'gpt-5.2';
   maxTokens?:  number;
-  /** Controls reasoning depth. Use { effort: 'none' } to disable thinking overhead for gpt-5-mini. */
-  reasoning?:  { effort: 'none' | 'low' | 'medium' | 'high' };
+  reasoning?:  { effort: 'low' | 'medium' | 'high' };
 }
 
 interface ResponseOutputContent {
@@ -52,7 +50,7 @@ export class LLMError extends Error {
 
 // ─── Defaults ─────────────────────────────────────────────────────────────────
 const DEFAULTS = {
-  model:     'gpt-5.2-pro',
+  model:     'gpt-5.2',
   maxTokens: 1_500,
 } as const;
 
@@ -73,11 +71,8 @@ export async function callLLM(
   apiKey: string,
   opts:   CallLLMOptions,
 ): Promise<string | unknown> {
-  const model   = opts.model ?? DEFAULTS.model;
-  const isMini  = model === 'gpt-5-mini';
-
   const body: Record<string, unknown> = {
-    model,
+    model:             opts.model ?? DEFAULTS.model,
     input: [
       {
         type:    'message',
@@ -90,11 +85,9 @@ export async function callLLM(
         content: [{ type: 'input_text', text: opts.user }],
       },
     ],
-    text:              isMini
-      ? { format: { type: 'text' }, verbosity: 'medium' }
-      : { format: { type: 'text' } },
+    text:              { format: { type: 'text' }, verbosity: 'medium' },
     max_output_tokens: opts.maxTokens ?? DEFAULTS.maxTokens,
-    reasoning:         opts.reasoning ?? (isMini ? { effort: 'medium' } : {}),
+    reasoning:         opts.reasoning ?? { effort: 'medium' },
     tools:             [],
     store:             true,
     include:           ['reasoning.encrypted_content', 'web_search_call.action.sources'],
