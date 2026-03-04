@@ -188,22 +188,23 @@ Return a single JSON object with EXACTLY this structure (raw JSON only, no markd
   "assignedWorld": "The exact world name from the list — copied verbatim",
   "roleArchetype": "A specific, evocative title unique to this world. Never a generic class. Examples: 'Cartographer of Unwritten Maps', 'Ember-Keeper of the Last Hearth', 'Debt-Collector of Borrowed Hours'.",
   "storyHookLines": [
-    "Line 1: set the scene of their arrival — cinematic, immediate, specific.",
-    "Line 2: reveal something unexpected they notice or feel in this world.",
-    "Line 3: introduce the gift or tension that marks them as different.",
-    "Line 4: hint at what they must face, choose, or sacrifice.",
-    "Line 5 (optional): deepen the mystery or raise the stakes one notch.",
-    "Line 6 (optional): a beat of quiet significance before the journey begins."
+    "Set the scene of their arrival — cinematic, immediate, specific.",
+    "Reveal something unexpected they notice or feel in this world.",
+    "Introduce the gift or tension that marks them as different.",
+    "Hint at what they must face, choose, or sacrifice.",
+    "Deepen the mystery or raise the stakes one notch.",
+    "A beat of quiet significance before the journey begins."
   ],
   "fateQuote": "One archaic-register sentence — a prophecy, a warning, or a promise. Memorable. No clichés."
 }
 
 CONSTRAINTS:
 - assignedWorld: verbatim from the list. No paraphrasing.
-- roleArchetype: vivid and world-specific. Never "warrior", "mage", "rogue", "hero".
-- storyHookLines: 4–6 items. One sentence each. Lyrical but grounded.
+- roleArchetype: vivid and world-specific, 4–7 words. Never "warrior", "mage", "rogue", "hero".
+- storyHookLines: exactly 6 items. One sentence each. Avoid long sentences or excessive description.
 - fateQuote: exactly 1 sentence.
 - Tone matches the vibe: dark → tense/ominous; cozy → warm/gentle; tragic → elegiac/bittersweet; whimsical → playful-eerie.
+- If the response risks exceeding the token budget, compress first rather than expanding.
 - Output ONLY the JSON object. No prose before or after.`;
 }
 
@@ -242,21 +243,22 @@ roleArchetype, storyHookLines, fateQuote는 한국어로 작성하세요.
   "assignedWorld": "목록에 있는 정확한 세계 이름 — 영어 그대로 복사 (번역 금지)",
   "roleArchetype": "이 세계에 특화된 구체적이고 인상적인 직함 (한국어). 일반적인 클래스명 금지. 예: '기록되지 않은 지도의 제도사', '마지막 난로의 불씨 수호자', '빌린 시간의 채권 추심인'",
   "storyHookLines": [
-    "1번 줄: 도착 장면 설정 — 영화적이고 즉각적이며 구체적으로 (한국어)",
-    "2번 줄: 이 세계에서 예상치 못하게 느끼거나 알아채는 무언가 (한국어)",
-    "3번 줄: 그들을 다르게 만드는 선물 또는 긴장감 소개 (한국어)",
-    "4번 줄: 직면해야 할 것, 선택해야 할 것, 또는 희생해야 할 것에 대한 암시 (한국어)",
-    "5번 줄 (선택): 미스터리를 깊게 하거나 판돈을 한 단계 높이기 (한국어)",
-    "6번 줄 (선택): 여정이 시작되기 전의 조용한 의미의 순간 (한국어)"
+    "도착 장면 설정 — 영화적이고 즉각적이며 구체적으로 (한국어)",
+    "이 세계에서 예상치 못하게 느끼거나 알아채는 무언가 (한국어)",
+    "그들을 다르게 만드는 선물 또는 긴장감 소개 (한국어)",
+    "직면해야 할 것, 선택해야 할 것, 또는 희생해야 할 것에 대한 암시 (한국어)",
+    "미스터리를 깊게 하거나 판돈을 한 단계 높이기 (한국어)",
+    "여정이 시작되기 전의 조용한 의미의 순간 (한국어)"
   ],
   "fateQuote": "고어체의 단 한 문장 — 예언, 경고, 또는 약속. 기억에 남도록. 클리셰 금지 (한국어)"
 }
 
 제약:
 - assignedWorld: 목록의 영어 이름을 그대로 사용. 번역하거나 바꿔 쓰지 마세요.
-- roleArchetype: 생생하고 세계 특화적. "전사", "마법사", "도적", "영웅" 같은 단어 금지.
-- storyHookLines: 4–6개 항목. 각각 한 문장. 서정적이지만 현실적으로.
+- roleArchetype: 생생하고 세계 특화적, 4–7단어. "전사", "마법사", "도적", "영웅" 같은 단어 금지.
+- storyHookLines: 정확히 6개 항목. 각각 한 문장. 긴 문장이나 과도한 묘사 금지.
 - fateQuote: 정확히 1문장.
+- 응답이 토큰 예산을 초과할 위험이 있다면, 압축을 우선하세요.
 - JSON 객체만 출력하세요. 앞뒤 산문 없음.`;
 }
 

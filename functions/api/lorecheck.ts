@@ -282,12 +282,17 @@ Return a single JSON object matching EXACTLY this structure (raw JSON only, no m
 - **eyebrowRaiseRisk**: likelihood an informed reader pauses and questions the passage (high = very likely).
 - **riskLevel per tension**: severity of threat to immersion if left unaddressed.
 
+### Coherence Rule:
+If the passage is internally coherent and believable with no meaningful tension, return tensionPoints as [], stability as "high", eyebrowRaiseRisk as "low", and state in overallImpression that the passage is credible. Do NOT invent minor issues.
+
 ### Strict Constraints:
-- Surface exactly 3–5 tension points — the most impactful only. Do not pad with trivial observations.
-- Each tension: exactly 2–3 fix suggestions.
-- missingInfoQuestions: 0–4 items, phrased with curiosity and warmth. Omit the array entry entirely if not needed.
+- tensionPoints: maximum 3, most impactful only. Do not pad with trivial observations.
+- Each tension why: max 2 sentences.
+- Each tension fixes: max 2 suggestions.
+- missingInfoQuestions: max 3, phrased with curiosity and warmth.
 - extractedAssumptions: list every silent inference. Never omit.
 - Do NOT fabricate statistics or historical facts — mark uncertain claims as "(approximation)".
+- If the response risks exceeding the token budget, compress first rather than expanding.
 - Output ONLY the JSON object. No prose before or after it.`;
 }
 
@@ -354,12 +359,17 @@ ${metaBlockKO(body.optionalMeta)}
 - **eyebrowRaiseRisk**: 정보에 밝은 독자가 단락을 읽다가 멈추고 의문을 가질 가능성 (high = 매우 높음).
 - **riskLevel**: 해결하지 않을 경우 몰입에 대한 위협의 심각도.
 
+### 일관성 규칙:
+단락이 내부적으로 일관성이 있고 신뢰할 수 있다면, tensionPoints를 []로, stability를 "high"로, eyebrowRaiseRisk를 "low"로 반환하고, overallImpression에서 단락이 신뢰할 수 있다고 기술하세요. 사소한 문제를 만들어내지 마세요.
+
 ### 엄격한 제약:
-- 정확히 3–5개의 긴장 요소만 제시 — 가장 영향력 있는 것만. 사소한 관찰로 채우지 마세요.
-- 각 긴장 요소: 정확히 2–3개의 수정 제안.
-- missingInfoQuestions: 0–4개 항목, 호기심과 따뜻함으로 표현. 필요 없으면 배열 항목을 완전히 생략하세요.
+- tensionPoints: 최대 3개, 가장 영향력 있는 것만. 사소한 관찰로 채우지 마세요.
+- 각 긴장 요소 why: 최대 2문장.
+- 각 긴장 요소 fixes: 최대 2개 제안.
+- missingInfoQuestions: 최대 3개, 호기심과 따뜻함으로 표현.
 - extractedAssumptions: 모든 암묵적 추론을 나열하세요. 절대 생략하지 마세요.
 - 통계나 역사적 사실을 날조하지 마세요 — 불확실한 주장은 "(추정)"으로 표시하세요.
+- 응답이 토큰 예산을 초과할 위험이 있다면, 압축을 우선하세요.
 - riskLevel, stability, eyebrowRaiseRisk 값은 반드시 영어로: "low", "medium", "high" 중 하나.
 - JSON 객체만 출력하세요. 앞뒤 산문 없음.`;
 }
@@ -404,7 +414,7 @@ Return a single JSON object matching EXACTLY this structure (raw JSON only, no m
 
 {
   "mode": "deep",
-  "executiveSummary": "3–5 sentences synthesizing overall plausibility. Lead with genuine strengths, then characterize the key risk profile. Be warm but honest — this is LoreKit's senior editorial verdict.",
+  "executiveSummary": "3–4 sentences synthesizing overall plausibility. Lead with genuine strengths, then characterize the key risk profile. Be warm but honest — this is LoreKit's senior editorial verdict.",
   "layerFindings": {
     "structural": [
       {
@@ -446,13 +456,15 @@ Return a single JSON object matching EXACTLY this structure (raw JSON only, no m
 }
 
 ### Field Constraints:
-- layerFindings: each layer array has 1–4 findings. Only include meaningful findings — empty arrays are allowed if a layer has no issues.
-- topRisks: 3–5 items, the cross-layer highest-severity issues only. No duplication of minor findings.
-- assumptions: list every silent inference — never omit.
-- uncertaintyFlags: only genuinely uncertain real-world claims. 0–6 items.
-- researchGapQuestions: 2–5 specific questions the author should actually research.
+- layerFindings: each layer array has 0–2 findings. If a layer has no meaningful issue, return an empty array. Do not fabricate problems.
+- Each finding why: max 2 sentences. Each finding fixes: max 2 items.
+- topRisks: max 3 items, cross-layer highest-severity only. No duplication of minor findings.
+- assumptions: 4–10 items. List every silent inference — never omit.
+- uncertaintyFlags: only genuinely uncertain real-world claims. 0–5 items.
+- researchGapQuestions: 2–4 specific questions the author should actually research.
 - Do NOT fabricate statistics or historical facts — mark uncertain claims as "(approximation)".
 - riskLevel values must be exactly: "low", "medium", or "high".
+- If the response risks exceeding the token budget, compress first rather than expanding.
 - Output ONLY the JSON object. No prose before or after it.`;
 }
 
@@ -497,7 +509,7 @@ ${metaBlockKO(body.optionalMeta)}
 
 {
   "mode": "deep",
-  "executiveSummary": "전반적인 개연성을 종합하는 3–5문장. 진정한 강점을 먼저, 그다음 핵심 위험 프로파일을 특성화하세요. 따뜻하되 솔직하게 — LoreKit의 시니어 편집자적 판단.",
+  "executiveSummary": "전반적인 개연성을 종합하는 3–4문장. 진정한 강점을 먼저, 그다음 핵심 위험 프로파일을 특성화하세요. 따뜻하되 솔직하게 — LoreKit의 시니어 편집자적 판단.",
   "layerFindings": {
     "structural": [
       {
@@ -539,13 +551,15 @@ ${metaBlockKO(body.optionalMeta)}
 }
 
 ### 필드 제약:
-- layerFindings: 각 레이어 배열은 1–4개의 발견. 의미 있는 발견만 포함 — 문제가 없는 레이어는 빈 배열 허용.
-- topRisks: 3–5개 항목, 레이어를 넘나드는 최고 심각도 문제만. 사소한 발견의 중복 없음.
-- assumptions: 모든 암묵적 추론 — 절대 생략하지 마세요.
-- uncertaintyFlags: 진정으로 불확실한 실제 주장만. 0–6개 항목.
-- researchGapQuestions: 작가가 실제로 조사해야 할 2–5개의 구체적인 질문.
+- layerFindings: 각 레이어 배열은 0–2개의 발견. 의미 있는 문제가 없는 레이어는 빈 배열로 반환하세요. 문제를 만들어내지 마세요.
+- 각 발견 why: 최대 2문장. 각 발견 fixes: 최대 2개 항목.
+- topRisks: 최대 3개 항목, 레이어를 넘나드는 최고 심각도 문제만. 사소한 발견의 중복 없음.
+- assumptions: 4–10개 항목. 모든 암묵적 추론 — 절대 생략하지 마세요.
+- uncertaintyFlags: 진정으로 불확실한 실제 주장만. 0–5개 항목.
+- researchGapQuestions: 작가가 실제로 조사해야 할 2–4개의 구체적인 질문.
 - 통계나 역사적 사실을 날조하지 마세요 — 불확실한 주장은 "(추정)"으로 표시.
 - riskLevel 값은 반드시 영어로: "low", "medium", "high" 중 하나.
+- 응답이 토큰 예산을 초과할 위험이 있다면, 압축을 우선하세요.
 - JSON 객체만 출력하세요. 앞뒤 산문 없음.`;
 }
 
