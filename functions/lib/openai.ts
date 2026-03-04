@@ -100,6 +100,9 @@ export async function callLLM(
     include:           ['reasoning.encrypted_content', 'web_search_call.action.sources'],
   };
 
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 28_000);
+
   let res: Response;
   try {
     res = await fetch(OPENAI_URL, {
@@ -108,10 +111,16 @@ export async function callLLM(
         'Content-Type': 'application/json',
         Authorization:  `Bearer ${apiKey}`,
       },
-      body: JSON.stringify(body),
+      body:   JSON.stringify(body),
+      signal: controller.signal,
     });
   } catch (err) {
-    throw new LLMError(`Network error reaching OpenAI: ${String(err)}`, 500);
+    const msg = String(err).includes('abort')
+      ? 'Request timed out (model took too long to respond).'
+      : `Network error reaching OpenAI: ${String(err)}`;
+    throw new LLMError(msg, 504);
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   let data: ResponsesAPIResponse;
