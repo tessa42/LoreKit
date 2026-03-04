@@ -80,10 +80,12 @@ export async function callLLM(
     model,
     input: [
       {
+        type:    'message',
         role:    'developer',
         content: [{ type: 'input_text', text: opts.system }],
       },
       {
+        type:    'message',
         role:    'user',
         content: [{ type: 'input_text', text: opts.user }],
       },
