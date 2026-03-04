@@ -495,6 +495,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       jsonSchema:  {},
       model:     'gpt-5.2',
       maxTokens: 6_000,
+      reasoning: { effort: 'low' },
     });
   } catch (e) {
     if (userId && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
