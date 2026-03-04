@@ -296,7 +296,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       user:        ko ? buildPromptKO(name, vibe) : buildPromptEN(name, vibe),
       jsonSchema:  {},
       model:     'gpt-5-mini',
-      maxTokens: 1_200,
+      maxTokens: 2_500,
     });
   } catch (e) {
     if (e instanceof LLMError) {
