@@ -18,7 +18,7 @@ export interface CallLLMOptions {
   model?:      'gpt-5.2-pro' | 'gpt-5-mini';
   maxTokens?:  number;
   /** Controls reasoning depth. Use { effort: 'none' } to disable thinking overhead. */
-  reasoning?:  { effort: 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' };
+  reasoning?:  { effort: 'minimal' | 'medium' | 'high' | 'xhigh' };
 }
 
 interface ResponseOutputContent {
