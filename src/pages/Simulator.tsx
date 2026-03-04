@@ -304,7 +304,9 @@ export default function Simulator() {
       const data = await res.json() as Record<string, unknown>;
 
       if (!res.ok) {
-        setError((data['error'] as string | undefined) ?? t('err_generic'));
+        const msg     = (data['error']   as string | undefined) ?? t('err_generic');
+        const details = (data['details'] as string | undefined);
+        setError(details ? `${msg} — ${details}` : msg);
         setView('form');
       } else {
         setCard({ ...(data as Omit<SimulatorCard, 'vibe'>), vibe: form.vibe });
