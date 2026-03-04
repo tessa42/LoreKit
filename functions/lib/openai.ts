@@ -6,6 +6,7 @@
  *
  * gpt-5.2-pro and gpt-5-mini require /v1/responses (not /v1/chat/completions).
  * Temperature is not supported for these models.
+ * For gpt-5-mini, pass reasoning: { effort: 'none' } to disable thinking overhead.
  */
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -16,6 +17,8 @@ export interface CallLLMOptions {
   jsonSchema?: Record<string, unknown>;
   model?:      'gpt-5.2-pro' | 'gpt-5-mini';
   maxTokens?:  number;
+  /** Controls reasoning depth. Use { effort: 'none' } to disable thinking overhead. */
+  reasoning?:  { effort: 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' };
 }
 
 interface ResponseOutputContent {
@@ -29,8 +32,10 @@ interface ResponseOutputItem {
 }
 
 interface ResponsesAPIResponse {
-  output?: ResponseOutputItem[];
-  error?:  { message: string; code?: string };
+  status?:           string;
+  incomplete_details?: { reason?: string };
+  output?:           ResponseOutputItem[];
+  error?:            { message: string; code?: string };
 }
 
 // ─── Error class ──────────────────────────────────────────────────────────────
@@ -76,6 +81,10 @@ export async function callLLM(
     stream:            false,
   };
 
+  if (opts.reasoning) {
+    body['reasoning'] = opts.reasoning;
+  }
+
   if (opts.jsonSchema) {
     body['text'] = { format: { type: 'json_object' } };
   }
@@ -91,14 +100,14 @@ export async function callLLM(
       body: JSON.stringify(body),
     });
   } catch (err) {
-    throw new LLMError(`Network error reaching OpenAI: ${String(err)}`, 502);
+    throw new LLMError(`Network error reaching OpenAI: ${String(err)}`, 500);
   }
 
   let data: ResponsesAPIResponse;
   try {
     data = (await res.json()) as ResponsesAPIResponse;
   } catch {
-    throw new LLMError('OpenAI returned a non-JSON response.', 502);
+    throw new LLMError('OpenAI returned a non-JSON response.', 500);
   }
 
   if (!res.ok) {
@@ -106,6 +115,14 @@ export async function callLLM(
       data.error?.message ?? 'OpenAI returned an error.',
       res.status,
       data.error?.code,
+    );
+  }
+
+  if (data.status === 'incomplete') {
+    const reason = data.incomplete_details?.reason ?? 'max_output_tokens';
+    throw new LLMError(
+      `Response was cut off (${reason}). Try again or reduce your input.`,
+      500,
     );
   }
 
@@ -117,7 +134,7 @@ export async function callLLM(
     try {
       return JSON.parse(content) as unknown;
     } catch {
-      throw new LLMError('OpenAI returned malformed JSON.', 502);
+      throw new LLMError('OpenAI returned malformed JSON.', 500);
     }
   }
 
