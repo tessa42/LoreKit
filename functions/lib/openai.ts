@@ -139,8 +139,13 @@ export async function callLLM(
   }
 
   if (opts.jsonSchema) {
+    // Strip markdown code fences that some models emit despite instructions
+    const cleaned = content
+      .replace(/^```(?:json)?\s*\n?/, '')
+      .replace(/\n?```\s*$/, '')
+      .trim();
     try {
-      return JSON.parse(content) as unknown;
+      return JSON.parse(cleaned) as unknown;
     } catch {
       throw new LLMError('OpenAI returned malformed JSON.', 502);
     }
