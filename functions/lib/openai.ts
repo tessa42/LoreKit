@@ -98,7 +98,6 @@ export async function callLLM(
         format:    { type: 'text' },
         verbosity: 'medium',
       },
-      reasoning: { effort: 'medium' },
       tools:   [],
       store:   true,
       include: ['reasoning.encrypted_content'],
