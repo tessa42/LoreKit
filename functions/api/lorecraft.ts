@@ -366,7 +366,7 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
         system:          ko ? SYSTEM_KO : SYSTEM_EN,
         user:            ko ? buildPromptKO(body) : buildPromptEN(body),
         model:           'gpt-5.2',
-        maxTokens:       5_000,
+        maxTokens:       8_000,
         reasoningEffort: 'low',
       });
 

@@ -256,30 +256,35 @@ export async function callLLMStream(
   return new ReadableStream<string>({
     start(controller) {
       const reader = body.getReader();
-      function pump(): Promise<void> {
-        return reader.read().then(({ done, value }) => {
-          if (done) { controller.close(); return; }
 
-          buf += dec.decode(value, { stream: true });
-          const lines = buf.split('\n');
-          buf = lines.pop() ?? '';
+      (async () => {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) { controller.close(); return; }
 
-          for (const raw of lines) {
-            if (!raw.startsWith('data: ')) continue;
-            const payload = raw.slice(6).trim();
-            if (payload === '[DONE]') { controller.close(); return; }
-            try {
-              const evt = JSON.parse(payload) as Record<string, unknown>;
-              if (evt['type'] === 'response.output_text.delta') {
-                const delta = evt['delta'] as string | undefined;
-                if (delta) controller.enqueue(delta);
-              }
-            } catch { /* ignore malformed SSE lines */ }
+            buf += dec.decode(value, { stream: true });
+            const lines = buf.split('\n');
+            buf = lines.pop() ?? '';
+
+            for (const raw of lines) {
+              if (!raw.startsWith('data: ')) continue;
+              const payload = raw.slice(6).trim();
+              if (payload === '[DONE]') { controller.close(); return; }
+              try {
+                const evt = JSON.parse(payload) as Record<string, unknown>;
+                const type = evt['type'] as string | undefined;
+                // Accept any *.delta event that carries a string delta field.
+                if (type?.includes('delta') && typeof evt['delta'] === 'string' && evt['delta']) {
+                  controller.enqueue(evt['delta'] as string);
+                }
+              } catch { /* ignore malformed SSE lines */ }
+            }
           }
-          return pump();
-        }).catch(err => controller.error(err));
-      }
-      pump();
+        } catch (err) {
+          controller.error(err);
+        }
+      })();
     },
     cancel() { body.cancel(); },
   });
