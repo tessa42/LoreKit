@@ -267,11 +267,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   let card: unknown;
   try {
     card = await callLLM(env.OPENAI_API_KEY, {
-      system:      ko ? SYSTEM_KO : SYSTEM_EN,
-      user:        ko ? buildPromptKO(name, vibe) : buildPromptEN(name, vibe),
-      jsonSchema:  {},
-      model:     'gpt-5-mini',
-      maxTokens: 1_200,
+      system:          ko ? SYSTEM_KO : SYSTEM_EN,
+      user:            ko ? buildPromptKO(name, vibe) : buildPromptEN(name, vibe),
+      jsonSchema:      {},
+      model:           'gpt-5-mini',
+      maxTokens:       1_200,
+      reasoningEffort: 'low',
     });
   } catch (e) {
     if (e instanceof LLMError) {

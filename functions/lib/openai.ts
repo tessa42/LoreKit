@@ -10,14 +10,16 @@
 export type LLMModel = 'gpt-4o' | 'gpt-4o-mini' | 'gpt-5.2' | 'gpt-5-mini';
 
 export interface CallLLMOptions {
-  system:       string;
-  user:         string;
+  system:           string;
+  user:             string;
   /** When provided, response text is parsed as JSON and returned as an object. */
-  jsonSchema?:  Record<string, unknown>;
-  model?:       LLMModel;
+  jsonSchema?:      Record<string, unknown>;
+  model?:           LLMModel;
   /** Used only for Chat Completions models. Silently ignored for reasoning models. */
-  temperature?: number;
-  maxTokens?:   number;
+  temperature?:     number;
+  maxTokens?:       number;
+  /** For Responses API models only. Default: 'medium'. */
+  reasoningEffort?: 'low' | 'medium' | 'high';
 }
 
 // ─── Error class ──────────────────────────────────────────────────────────────
@@ -42,28 +44,33 @@ const DEFAULTS = {
 const COMPLETIONS_URL  = 'https://api.openai.com/v1/chat/completions';
 const RESPONSES_URL    = 'https://api.openai.com/v1/responses';
 const RESPONSES_MODELS = new Set<string>(['gpt-5.2', 'gpt-5-mini']);
-const TIMEOUT_MS       = 23_000;
+const TIMEOUT_MS       = 25_000;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-/** Races a fetch+body-read against a hard timeout (works in CF Workers). */
+/**
+ * Fetches a URL with an AbortController-based hard timeout.
+ * AbortController cancels the fetch at the network level, which works reliably
+ * in CF Workers (unlike Promise.race + setTimeout which may not fire during I/O).
+ */
 async function fetchText(
   url:  string,
   init: RequestInit,
 ): Promise<{ ok: boolean; status: number; rawText: string }> {
-  const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(
-      () => reject(new LLMError('OpenAI request timed out (23 s).', 504)),
-      TIMEOUT_MS,
-    ),
-  );
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-  const fetchPromise = fetch(url, init).then(async (res) => ({
-    ok:      res.ok,
-    status:  res.status,
-    rawText: await res.text(),
-  }));
-
-  return Promise.race([fetchPromise, timeoutPromise]);
+  try {
+    const res     = await fetch(url, { ...init, signal: controller.signal });
+    const rawText = await res.text();
+    return { ok: res.ok, status: res.status, rawText };
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new LLMError('OpenAI request timed out (25 s).', 504);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // ─── Overloads ────────────────────────────────────────────────────────────────
@@ -98,9 +105,10 @@ export async function callLLM(
         format:    { type: 'text' },
         verbosity: 'medium',
       },
-      tools:   [],
-      store:   true,
-      include: ['reasoning.encrypted_content'],
+      reasoning: { effort: opts.reasoningEffort ?? 'medium' },
+      tools:     [],
+      store:     true,
+      include:   ['reasoning.encrypted_content'],
     };
     if (opts.maxTokens) reqBody['max_output_tokens'] = opts.maxTokens;
   } else {
@@ -116,7 +124,7 @@ export async function callLLM(
     if (opts.jsonSchema) reqBody['response_format'] = { type: 'json_object' };
   }
 
-  // ── Fetch (with timeout via Promise.race) ──────────────────────────────────
+  // ── Fetch (AbortController timeout) ────────────────────────────────────────
   let ok: boolean, status: number, rawText: string;
   try {
     ({ ok, status, rawText } = await fetchText(
