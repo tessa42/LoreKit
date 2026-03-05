@@ -198,3 +198,89 @@ export async function callLLM(
 
   return content;
 }
+
+// ─── Streaming (Responses API only) ───────────────────────────────────────────
+/**
+ * Makes a streaming Responses API call.
+ * Returns a ReadableStream of text output deltas (response.output_text.delta).
+ * Caller is responsible for heartbeats; only actual text content is yielded.
+ */
+export async function callLLMStream(
+  apiKey: string,
+  opts:   Pick<CallLLMOptions, 'system' | 'user' | 'model' | 'maxTokens' | 'reasoningEffort'>,
+): Promise<ReadableStream<string>> {
+  const model = opts.model ?? DEFAULTS.model;
+  if (!RESPONSES_MODELS.has(model)) {
+    throw new LLMError('callLLMStream only supports Responses API models', 500);
+  }
+
+  const reqBody: Record<string, unknown> = {
+    model,
+    input: [
+      { role: 'developer', content: opts.system },
+      { role: 'user',      content: opts.user   },
+    ],
+    text:      { format: { type: 'text' }, verbosity: 'medium' },
+    reasoning: { effort: opts.reasoningEffort ?? 'medium' },
+    tools:     [],
+    store:     true,
+    include:   ['reasoning.encrypted_content'],
+    stream:    true,
+  };
+  if (opts.maxTokens) reqBody['max_output_tokens'] = opts.maxTokens;
+
+  const res = await fetch(RESPONSES_URL, {
+    method:  'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization:  `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(reqBody),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    let message = `HTTP ${res.status}`;
+    try {
+      const json = JSON.parse(text) as Record<string, unknown>;
+      const e = (json['error'] ?? {}) as Record<string, unknown>;
+      message = (e['message'] as string) || message;
+    } catch {}
+    throw new LLMError(message, res.status);
+  }
+
+  const body = res.body!;
+  const dec  = new TextDecoder();
+  let   buf  = '';
+
+  return new ReadableStream<string>({
+    start(controller) {
+      const reader = body.getReader();
+      function pump(): Promise<void> {
+        return reader.read().then(({ done, value }) => {
+          if (done) { controller.close(); return; }
+
+          buf += dec.decode(value, { stream: true });
+          const lines = buf.split('\n');
+          buf = lines.pop() ?? '';
+
+          for (const raw of lines) {
+            if (!raw.startsWith('data: ')) continue;
+            const payload = raw.slice(6).trim();
+            if (payload === '[DONE]') { controller.close(); return; }
+            try {
+              const evt = JSON.parse(payload) as Record<string, unknown>;
+              if (evt['type'] === 'response.output_text.delta') {
+                const delta = evt['delta'] as string | undefined;
+                if (delta) controller.enqueue(delta);
+              }
+            } catch { /* ignore malformed SSE lines */ }
+          }
+          return pump();
+        }).catch(err => controller.error(err));
+      }
+      pump();
+    },
+    cancel() { body.cancel(); },
+  });
+}

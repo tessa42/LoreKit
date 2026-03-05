@@ -34,7 +34,7 @@ import {
   jsonOk, jsonError, corsPreflightResponse,
   requireApiKey, rateLimitResponse,
 } from '../_shared/response';
-import { callLLM, LLMError } from '../lib/openai';
+import { callLLMStream, LLMError } from '../lib/openai';
 import { checkRateLimit, getClientIp } from '../lib/ratelimit';
 import { getLang, isKorean } from '../_shared/i18n';
 import { spendSeeds, refundSeeds } from '../_shared/seeds';
@@ -275,7 +275,9 @@ ${metaBlockKO(body.optionalMeta)}
 }
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+export const onRequestPost: PagesFunction<Env> = async (ctx) => {
+  const { request, env } = ctx;
+
   const guard = requireApiKey(env.OPENAI_API_KEY);
   if (guard) return guard;
 
@@ -296,8 +298,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (err) return jsonError(err, 400);
 
   const body = sanitise(raw as LoreCheckRequest);
-
-  const ko = isKorean(lang);
+  const ko   = isKorean(lang);
 
   // ── Spend seeds ────────────────────────────────────────────────────────────
   let userId: string | undefined;
@@ -314,38 +315,88 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     userId = seedResult.userId;
   }
 
-  // ── AI call (refund seeds on failure) ──────────────────────────────────────
-  let report: unknown;
-  try {
-    report = await callLLM(env.OPENAI_API_KEY, {
-      system:          ko ? SYSTEM_KO : SYSTEM_EN,
-      user:            ko ? buildPromptKO(body) : buildPromptEN(body),
-      jsonSchema:      {},
-      model:           'gpt-5.2',
-      maxTokens:       2_500,
-      reasoningEffort: 'low',
-    });
-  } catch (e) {
-    if (userId && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
-      try { await refundSeeds(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, userId, SEEDS_COST); } catch {}
-    }
-    if (e instanceof LLMError) {
-      return jsonError('AI service returned an error.', e.status, e.message);
-    }
-    return jsonError('Unexpected server error.', 500, String(e));
-  }
+  // ── Set up SSE stream ──────────────────────────────────────────────────────
+  const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
+  const writer  = writable.getWriter();
+  const enc     = new TextEncoder();
 
-  if (!isValidReport(report)) {
-    if (userId && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
-      try { await refundSeeds(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, userId, SEEDS_COST); } catch {}
-    }
-    return jsonError(
-      'The AI returned an unexpected response shape. Please try again.',
-      502,
-    );
-  }
+  const sseWrite = (event: string, data: unknown): Promise<void> =>
+    writer.write(enc.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
 
-  return jsonOk(report);
+  const doRefund = () => {
+    if (userId && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
+      ctx.waitUntil(
+        refundSeeds(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, userId, SEEDS_COST).catch(() => {}),
+      );
+    }
+  };
+
+  // ── Stream OpenAI response in background ───────────────────────────────────
+  ctx.waitUntil((async () => {
+    // Heartbeat every 5 s — keeps CF connection alive during reasoning phase.
+    const hbTimer = setInterval(() => {
+      writer.write(enc.encode(': keep-alive\n\n')).catch(() => {});
+    }, 5_000);
+
+    try {
+      const stream = await callLLMStream(env.OPENAI_API_KEY, {
+        system:          ko ? SYSTEM_KO : SYSTEM_EN,
+        user:            ko ? buildPromptKO(body) : buildPromptEN(body),
+        model:           'gpt-5.2',
+        maxTokens:       2_500,
+        reasoningEffort: 'low',
+      });
+
+      let fullText = '';
+      const reader = stream.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        fullText += value;
+      }
+
+      // Parse and validate
+      const cleaned = fullText
+        .replace(/^```(?:json)?\s*\n?/, '')
+        .replace(/\n?```\s*$/, '')
+        .trim();
+
+      let report: unknown;
+      try {
+        report = JSON.parse(cleaned);
+      } catch {
+        doRefund();
+        await sseWrite('error', { message: 'AI returned malformed JSON.', status: 502 });
+        return;
+      }
+
+      if (!isValidReport(report)) {
+        doRefund();
+        await sseWrite('error', { message: 'AI returned unexpected shape. Please try again.', status: 502 });
+        return;
+      }
+
+      await sseWrite('result', report);
+
+    } catch (e) {
+      doRefund();
+      const message = e instanceof LLMError ? e.message : String(e);
+      const status  = e instanceof LLMError ? e.status  : 500;
+      await sseWrite('error', { message, status });
+    } finally {
+      clearInterval(hbTimer);
+      writer.close().catch(() => {});
+    }
+  })());
+
+  return new Response(readable, {
+    headers: {
+      'Content-Type':              'text/event-stream',
+      'Cache-Control':             'no-cache',
+      'X-Accel-Buffering':         'no',
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
 };
 
 export const onRequestOptions: PagesFunction = () =>

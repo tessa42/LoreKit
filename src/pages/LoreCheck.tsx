@@ -152,22 +152,64 @@ export default function LoreCheck() {
         }),
       });
 
-      const data = await res.json() as Record<string, unknown>;
-
-      if (res.status === 401) {
-        navigate('/login');
-      } else if (res.status === 402) {
-        setNeedsSeeds(true);
-        setError(t('err_insufficient_seeds'));
+      // Non-200 before stream starts → seeds/auth error (regular JSON response).
+      if (!res.ok) {
+        const data = await res.json() as Record<string, unknown>;
+        if (res.status === 401) { navigate('/login'); return; }
+        if (res.status === 402) {
+          setNeedsSeeds(true);
+          setError(t('err_insufficient_seeds'));
+        } else {
+          setError((data['error'] as string | undefined) ?? t('err_generic'));
+        }
         setView('form');
-      } else if (!res.ok) {
-        setError((data['error'] as string | undefined) ?? t('err_generic'));
-        setView('form');
-      } else {
-        setReport(data as unknown as LoreCheckReport);
-        refetchSeeds();
-        setView('result');
+        return;
       }
+
+      // Parse SSE stream (text/event-stream via POST).
+      const reader = res.body!.getReader();
+      const dec    = new TextDecoder();
+      let   buf    = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buf += dec.decode(value, { stream: true });
+        const parts = buf.split('\n\n');
+        buf = parts.pop() ?? '';
+
+        for (const part of parts) {
+          let event = 'message';
+          let data  = '';
+          for (const line of part.split('\n')) {
+            if (line.startsWith('event: ')) event = line.slice(7).trim();
+            if (line.startsWith('data: '))  data  = line.slice(6);
+          }
+          if (!data || event === 'message') continue;  // heartbeat comment
+
+          if (event === 'result') {
+            setReport(JSON.parse(data) as LoreCheckReport);
+            refetchSeeds();
+            setView('result');
+            return;
+          }
+
+          if (event === 'error') {
+            const { message, status } = JSON.parse(data) as { message: string; status?: number };
+            if (status === 401) { navigate('/login'); return; }
+            if (status === 402) { setNeedsSeeds(true); setError(t('err_insufficient_seeds')); }
+            else { setError(message ?? t('err_generic')); }
+            setView('form');
+            return;
+          }
+        }
+      }
+
+      // Stream ended without a result event.
+      setError(t('err_server'));
+      setView('form');
+
     } catch {
       setError(t('err_server'));
       setView('form');
