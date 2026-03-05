@@ -130,9 +130,16 @@ export async function callLLM(
   if (useResponses) {
     const output     = (data['output']  as Array<Record<string, unknown>> | undefined) ?? [];
     const msgItem    = output.find(o => o['type'] === 'message');
-    const contentArr = (msgItem?.['content'] as Array<Record<string, unknown>> | undefined) ?? [];
+    if (!msgItem) {
+      const types = output.map(o => String(o['type'])).join(', ') || 'none';
+      throw new LLMError(`Responses API: no message output (types found: ${types})`, 502);
+    }
+    const contentArr = (msgItem['content'] as Array<Record<string, unknown>> | undefined) ?? [];
     const textItem   = contentArr.find(c => c['type'] === 'output_text') ?? contentArr[0];
     content          = (textItem?.['text'] as string) ?? '';
+    if (!content) {
+      throw new LLMError(`Responses API: empty text content (content items: ${contentArr.length})`, 502);
+    }
   } else {
     const choices = (data['choices'] as Array<{ message: { content: string } }> | undefined) ?? [];
     content       = choices[0]?.message?.content ?? '';
@@ -147,7 +154,7 @@ export async function callLLM(
     try {
       return JSON.parse(cleaned) as unknown;
     } catch {
-      throw new LLMError('OpenAI returned malformed JSON.', 502);
+      throw new LLMError(`OpenAI returned malformed JSON. Preview: ${cleaned.slice(0, 120)}`, 502);
     }
   }
 
