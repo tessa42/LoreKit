@@ -91,23 +91,12 @@ export async function callLLM(
     reqBody = {
       model,
       input: [
-        {
-          type:    'message',
-          role:    'developer',
-          content: [{ type: 'input_text', text: opts.system }],
-        },
-        {
-          type:    'message',
-          role:    'user',
-          content: [{ type: 'input_text', text: opts.user }],
-        },
+        { role: 'developer', content: opts.system },
+        { role: 'user',      content: opts.user   },
       ],
-      text:    { format: { type: 'text' }, verbosity: 'medium' },
-      tools:   [],
-      store:   true,
-      include: ['reasoning.encrypted_content'],
     };
-    if (opts.maxTokens) reqBody['max_output_tokens'] = opts.maxTokens;
+    if (opts.maxTokens)  reqBody['max_output_tokens'] = opts.maxTokens;
+    if (opts.jsonSchema) reqBody['text'] = { format: { type: 'json_object' } };
   } else {
     reqBody = {
       model,
