@@ -114,7 +114,17 @@ export async function callLLM(
   }
 
   // ── Parse response ─────────────────────────────────────────────────────────
-  const data = await res.json() as Record<string, unknown>;
+  const rawText = await res.text().catch(() => '');
+
+  let data: Record<string, unknown>;
+  try {
+    data = JSON.parse(rawText) as Record<string, unknown>;
+  } catch {
+    throw new LLMError(
+      `OpenAI returned non-JSON (HTTP ${res.status}): ${rawText.slice(0, 150)}`,
+      res.status || 502,
+    );
+  }
 
   if (!res.ok) {
     const e = (data['error'] ?? {}) as Record<string, unknown>;
