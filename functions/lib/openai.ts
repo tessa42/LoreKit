@@ -10,16 +10,14 @@
 export type LLMModel = 'gpt-4o' | 'gpt-4o-mini' | 'gpt-5.2' | 'gpt-5-mini';
 
 export interface CallLLMOptions {
-  system:           string;
-  user:             string;
+  system:       string;
+  user:         string;
   /** When provided, response text is parsed as JSON and returned as an object. */
-  jsonSchema?:      Record<string, unknown>;
-  model?:           LLMModel;
+  jsonSchema?:  Record<string, unknown>;
+  model?:       LLMModel;
   /** Used only for Chat Completions models. Silently ignored for reasoning models. */
-  temperature?:     number;
-  maxTokens?:       number;
-  /** Reasoning effort for Responses API models. Defaults to 'medium'. */
-  reasoningEffort?: 'low' | 'medium' | 'high';
+  temperature?: number;
+  maxTokens?:   number;
 }
 
 // ─── Error class ──────────────────────────────────────────────────────────────
@@ -76,7 +74,6 @@ export async function callLLM(
       }],
       instructions: opts.system,
       text:         { format: { type: 'text' } },
-      reasoning:    { effort: opts.reasoningEffort ?? 'medium' },
     };
     if (opts.maxTokens) reqBody['max_output_tokens'] = opts.maxTokens;
   } else {
