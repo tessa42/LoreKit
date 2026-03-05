@@ -44,7 +44,7 @@ const DEFAULTS = {
 const COMPLETIONS_URL  = 'https://api.openai.com/v1/chat/completions';
 const RESPONSES_URL    = 'https://api.openai.com/v1/responses';
 const RESPONSES_MODELS = new Set<string>(['gpt-5.2', 'gpt-5-mini']);
-const TIMEOUT_MS       = 25_000;
+const TIMEOUT_MS       = 22_000;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 /**

@@ -318,11 +318,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   let report: unknown;
   try {
     report = await callLLM(env.OPENAI_API_KEY, {
-      system:      ko ? SYSTEM_KO : SYSTEM_EN,
-      user:        ko ? buildPromptKO(body) : buildPromptEN(body),
-      jsonSchema:  {},
-      model:      'gpt-5.2',
-      maxTokens:  2_500,
+      system:          ko ? SYSTEM_KO : SYSTEM_EN,
+      user:            ko ? buildPromptKO(body) : buildPromptEN(body),
+      jsonSchema:      {},
+      model:           'gpt-5.2',
+      maxTokens:       2_500,
+      reasoningEffort: 'low',
     });
   } catch (e) {
     if (userId && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
