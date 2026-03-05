@@ -95,8 +95,7 @@ export async function callLLM(
         { role: 'user',      content: opts.user   },
       ],
     };
-    if (opts.maxTokens)  reqBody['max_output_tokens'] = opts.maxTokens;
-    if (opts.jsonSchema) reqBody['text'] = { format: { type: 'json_object' } };
+    if (opts.maxTokens) reqBody['max_output_tokens'] = opts.maxTokens;
   } else {
     reqBody = {
       model,
