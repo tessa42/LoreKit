@@ -94,6 +94,14 @@ export async function callLLM(
         { role: 'developer', content: opts.system },
         { role: 'user',      content: opts.user   },
       ],
+      text: {
+        format:    { type: 'text' },
+        verbosity: 'medium',
+      },
+      reasoning: { effort: 'medium' },
+      tools:   [],
+      store:   true,
+      include: ['reasoning.encrypted_content'],
     };
     if (opts.maxTokens) reqBody['max_output_tokens'] = opts.maxTokens;
   } else {
