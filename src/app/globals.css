@@ -4,6 +4,7 @@
 
 @layer base {
   :root {
+    /* ── 기본 색상 ── */
     --background: #0f0f12;
     --foreground: #e8e6e1;
     --surface: #1a1a20;
@@ -12,6 +13,24 @@
     --muted: #6b6b78;
     --accent: #7c6af7;
     --accent-hover: #9585ff;
+    --accent-subtle: rgba(124, 106, 247, 0.12);
+
+    /* ── 상태 색상 ── */
+    --success: #34d399;
+    --success-subtle: rgba(52, 211, 153, 0.12);
+    --error: #f87171;
+    --error-subtle: rgba(248, 113, 113, 0.10);
+    --error-border: rgba(248, 113, 113, 0.30);
+    --warning: #fbbf24;
+
+    /* ── Border radius ── */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-full: 9999px;
+
+    /* ── Transition ── */
+    --transition: 150ms ease;
   }
 
   * {

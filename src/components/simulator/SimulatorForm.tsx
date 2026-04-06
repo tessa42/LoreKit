@@ -4,6 +4,9 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { MOODS } from '@/lib/ai/pipeline/simulator/contexts/moods';
 import { GENRES } from '@/lib/ai/pipeline/simulator/contexts/genres';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import TagButton from '@/components/ui/TagButton';
 import type { SimulatorInput, SimulatorApiResponse } from '@/types/simulator';
 
 export default function SimulatorForm() {
@@ -52,26 +55,21 @@ export default function SimulatorForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* 캐릭터 이름 */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-[var(--foreground)]">
-          캐릭터 이름 <span className="text-[var(--accent)]">*</span>
-        </label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          maxLength={50}
-          placeholder="예: 이도하"
-          className={inputClass}
-          disabled={isPending}
-        />
-      </div>
+      <Input
+        label="캐릭터 이름"
+        required
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        maxLength={50}
+        placeholder="예: 이도하"
+        disabled={isPending}
+      />
 
       {/* 분위기 선택 */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-[var(--foreground)]">
+        <p className="text-sm font-medium text-[var(--foreground)]">
           분위기 <span className="text-[var(--accent)]">*</span>
-        </label>
+        </p>
         <div className="flex flex-wrap gap-2">
           {MOODS.map((m) => (
             <TagButton
@@ -87,9 +85,9 @@ export default function SimulatorForm() {
 
       {/* 세계관 선택 */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-[var(--foreground)]">
+        <p className="text-sm font-medium text-[var(--foreground)]">
           세계관 <span className="text-[var(--accent)]">*</span>
-        </label>
+        </p>
         <div className="flex flex-wrap gap-2">
           {GENRES.map((g) => (
             <TagButton
@@ -105,50 +103,25 @@ export default function SimulatorForm() {
 
       {/* 에러 */}
       {error && (
-        <div className="rounded-lg border border-red-800/50 bg-red-950/30 px-4 py-3 text-sm text-red-400">
+        <div
+          className="rounded-[var(--radius-md)] border border-[var(--error-border)] bg-[var(--error-subtle)] px-4 py-3 text-sm text-[var(--error)]"
+          role="alert"
+        >
           {error}
         </div>
       )}
 
       {/* 제출 */}
-      <button
+      <Button
         type="submit"
-        disabled={!isValid || isPending}
-        className="w-full rounded-lg bg-[var(--accent)] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+        variant="primary"
+        size="lg"
+        loading={isPending}
+        disabled={!isValid}
+        className="w-full"
       >
         {isPending ? '생성 중…' : '캐릭터 카드 생성'}
-      </button>
+      </Button>
     </form>
   );
 }
-
-function TagButton({
-  label,
-  selected,
-  disabled,
-  onClick,
-}: {
-  label: string;
-  selected: boolean;
-  disabled: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={[
-        'rounded-full border px-3.5 py-1.5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40',
-        selected
-          ? 'border-[var(--accent)] bg-[var(--accent)] text-white'
-          : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--foreground)] hover:border-[var(--accent)] hover:text-[var(--accent)]',
-      ].join(' ')}
-    >
-      {label}
-    </button>
-  );
-}
-
-const inputClass =
-  'w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] disabled:opacity-50 transition-colors';

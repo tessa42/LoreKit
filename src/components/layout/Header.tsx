@@ -1,7 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { useCredits } from '@/hooks/useCredits';
 
 const NAV_ITEMS = [
   { label: 'Lorecraft', href: '/lorecraft' },
@@ -11,6 +14,8 @@ const NAV_ITEMS = [
 
 export default function Header() {
   const pathname = usePathname();
+  const { user, loading: authLoading } = useAuth();
+  const { balance } = useCredits();
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-sm">
@@ -18,8 +23,16 @@ export default function Header() {
         {/* Logo */}
         <Link
           href="/"
-          className="text-lg font-semibold tracking-tight text-[var(--foreground)] hover:text-[var(--accent)] transition-colors"
+          className="flex items-center gap-2 text-lg font-semibold tracking-tight text-[var(--foreground)] hover:text-[var(--accent)] transition-colors"
         >
+          <Image
+            src="/images/icon.png"
+            alt="Lorekit 마스코트"
+            width={28}
+            height={28}
+            className="rounded-full"
+            priority
+          />
           Lorekit
         </Link>
 
@@ -32,9 +45,9 @@ export default function Header() {
                 key={href}
                 href={href}
                 className={[
-                  'px-3 py-1.5 rounded-md text-sm transition-colors',
+                  'px-3 py-1.5 rounded-[var(--radius-md)] text-sm transition-colors',
                   active
-                    ? 'text-[var(--accent)] bg-[var(--accent)]/10'
+                    ? 'text-[var(--accent)] bg-[var(--accent-subtle)]'
                     : 'text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-2)]',
                 ].join(' ')}
               >
@@ -46,23 +59,35 @@ export default function Header() {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
-          {/* 씨앗 잔액 — 로그인 상태일 때만 (추후 useCredits 연결) */}
-          {/* <SeedBalance /> */}
+          {/* 씨앗 잔액 — 로그인 상태일 때만 */}
+          {!authLoading && user && balance !== null && (
+            <Link
+              href="/mypage/billing"
+              className="hidden sm:flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--foreground)] hover:bg-[var(--surface-2)] transition-colors"
+              title="씨앗 잔액"
+            >
+              <span aria-hidden="true">🌱</span>
+              <span className="font-medium tabular-nums">{balance.toLocaleString()}</span>
+            </Link>
+          )}
 
-          <Link
-            href="/mypage"
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-2)] transition-colors"
-          >
-            My Page
-          </Link>
-
-          {/* 로그인 버튼 — 비로그인 시 표시 (추후 useAuth 연결) */}
-          <Link
-            href="/login"
-            className="rounded-md bg-[var(--accent)] px-3 py-1.5 text-sm font-medium text-white hover:bg-[var(--accent-hover)] transition-colors"
-          >
-            로그인
-          </Link>
+          {!authLoading && (
+            user ? (
+              <Link
+                href="/mypage"
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-[var(--radius-md)] px-3 py-1.5 text-sm text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-2)] transition-colors"
+              >
+                My Page
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="rounded-[var(--radius-md)] bg-[var(--accent)] px-3 py-1.5 text-sm font-medium text-white hover:bg-[var(--accent-hover)] transition-colors"
+              >
+                로그인
+              </Link>
+            )
+          )}
         </div>
       </div>
     </header>
