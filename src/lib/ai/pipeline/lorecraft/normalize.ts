@@ -11,9 +11,9 @@ const VALID_AREAS: LorcraftArea[] = [
   '사건과 갈등 구조',
 ];
 
-const MAX_BACKGROUND = 2000;
+const MAX_BACKGROUND = 500;
 const MAX_GENRE = 100;
-const MAX_EXISTING_SETTING = 5000;
+const MAX_EXISTING_SETTING = 1000;
 
 export function normalizeLorecraft(input: LorcraftInput): NormalizedLorcraftInput {
   if (!input.background?.trim()) {

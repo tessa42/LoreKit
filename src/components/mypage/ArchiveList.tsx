@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import ArchiveCard from '@/components/mypage/ArchiveCard';
 import type { ArchiveItem, ArchiveFilter } from '@/types/mypage';
@@ -22,6 +22,10 @@ export default function ArchiveList({ initialItems, currentFilter }: ArchiveList
   const router = useRouter();
   const [items, setItems] = useState<ArchiveItem[]>(initialItems);
   const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    setItems(initialItems);
+  }, [initialItems]);
 
   function handleFilterChange(filter: ArchiveFilter) {
     const params = new URLSearchParams();

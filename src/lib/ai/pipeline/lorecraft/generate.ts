@@ -12,7 +12,8 @@ const SYSTEM_PROMPT = `당신은 세계관 설정 아카이브의 편찬자입�
 3. 실존과 가상을 구분하여 서술
 4. 고유 문법 우선 — 세계관 용어 그대로 사용, 현실 대응어 풀이 금지
 5. 문서 작성자가 AI임을 드러내는 표현 금지
-6. 표보다 산문 우선`;
+6. 표보다 산문 우선
+7. 전달받은 초안을 세계 내부자 시점의 설정집 문체로 변환하라. 내용 추가나 판단 없이 문체 변환에만 집중하라.`;
 
 export async function generateLorecraft(
   input: NormalizedLorcraftInput,
@@ -21,7 +22,7 @@ export async function generateLorecraft(
   const client = getAnthropicClient();
 
   const sectionGuide = reviewed.sections
-    .map((s) => `## ${s.title}\n핵심 포인트: ${s.key_points.join(', ')}\n문체 가이드: ${s.tone_hints}`)
+    .map((s) => `## ${s.title}\n${s.content}`)
     .join('\n\n');
 
   const userContent = [

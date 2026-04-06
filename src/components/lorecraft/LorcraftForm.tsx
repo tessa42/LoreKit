@@ -8,7 +8,47 @@ import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import TagButton from '@/components/ui/TagButton';
 import LoginPromptModal from '@/components/common/LoginPromptModal';
+import LorcraftMarkdown from '@/components/lorecraft/LorcraftMarkdown';
 import type { LorcraftArea, LorcraftInput } from '@/types/lorecraft';
+
+const STEP_LABELS: Record<string, string> = {
+  analyze: '분석 중...',
+  research: '리서치 중...',
+  synthesize: '정보 통합 중...',
+  generate: '설정집 생성 중...',
+  review: '검토 중...',
+  normalize: '마무리 중...',
+};
+
+function StreamingPreview({
+  progressMessage,
+  streamedText,
+}: {
+  progressMessage: string;
+  streamedText: string;
+}) {
+  return (
+    <div className="space-y-4">
+      {/* 진행 단계 */}
+      <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+        <span
+          className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--accent)]"
+          aria-hidden="true"
+        />
+        <span className="text-sm text-[var(--muted)]">
+          {STEP_LABELS[progressMessage] ?? progressMessage}
+        </span>
+      </div>
+
+      {/* 생성 중 텍스트 프리뷰 */}
+      {streamedText && (
+        <div className="max-h-[60vh] overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-2)] px-5 py-4">
+          <LorcraftMarkdown text={streamedText} />
+        </div>
+      )}
+    </div>
+  );
+}
 
 const AREAS: LorcraftArea[] = [
   '역사와 배경',
@@ -143,77 +183,70 @@ export default function LorcraftForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* 배경 */}
-      <Textarea
-        label="세계관 배경"
-        required
-        value={background}
-        onChange={(e) => setBackground(e.target.value)}
-        maxLength={2000}
-        placeholder="예: 1920년대 경성을 배경으로 한 대체역사. 일제강점기이지만 조선의 독립운동 세력이 비밀 마법 결사를 운영하고 있다."
-        disabled={isRunning}
-        className="min-h-[140px]"
-      />
-
-      {/* 장르 */}
-      <Input
-        label="장르"
-        required
-        value={genre}
-        onChange={(e) => setGenre(e.target.value)}
-        maxLength={100}
-        placeholder="예: 대체역사 / 다크 판타지 / SF 스릴러"
-        disabled={isRunning}
-      />
-
-      {/* 기존 설정 */}
-      <Textarea
-        label="기존 설정 (선택)"
-        value={existingSetting}
-        onChange={(e) => setExistingSetting(e.target.value)}
-        maxLength={5000}
-        placeholder="이미 구성해 둔 설정이 있다면 입력하세요. 없으면 비워두세요."
-        disabled={isRunning}
-        className="min-h-[100px]"
-      />
-
-      {/* 요청 영역 */}
-      <div className="space-y-2">
-        <p className="text-sm font-medium text-[var(--foreground)]">
-          생성 영역 <span className="text-[var(--accent)]">*</span>
-        </p>
-        <p className="text-xs text-[var(--muted)]">원하는 항목을 복수 선택하세요.</p>
-        <div className="flex flex-wrap gap-2 pt-1">
-          {AREAS.map((area) => (
-            <TagButton
-              key={area}
-              label={area}
-              selected={areas.includes(area)}
-              disabled={isRunning}
-              onClick={() => toggleArea(area)}
+      {/* 스트리밍 중: 입력 폼 숨기고 미리보기만 표시 */}
+      {isRunning ? (
+        <StreamingPreview progressMessage={progressMessage} streamedText={streamedText} />
+      ) : (
+        <>
+          {/* 배경 */}
+          <div className="space-y-1.5">
+            <Textarea
+              label="세계관 배경"
+              required
+              value={background}
+              onChange={(e) => setBackground(e.target.value)}
+              maxLength={500}
+              placeholder="예: 1920년대 경성을 배경으로 한 대체역사. 일제강점기이지만 조선의 독립운동 세력이 비밀 마법 결사를 운영하고 있다."
+              className="min-h-[140px]"
             />
-          ))}
-        </div>
-      </div>
-
-      {/* 진행 상태 */}
-      {isRunning && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-            <span
-              className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--accent)]"
-              aria-hidden="true"
-            />
-            <span className="text-sm text-[var(--muted)]">{progressMessage}</span>
+            <p className={`text-right text-xs ${background.length >= 500 ? 'text-[var(--error)]' : 'text-[var(--muted)]'}`}>
+              {background.length}/500
+            </p>
           </div>
-          {streamedText && (
-            <div className="max-h-48 overflow-y-auto rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
-              <p className="whitespace-pre-wrap text-xs leading-relaxed text-[var(--muted)]">
-                {streamedText}
-              </p>
+
+          {/* 장르 */}
+          <Input
+            label="장르"
+            required
+            value={genre}
+            onChange={(e) => setGenre(e.target.value)}
+            maxLength={100}
+            placeholder="예: 대체역사 / 다크 판타지 / SF 스릴러"
+          />
+
+          {/* 기존 설정 */}
+          <div className="space-y-1.5">
+            <Textarea
+              label="기존 설정 (선택)"
+              value={existingSetting}
+              onChange={(e) => setExistingSetting(e.target.value)}
+              maxLength={1000}
+              placeholder="이미 구성해 둔 설정이 있다면 입력하세요. 없으면 비워두세요."
+              className="min-h-[100px]"
+            />
+            <p className={`text-right text-xs ${existingSetting.length >= 1000 ? 'text-[var(--error)]' : 'text-[var(--muted)]'}`}>
+              {existingSetting.length}/1000
+            </p>
+          </div>
+
+          {/* 요청 영역 */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-[var(--foreground)]">
+              생성 영역 <span className="text-[var(--accent)]">*</span>
+            </p>
+            <p className="text-xs text-[var(--muted)]">원하는 항목을 복수 선택하세요.</p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {AREAS.map((area) => (
+                <TagButton
+                  key={area}
+                  label={area}
+                  selected={areas.includes(area)}
+                  onClick={() => toggleArea(area)}
+                />
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        </>
       )}
 
       {/* 에러 */}

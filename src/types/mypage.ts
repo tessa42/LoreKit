@@ -28,10 +28,20 @@ export interface SimulatorPayload extends SimulatorResult {
   name: string;
 }
 
+export interface LoreCraftSection {
+  title: string;
+  content: string;
+}
+
 export interface LoreCraftPayload {
-  title?: string;
-  content?: string;
-  [key: string]: unknown;
+  title: string;
+  sections: LoreCraftSection[];
+  meta: {
+    background: string;
+    genre: string;
+    areas: string[];
+    generatedAt: string;
+  };
 }
 
 export interface LoreCheckPayload {

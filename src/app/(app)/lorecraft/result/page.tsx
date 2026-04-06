@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/lib/supabase/client';
 import { formatLorecraft } from '@/lib/ai/pipeline/lorecraft/format';
 import LoginPromptModal from '@/components/common/LoginPromptModal';
+import LorcraftMarkdown from '@/components/lorecraft/LorcraftMarkdown';
 import Button, { buttonVariants } from '@/components/ui/Button';
 import type { LorcraftArea, LorcraftPayload, FormatSection } from '@/types/lorecraft';
 
@@ -100,22 +101,10 @@ export default function LorcraftResultPage() {
           <SaveButton state={saveState} authLoading={authLoading} onClick={handleSave} />
         </div>
 
-        {/* 영역 태그 */}
-        <div className="mb-8 flex flex-wrap gap-2">
-          {payload.areas.map((area) => (
-            <span
-              key={area}
-              className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-xs text-[var(--muted)]"
-            >
-              {area}
-            </span>
-          ))}
-        </div>
-
         {/* 섹션별 렌더링 */}
-        <div className="space-y-10">
+        <div className="space-y-12">
           {payload.sections.map((section, i) => (
-            <ResultSection key={i} section={section} />
+            <ResultSection key={i} index={i} section={section} />
           ))}
         </div>
 
@@ -154,17 +143,18 @@ export default function LorcraftResultPage() {
 
 /* ── 헬퍼 컴포넌트 ── */
 
-function ResultSection({ section }: { section: FormatSection }) {
+function stripEmoji(str: string) {
+  return str.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27FF}]/gu, '').trim();
+}
+
+function ResultSection({ section, index }: { section: FormatSection; index: number }) {
+  const title = stripEmoji(section.title);
   return (
     <div>
-      <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
-        {section.title}
+      <h2 className="mb-4 text-base font-bold text-[var(--foreground)]">
+        {index + 1}. {title}
       </h2>
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] px-6 py-5">
-        <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--foreground)]">
-          {section.content}
-        </p>
-      </div>
+      <LorcraftMarkdown text={section.content} />
     </div>
   );
 }

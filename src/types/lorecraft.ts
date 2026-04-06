@@ -42,27 +42,12 @@ export interface PlanResult {
   sections: PlanSection[];
 }
 
-export interface ResearchSource {
-  topic: string;
-  facts: string[];
-  confidence: 'high' | 'medium' | 'low';
-}
-
 export interface ResearchResult {
-  sources_summary: ResearchSource[];
-  gaps: string[];
-  creative_flex_points: string[];
-}
-
-export interface SynthesizeSection {
-  title: string;
-  key_points: string[];
-  tone_hints: string;
-  connections: string[];
+  sections: { title: string; content: string }[];
 }
 
 export interface SynthesizeResult {
-  sections: SynthesizeSection[];
+  sections: { title: string; content: string }[];
 }
 
 export type ReviewResult = SynthesizeResult;
