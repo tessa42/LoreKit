@@ -1,4 +1,5 @@
 import { getAnthropicClient, MODELS } from '@/lib/ai/anthropic';
+import { extractJson } from './utils';
 import type { PlanResult, ResearchResult, SynthesizeResult } from '@/types/lorecraft';
 
 const SYSTEM_PROMPT = `당신은 창작 세계관 설정 편집 전문가입니다. 리서치 결과를 설정집 작성에 활용할 수 있는 형태로 재구성하세요. 마크다운 코드 블록 없이 순수 JSON만 출력하세요.
@@ -31,7 +32,7 @@ async function callSynthesize(plan: PlanResult, research: ResearchResult): Promi
 
   const message = await client.messages.create({
     model: MODELS.haiku,
-    max_tokens: 3072,
+    max_tokens: 4096,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userContent }],
   });
@@ -39,7 +40,7 @@ async function callSynthesize(plan: PlanResult, research: ResearchResult): Promi
   const block = message.content[0];
   if (block.type !== 'text') throw new Error('[synthesize] Unexpected response type');
 
-  return JSON.parse(block.text) as SynthesizeResult;
+  return JSON.parse(extractJson(block.text)) as SynthesizeResult;
 }
 
 export async function synthesizeLorecraft(plan: PlanResult, research: ResearchResult): Promise<SynthesizeResult> {

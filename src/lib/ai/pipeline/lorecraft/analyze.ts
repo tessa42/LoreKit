@@ -1,4 +1,5 @@
 import { getAnthropicClient, MODELS } from '@/lib/ai/anthropic';
+import { extractJson } from './utils';
 import type { NormalizedLorcraftInput, AnalyzeResult } from '@/types/lorecraft';
 
 const SYSTEM_PROMPT = `당신은 창작 세계관 분석 전문가입니다. 입력된 세계관 정보를 분석하여 JSON 형식으로만 응답하세요. 마크다운 코드 블록 없이 순수 JSON만 출력하세요.
@@ -40,7 +41,7 @@ async function callAnalyze(input: NormalizedLorcraftInput): Promise<AnalyzeResul
   const block = message.content[0];
   if (block.type !== 'text') throw new Error('[analyze] Unexpected response type');
 
-  return JSON.parse(block.text) as AnalyzeResult;
+  return JSON.parse(extractJson(block.text)) as AnalyzeResult;
 }
 
 export async function analyzeLorecraft(input: NormalizedLorcraftInput): Promise<AnalyzeResult> {

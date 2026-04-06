@@ -1,4 +1,5 @@
 import { getAnthropicClient, MODELS } from '@/lib/ai/anthropic';
+import { extractJson } from './utils';
 import type { NormalizedLorcraftInput, AnalyzeResult, PlanResult } from '@/types/lorecraft';
 
 const SYSTEM_PROMPT = `당신은 창작 세계관 설정집 기획 전문가입니다. 분석 결과를 바탕으로 섹션별 생성 계획을 수립하세요. 마크다운 코드 블록 없이 순수 JSON만 출력하세요.
@@ -35,7 +36,7 @@ async function callPlan(input: NormalizedLorcraftInput, analysis: AnalyzeResult)
 
   const message = await client.messages.create({
     model: MODELS.haiku,
-    max_tokens: 2048,
+    max_tokens: 4096,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userContent }],
   });
@@ -43,7 +44,7 @@ async function callPlan(input: NormalizedLorcraftInput, analysis: AnalyzeResult)
   const block = message.content[0];
   if (block.type !== 'text') throw new Error('[plan] Unexpected response type');
 
-  return JSON.parse(block.text) as PlanResult;
+  return JSON.parse(extractJson(block.text)) as PlanResult;
 }
 
 export async function planLorecraft(input: NormalizedLorcraftInput, analysis: AnalyzeResult): Promise<PlanResult> {

@@ -1,4 +1,5 @@
 import { getAnthropicClient, MODELS } from '@/lib/ai/anthropic';
+import { extractJson } from './utils';
 import type { NormalizedLorcraftInput, SynthesizeResult, ReviewResult } from '@/types/lorecraft';
 
 const SYSTEM_PROMPT = `당신은 창작 세계관 설정 검토 전문가입니다. 합성된 설정 자료를 검토하고 보정하여 최종 생성 단계에 전달할 완성 자료를 만드세요. 마크다운 코드 블록 없이 순수 JSON만 출력하세요.
@@ -34,7 +35,7 @@ async function callReview(input: NormalizedLorcraftInput, synthesized: Synthesiz
 
   const message = await client.messages.create({
     model: MODELS.haiku,
-    max_tokens: 3072,
+    max_tokens: 4096,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userContent }],
   });
@@ -42,7 +43,7 @@ async function callReview(input: NormalizedLorcraftInput, synthesized: Synthesiz
   const block = message.content[0];
   if (block.type !== 'text') throw new Error('[review] Unexpected response type');
 
-  return JSON.parse(block.text) as ReviewResult;
+  return JSON.parse(extractJson(block.text)) as ReviewResult;
 }
 
 export async function reviewLorecraft(input: NormalizedLorcraftInput, synthesized: SynthesizeResult): Promise<ReviewResult> {
