@@ -138,7 +138,12 @@ lorekit/
 │   │   │       │   ├── quick.ts
 │   │   │       │   ├── deep.ts
 │   │   │       │   ├── similarity.ts
-│   │   │       │   └── compose.ts
+│   │   │       │   ├── compose.ts
+│   │   │       │   └── quick/           ← Quick 파이프라인 (구현 완료)
+│   │   │       │       ├── normalize.ts
+│   │   │       │       ├── analyze.ts
+│   │   │       │       ├── check.ts
+│   │   │       │       └── format.ts
 │   │   │       └── simulator/
 │   │   │           ├── normalize.ts
 │   │   │           ├── load-context.ts

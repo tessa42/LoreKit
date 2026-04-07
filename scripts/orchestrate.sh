@@ -78,6 +78,7 @@ run_agent() {
   if claude \
     --agents "[${agents_json}]" \
     --add-dir "$ROOT_DIR" \
+    --allowedTools "Write,Edit,MultiEdit,Bash" \
     -p "$user_prompt" \
     2>&1 | tee -a "$LOG_FILE"; then
     log "[$label] 완료"

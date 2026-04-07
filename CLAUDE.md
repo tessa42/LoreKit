@@ -51,12 +51,13 @@
 - My Page 아카이브 (탭 필터, 카드 렌더링)
 - Lorecraft 파이프라인 8단계 + UI
 - Lorecraft 결과 페이지 디자인 (마크다운 렌더링)
+- Lorecheck Quick 파이프라인 (normalize → analyze → check → format + API route)
 
 ### 진행중
 - 계정 페이지 (로그아웃 버튼)
 
 ### 다음
-- Lorecheck Quick 구현
+- Lorecheck Quick UI (입력 페이지 + 결과 페이지)
 - 씨앗 단가 확정 (토큰 비용 측정 후)
 - Lorecraft 속도 최적화 (현재 2.6분 → 목표 30초 이내)
 

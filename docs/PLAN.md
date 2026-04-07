@@ -1,6 +1,6 @@
 # Lorekit 구현 계획
 
-## Lorecheck Quick 구현 계획
+## Lorecheck Quick 구현 계획 ✅ 완료 (2026-04-07)
 
 ### 기능 개요
 유저가 시놉시스/플롯/원고를 입력하면 현실 고증 오류, 내부 설정 충돌, 개연성 문제를 점검해주는 기능.
@@ -24,12 +24,35 @@ SSE 스트리밍
 ### 씨앗
 단가 미확정 — 일단 0으로 진행
 
-### 파일 구조
-- src/lib/ai/pipeline/lorecheck/quick/
-- src/app/api/lorecheck/quick/route.ts
+### 파일 구조 (구현 완료)
+- src/lib/ai/pipeline/lorecheck/quick/normalize.ts  ← 입력 검증
+- src/lib/ai/pipeline/lorecheck/quick/analyze.ts    ← Haiku, 장르/시대/배경 분석
+- src/lib/ai/pipeline/lorecheck/quick/check.ts      ← Sonnet, 몰입 파괴 통합 판단
+- src/lib/ai/pipeline/lorecheck/quick/format.ts     ← payload 변환 (AI 없음)
+- src/app/api/lorecheck/quick/route.ts              ← POST, SSE 스트리밍
 - src/app/(app)/lorecheck/page.tsx
 - src/app/(app)/lorecheck/result/page.tsx
 - src/components/lorecheck/
+
+### 검토 철학
+Lorecheck는 단순 오류 탐지가 아니라 독자 몰입 관점에서 판단한다.
+
+세 가지를 통합적으로 판단:
+- 몰입 파괴 오류: 현실과 달라서 독자가 위화감을 느낄 수 있는 고증 오류
+- 의도적 상상력: 현실과 다르지만 작품 맥락상 허용되거나 오히려 강점인 요소 → 오류로 분류하지 않음
+- 내부자 맥락: 해당 문화/직군/집단에 속한 독자만 알 수 있는 현실 규칙 위반
+
+판단 원칙:
+- 확신 없으면 지적하지 않음
+- 장르 관습은 오류가 아님
+- 의도적 재해석이 명백한 경우 오류 분류 금지
+- 지적 시 반드시 "왜 독자가 위화감을 느끼는가" 근거 제시
+
+출력 타입:
+- type: 'immersion_break' | 'intentional' | 'insider_context'
+- severity: 'high' | 'medium' | 'low' (intentional은 없음)
+- description: 판단 근거
+- suggestion: 수정 방향 또는 강점을 살리는 방법
 
 ### 미확정
 - 씨앗 단가
