@@ -51,7 +51,7 @@
 - My Page 아카이브 (탭 필터, 카드 렌더링)
 - Lorecraft 파이프라인 8단계 + UI
 - Lorecraft 결과 페이지 디자인 (마크다운 렌더링)
-- Lorecheck Quick 파이프라인 (normalize → analyze → check → format + API route)
+- Lorecheck Quick 파이프라인 (normalize → analyze → research → check → format + API route)
 - Lorecheck Quick UI (입력 페이지 + 결과 페이지 — LorcheckForm, LorcheckResult 컴포넌트)
 
 ### 진행중

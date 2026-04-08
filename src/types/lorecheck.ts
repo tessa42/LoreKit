@@ -33,6 +33,13 @@ export interface LorcheckCheckResult {
   issues: LorcheckIssue[];
 }
 
+export interface LorcheckResearchResult {
+  insider_rules: {
+    subject: string;
+    rules: string[];
+  }[];
+}
+
 export interface LorcheckQuickPayload {
   text: string;
   genre: string;

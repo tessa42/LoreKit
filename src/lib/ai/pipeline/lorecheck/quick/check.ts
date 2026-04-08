@@ -3,6 +3,7 @@ import { extractJson } from '@/lib/ai/pipeline/lorecraft/utils';
 import type {
   NormalizedLorcheckQuickInput,
   LorcheckAnalyzeResult,
+  LorcheckResearchResult,
   LorcheckCheckResult,
 } from '@/types/lorecheck';
 
@@ -36,8 +37,13 @@ const SYSTEM_PROMPT = `당신은 독자 몰입 관점에서 창작 텍스트를 
 async function callCheck(
   input: NormalizedLorcheckQuickInput,
   analysis: LorcheckAnalyzeResult,
+  research: LorcheckResearchResult,
 ): Promise<LorcheckCheckResult> {
   const client = getAnthropicClient();
+
+  const insiderRulesLines = research.insider_rules.map(
+    ({ subject, rules }) => `내부자 맥락 규칙 - ${subject}: ${rules.join(', ')}`,
+  );
 
   const userContent = [
     `텍스트:\n${input.text}`,
@@ -48,6 +54,7 @@ async function callCheck(
     `- 주요 소재: ${analysis.materials.join(', ')}`,
     `- 등장 집단: ${analysis.groups.join(', ')}`,
     `- 의도적 상상력 사용 여부: ${analysis.uses_intentional_imagination ? '예' : '아니오'}`,
+    insiderRulesLines.length > 0 ? `\n${insiderRulesLines.join('\n')}` : '',
     input.existingSetting ? `\n기존 설정:\n${input.existingSetting}` : '',
   ]
     .filter(Boolean)
@@ -69,6 +76,7 @@ async function callCheck(
 export async function checkLorcheckQuick(
   input: NormalizedLorcheckQuickInput,
   analysis: LorcheckAnalyzeResult,
+  research: LorcheckResearchResult,
 ): Promise<LorcheckCheckResult> {
-  return await callCheck(input, analysis);
+  return await callCheck(input, analysis, research);
 }

@@ -142,6 +142,7 @@ lorekit/
 │   │   │       │   └── quick/           ← Quick 파이프라인 (구현 완료)
 │   │   │       │       ├── normalize.ts
 │   │   │       │       ├── analyze.ts
+│   │   │       │       ├── research.ts  ← 소재/집단별 내부자 규칙 수집
 │   │   │       │       ├── check.ts
 │   │   │       │       └── format.ts
 │   │   │       └── simulator/

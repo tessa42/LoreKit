@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { normalizeLorcheckQuick } from '@/lib/ai/pipeline/lorecheck/quick/normalize';
 import { analyzeLorcheckQuick } from '@/lib/ai/pipeline/lorecheck/quick/analyze';
+import { researchLorcheckQuick } from '@/lib/ai/pipeline/lorecheck/quick/research';
 import { checkLorcheckQuick } from '@/lib/ai/pipeline/lorecheck/quick/check';
 import { formatLorcheckQuick } from '@/lib/ai/pipeline/lorecheck/quick/format';
 import type { LorcheckQuickInput } from '@/types/lorecheck';
@@ -39,9 +40,14 @@ export async function POST(request: NextRequest) {
         const analysis = await analyzeLorcheckQuick(normalized);
         send('progress', { step: 'analyze', message: '텍스트 분석 완료' });
 
-        // 3. check
+        // 3. research
+        send('progress', { step: 'research', message: '내부자 맥락 분석 중...' });
+        const research = await researchLorcheckQuick(normalized, analysis);
+        send('progress', { step: 'research', message: '내부자 맥락 분석 완료' });
+
+        // 4. check
         send('progress', { step: 'check', message: '고증 검토 중...' });
-        const checkResult = await checkLorcheckQuick(normalized, analysis);
+        const checkResult = await checkLorcheckQuick(normalized, analysis, research);
         send('progress', { step: 'check', message: '고증 검토 완료' });
 
         // 4. format
