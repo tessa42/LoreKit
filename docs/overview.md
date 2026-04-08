@@ -102,6 +102,8 @@ lorekit/
 │   │   │   │   ├── quick/route.ts   ← Quick 전용 엔드포인트
 │   │   │   │   └── deep/route.ts    ← Deep 전용 엔드포인트 (2차)
 │   │   │   ├── simulator/route.ts
+│   │   │   ├── account/
+│   │   │   │   └── delete/route.ts  ← 회원 탈퇴 (service role 사용)
 │   │   │   ├── credits/route.ts
 │   │   │   └── webhooks/polar/route.ts
 │   │   │

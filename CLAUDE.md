@@ -53,9 +53,10 @@
 - Lorecraft 결과 페이지 디자인 (마크다운 렌더링)
 - Lorecheck Quick 파이프라인 (normalize → analyze → research → check → format + API route)
 - Lorecheck Quick UI (입력 페이지 + 결과 페이지 — LorcheckForm, LorcheckResult 컴포넌트)
+- 계정 페이지 (계정 정보 표시, 로그아웃, 회원 탈퇴 + POST /api/account/delete)
 
 ### 진행중
-- 계정 페이지 (로그아웃 버튼)
+- (없음)
 
 ### 다음
 - 씨앗 단가 확정 (토큰 비용 측정 후)
