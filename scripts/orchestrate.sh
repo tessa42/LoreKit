@@ -1,4 +1,5 @@
 #!/bin/bash
+export PATH="/home/codespace/nvm/current/bin:$PATH"
 set -euo pipefail
 
 # ─── 사용법 ───────────────────────────────────────────────
