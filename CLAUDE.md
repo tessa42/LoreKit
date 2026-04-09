@@ -44,7 +44,7 @@
 - 테스트 프레임워크: Vitest (예정)
 - 테스트 작성: tester 에이전트 담당
 
-## 현재 진행 상황 (2026-04-08 기준)
+## 현재 진행 상황 (2026-04-09 기준)
 ### 완료
 - 인증 (Google OAuth)
 - Simulator 파이프라인 + UI
@@ -72,6 +72,15 @@
   - src/app/(legal)/privacy/page.tsx — 개인정보처리방침 (12개 섹션)
   - src/app/(legal)/refund/page.tsx — 환불 정책 (7개 섹션, Polar MoR 기준)
   - Footer.tsx에 /terms /privacy /refund 링크 포함
+- 작가 노트 UI — 블록 기반 노트 편집 시스템
+  - src/app/(app)/mypage/note/page.tsx — 노트 목록 (생성/삭제/이동)
+  - src/app/(app)/mypage/note/[id]/page.tsx — 노트 편집 페이지 (서버 컴포넌트)
+  - src/components/mypage/note/NoteListClient.tsx — 노트 카드 목록 클라이언트
+  - src/components/mypage/note/NoteEditorClient.tsx — 제목 인라인 편집, 블록 추가 드롭다운, 아카이브 불러오기 모달
+  - src/components/mypage/note/NoteBlockList.tsx — @dnd-kit 드래그 앤 드롭 블록 재배치
+  - src/components/mypage/note/NoteBlockEditor.tsx — 타입 뱃지, 드래그 핸들, blur 시 자동 저장
+  - 블록 6종: TextBlock / WorldOverviewBlock / SettingBlock / CharacterBlock / TimelineBlock / PlotBlock
+  - Lorecraft 아카이브 섹션 → world_overview 블록 일괄 변환 지원
 
 ### 진행중
 - (없음)
