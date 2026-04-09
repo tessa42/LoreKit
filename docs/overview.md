@@ -93,7 +93,8 @@ lorekit/
 │   │   │       │   ├── page.tsx
 │   │   │       │   └── [id]/page.tsx
 │   │   │       ├── account/page.tsx
-│   │   │       └── billing/page.tsx
+│   │   │       ├── shop/page.tsx        ← 씨앗 구매 (패키지 선택 + Polar 체크아웃)
+│   │   │       └── billing/page.tsx     ← 결제 내역
 │   │   │
 │   │   ├── api/
 │   │   │   ├── auth/callback/route.ts
@@ -104,12 +105,15 @@ lorekit/
 │   │   │   ├── simulator/route.ts
 │   │   │   ├── account/
 │   │   │   │   └── delete/route.ts  ← 회원 탈퇴 (service role 사용)
+│   │   │   ├── checkout/route.ts    ← Polar 체크아웃 세션 생성
 │   │   │   ├── credits/route.ts
-│   │   │   └── webhooks/polar/route.ts
+│   │   │   └── webhooks/polar/route.ts  ← 결제 완료 웹훅 → 씨앗 지급
 │   │   │
-│   │   ├── terms/page.tsx
-│   │   ├── refund/page.tsx
-│   │   └── privacy/page.tsx
+│   │   └── (legal)/                  ← 법적 문서 (공통 레이아웃)
+│   │       ├── layout.tsx           ← 법적 문서 전용 헤더/푸터
+│   │       ├── terms/page.tsx       ← 서비스 이용약관
+│   │       ├── privacy/page.tsx     ← 개인정보처리방침
+│   │       └── refund/page.tsx      ← 환불 정책
 │   │
 │   ├── components/
 │   │   ├── common/                  ← 버튼, 인풋, 모달 등
@@ -306,7 +310,7 @@ type ApiError   = { ok: false; error: string; code?: string };
 | 항목 | 상태 |
 |---|---|
 | 씨앗 기본 단가 | 토큰 비용 측정 후 결정 |
-| 신규 가입 지급 씨앗 수 | 미정 |
+| 신규 가입 지급 씨앗 수 | 6개 (Supabase Trigger — 001_signup_credits.sql) |
 | 작가 노트 에디터 형식 | 미정 (마크다운 vs 리치텍스트) |
 | Lorecheck Deep | 2차 구현 |
 | RAG 도입 시점 | 2차 구현 |

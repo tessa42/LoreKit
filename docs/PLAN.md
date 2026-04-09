@@ -57,3 +57,69 @@ Lorecheck는 단순 오류 탐지가 아니라 독자 몰입 관점에서 판단
 ### 미확정
 - 씨앗 단가
 - Deep 버전 파이프라인 (2차)
+
+---
+
+## 작가 노트 + 로어북 설계
+
+### 전체 데이터 흐름
+
+```
+아카이브(archive_items) → 작가 노트(notes + note_blocks) → 로어북(lorebooks + lorebook_sections)
+```
+
+### DB 구조
+
+#### notes 테이블 (기존 content text 컬럼 제거, 블록 구조로 전환)
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| id | uuid PK | |
+| user_id | uuid FK→profiles | |
+| title | text | |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+> ⚠️ 기존 `content text` 컬럼 제거 — 블록(note_blocks)으로 대체
+
+#### note_blocks 테이블 (신규)
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| id | uuid PK | |
+| note_id | uuid FK→notes | |
+| user_id | uuid FK→profiles | |
+| type | text | `text \| character \| timeline \| plot \| org_chart \| scenario \| world_overview \| setting` |
+| content | jsonb | 블록 타입별 구조화 데이터 |
+| order_index | integer default 0 | 블록 순서 |
+| source_archive_id | uuid nullable FK→archive_items | 아카이브 불러오기 시 원본 참조 |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+#### lorebooks 테이블 추가 컬럼
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| is_public | boolean default false | 전체 공개 여부 |
+
+#### lorebook_sections 테이블 추가 컬럼
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| note_block_id | uuid nullable FK→note_blocks | 연결된 노트 블록 |
+| is_public | boolean default false | 섹션 개별 공개 여부 |
+| is_usable | boolean default false | 추후 활용 요청 기능용 플래그 |
+
+### MVP 범위 (1단계)
+
+**작가 노트**
+- 노트 생성 / 삭제 / 목록
+- 블록 추가 / 편집 / 삭제 / 순서 변경
+- 지원 블록 타입: `text`, `character`, `world_overview`, `setting`
+- 아카이브에서 Lorecraft 결과물 불러오기 → note_block 변환
+
+**로어북**
+- 로어북 생성 + note_blocks에서 섹션 선택해서 발행
+- 섹션 / 전체 공개·비공개 토글
+- 내 로어북 목록 + 상세 페이지
+
+### 2단계 (추후)
+- `timeline`, `plot`, `org_chart`, `scenario` 블록 타입 추가
+- 공개 로어북 퍼블릭 URL
+- 활용 요청 기능 (`is_usable` 연동)

@@ -62,9 +62,9 @@ export default function Header() {
           {/* 씨앗 잔액 — 로그인 상태일 때만 */}
           {!authLoading && user && balance !== null && (
             <Link
-              href="/mypage/billing"
+              href="/mypage/shop"
               className="hidden sm:flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--foreground)] hover:bg-[var(--surface-2)] transition-colors"
-              title="씨앗 잔액"
+              title="씨앗 구매"
             >
               <span aria-hidden="true">🌱</span>
               <span className="font-medium tabular-nums">{balance.toLocaleString()}</span>
@@ -90,6 +90,7 @@ export default function Header() {
           )}
         </div>
       </div>
+
     </header>
   );
 }

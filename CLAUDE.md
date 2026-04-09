@@ -54,6 +54,24 @@
 - Lorecheck Quick 파이프라인 (normalize → analyze → research → check → format + API route)
 - Lorecheck Quick UI (입력 페이지 + 결과 페이지 — LorcheckForm, LorcheckResult 컴포넌트)
 - 계정 페이지 (계정 정보 표시, 로그아웃, 회원 탈퇴 + POST /api/account/delete)
+- 씨앗 구매 페이지 (/mypage/shop — ShopSection + POST /api/checkout)
+  - 3종 패키지 (5씨앗 $4.99 / 12씨앗 $9.99 / 30씨앗 $23.99), Polar 체크아웃 연동
+  - 웹훅 서명 검증 + addCredits 호출 (POST /api/webhooks/polar)
+- 결제 내역 페이지 (/mypage/billing — BillingSection, 거래 이력 목록)
+- Header 씨앗 버튼 → /mypage/shop 이동
+- MypageNav: 씨앗 구매(/mypage/shop) + 결제 내역(/mypage/billing) 분리
+- 신규 가입 씨앗 6개 자동 지급 (Supabase DB Function + Trigger — src/lib/supabase/migrations/001_signup_credits.sql)
+- 작가 노트 + 로어북 구조 개편 마이그레이션 — src/lib/supabase/migrations/002_notes_lorebook_redesign.sql
+  - notes.content 컬럼 제거 (블록 구조 전환)
+  - note_blocks 테이블 신규 생성 (RLS + 트리거 + 인덱스 포함)
+  - lorebooks.is_public 컬럼 추가
+  - lorebook_sections에 note_block_id, is_public, is_usable 컬럼 추가
+- 법적 문서 페이지 3종 — (legal) 라우트 그룹으로 통합
+  - src/app/(legal)/layout.tsx — 법적 문서 전용 헤더/푸터
+  - src/app/(legal)/terms/page.tsx — 서비스 이용약관 (15개 섹션)
+  - src/app/(legal)/privacy/page.tsx — 개인정보처리방침 (12개 섹션)
+  - src/app/(legal)/refund/page.tsx — 환불 정책 (7개 섹션, Polar MoR 기준)
+  - Footer.tsx에 /terms /privacy /refund 링크 포함
 
 ### 진행중
 - (없음)

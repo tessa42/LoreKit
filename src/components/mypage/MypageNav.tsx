@@ -8,7 +8,8 @@ const NAV_ITEMS = [
   { label: '작가 노트', href: '/mypage/note', icon: '📝' },
   { label: '로어북', href: '/mypage/lorebook', icon: '📖' },
   { label: '계정', href: '/mypage/account', icon: '👤' },
-  { label: '결제', href: '/mypage/billing', icon: '💳' },
+  { label: '씨앗 구매', href: '/mypage/shop', icon: '🌱' },
+  { label: '결제 내역', href: '/mypage/billing', icon: '💳' },
 ] as const;
 
 export default function MypageNav() {
