@@ -1,7 +1,6 @@
 name = "lorekit"
-pages_build_output_dir = ".vercel/output/static"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
-# Local dev: set your API key in .dev.vars (see .dev.vars.example)
-# Production: set OPENAI_API_KEY in Cloudflare Pages dashboard → Settings → Environment Variables
+[vars]
+NEXT_PUBLIC_APP_URL = "https://lorekit.cc"

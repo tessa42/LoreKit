@@ -100,8 +100,8 @@
 - Cloudflare Pages Edge Runtime 적용 — Lorecraft 타임아웃 우회
   - `export const runtime = 'edge'` 전체 API 라우트에 적용 (lorecraft, lorecheck/quick, simulator, account/delete, checkout, webhooks/polar)
   - next.config.ts: @cloudflare/next-on-pages 관련 코드 제거됨 (wrangler 의존성 빌드 실패 문제로)
-  - wrangler.toml: pages_build_output_dir + nodejs_compat 설정
-  - @cloudflare/next-on-pages ^1.13.16 설치 완료
+  - wrangler.toml: name + compatibility_date + nodejs_compat + [vars] NEXT_PUBLIC_APP_URL만 유지 (간소화)
+  - @cloudflare/next-on-pages: devDependencies에서 완전 제거
   - 스텁 파일 모듈화: /api/credits, /api/lorecheck/deep, /(app)/lorecheck/result-deep/page.tsx
 
 ### 진행중
