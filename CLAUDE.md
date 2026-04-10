@@ -28,6 +28,7 @@
 - 2026-04-06: useState(initialItems)는 props 변경 시 자동 갱신 안 됨 → useEffect로 동기화 필요
 - 2026-04-06: Codespace 재시작 시 포트 3000 충돌 → kill [PID] 후 npm run dev
 - 2026-04-06: Supabase Redirect URL은 Codespace URL 변경 시 반드시 업데이트
+- 2026-04-10: Edge Runtime에서 Anthropic SDK `getDefaultAgent is not a function` 오류 → `getAnthropicClient()`에 `fetch: fetch` 명시 필수, 싱글턴 캐싱 금지
 
 ## 검증 원칙
 - 코드 작성 후 반드시 실행: npx tsc --noEmit

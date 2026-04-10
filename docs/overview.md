@@ -23,17 +23,17 @@
 
 | 항목 | 선택 | 비고 |
 |---|---|---|
-| 프레임워크 | Next.js 14 (App Router) | Cloudflare Pages 호환 |
+| 프레임워크 | Next.js 16 (App Router) | Cloudflare Pages 호환, Turbopack |
 | 언어 | TypeScript | strict 모드 |
 | 스타일 | Tailwind CSS | |
 | DB / Auth | Supabase | Google OAuth 단독 |
-| AI (최종 생성) | Claude Sonnet | Anthropic API |
-| AI (전처리) | GPT-4o / GPT-4o mini | OpenAI API — MVP 이후 멀티모델 전환 |
+| AI | Claude Sonnet / Haiku | Anthropic API — `lib/ai/anthropic.ts` 단일 진입점 |
 | 결제 | Polar | 씨앗 충전, 웹훅 처리 |
 | 이메일 | Resend | |
-| 배포 | Cloudflare Pages | wrangler 사용 |
+| 배포 | Cloudflare Pages | wrangler 사용, Edge Runtime |
 
-> MVP는 Claude Sonnet 단일 모델로 출시 후, 전처리에 GPT 계열 추가 예정.
+> MVP는 Claude Sonnet / Haiku 단일 공급자로 운영. OpenAI 연동은 MVP 이후 검토.
+> `openai` 패키지는 미사용으로 제거됨 (2026-04-10). `lib/ai/openai.ts`는 빈 스텁으로 유지.
 
 ---
 
@@ -253,19 +253,27 @@ type ApiError   = { ok: false; error: string; code?: string };
 
 ## 7. AI 파이프라인 원칙
 
-- **모든 AI 호출은 `lib/ai/anthropic.ts` 또는 `lib/ai/openai.ts`를 통해서만** 이루어집니다.
+- **모든 AI 호출은 `lib/ai/anthropic.ts`를 통해서만** 이루어집니다.
+  - `lib/ai/openai.ts`는 빈 스텁 — 현재 미사용, OpenAI 연동 시 여기에 구현
 - 페이지/API 라우트에서 SDK를 직접 import하지 않습니다.
 - 파이프라인 각 단계는 독립 함수로 분리해 단계별 디버깅이 가능하게 합니다.
 - 각 단계 함수는 순수 함수(pure function)에 가깝게 작성합니다 (입력 → 출력).
 
-**MVP → 2차 전환 계획:**
+**Edge Runtime 호환 (Anthropic SDK):**
+- `getAnthropicClient()`는 매 호출마다 새 인스턴스를 반환합니다 (싱글턴 캐싱 금지).
+  - Edge Runtime에서는 모듈 수준 싱글턴이 예기치 않게 공유될 수 있음.
+- `fetch: fetch`를 명시적으로 전달합니다.
+  - 미전달 시 SDK 내부에서 Node.js `http` 에이전트를 탐색하다 `getDefaultAgent is not a function` 오류 발생.
+- `anthropic-dangerous-direct-browser-access: 'true'` 헤더를 포함합니다.
+  - Cloudflare Pages Edge 환경에서 CORS 브라우저 접근 허용에 필요.
 
-| 단계 | MVP | 2차 |
-|---|---|---|
-| 전처리 | Claude Sonnet | GPT-4o mini |
-| 중간처리 | Claude Sonnet | GPT-4o |
-| 최종 생성 | Claude Sonnet | Claude Sonnet |
-| 포맷 정리 | Claude Sonnet | Claude Haiku |
+**현재 모델 구성:**
+
+| 단계 | 현재 |
+|---|---|
+| 전처리 / 분석 | Claude Haiku |
+| 생성 / 종합 | Claude Sonnet |
+| 포맷 정리 | Claude Haiku |
 
 ---
 

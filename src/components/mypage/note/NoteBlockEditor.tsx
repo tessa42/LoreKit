@@ -2,15 +2,17 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import dynamic from 'next/dynamic';
 import type { NoteBlock, NoteBlockContent } from '@/types/note';
 import { NOTE_BLOCK_TYPE_LABELS } from '@/types/note';
-import TextBlock from './blocks/TextBlock';
-import WorldOverviewBlock from './blocks/WorldOverviewBlock';
-import SettingBlock from './blocks/SettingBlock';
-import CharacterBlock from './blocks/CharacterBlock';
-import TimelineBlock from './blocks/TimelineBlock';
-import PlotBlock from './blocks/PlotBlock';
 import type { TextContent, WorldOverviewContent, SettingContent, CharacterContent, TimelineContent, PlotContent } from '@/types/note';
+
+const TextBlock = dynamic(() => import('./blocks/TextBlock'), { ssr: false });
+const WorldOverviewBlock = dynamic(() => import('./blocks/WorldOverviewBlock'), { ssr: false });
+const SettingBlock = dynamic(() => import('./blocks/SettingBlock'), { ssr: false });
+const CharacterBlock = dynamic(() => import('./blocks/CharacterBlock'), { ssr: false });
+const TimelineBlock = dynamic(() => import('./blocks/TimelineBlock'), { ssr: false });
+const PlotBlock = dynamic(() => import('./blocks/PlotBlock'), { ssr: false });
 
 const TYPE_COLORS: Record<string, string> = {
   text: 'bg-[var(--surface-2)] text-[var(--muted)]',

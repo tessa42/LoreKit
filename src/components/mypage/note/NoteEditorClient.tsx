@@ -2,7 +2,9 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import NoteBlockList from './NoteBlockList';
+import dynamic from 'next/dynamic';
+
+const NoteBlockList = dynamic(() => import('./NoteBlockList'), { ssr: false });
 import Button from '@/components/ui/Button';
 import type { Note, NoteBlock, NoteBlockType, NoteBlockContent } from '@/types/note';
 import { NOTE_BLOCK_TYPE_LABELS } from '@/types/note';
