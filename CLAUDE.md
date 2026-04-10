@@ -97,8 +97,10 @@
   - src/components/mypage/lorebook/LorebookEditorClient.tsx — 미사용 (향후 제거 예정)
   - src/components/mypage/lorebook/LorebookSectionList.tsx — 미사용 (향후 제거 예정)
   - API routes: GET/POST /api/lorebooks, GET/PUT/DELETE /api/lorebooks/[id], GET/POST /api/lorebooks/[id]/sections, PUT/DELETE /api/lorebooks/[id]/sections/[sectionId]
-- Cloudflare Pages Edge Runtime 적용 — Lorecraft 타임아웃 우회
-  - `export const runtime = 'edge'` 전체 API 라우트에 적용 (lorecraft, lorecheck/quick, simulator, account/delete, checkout, webhooks/polar)
+- Cloudflare Pages Edge Runtime 적용 — 전체 라우트 확장 완료
+  - `export const runtime = 'edge'` 전체 API 라우트 + 페이지 파일에 적용
+    - API: auth/callback, auth/signin, lorebooks (4개 라우트), notes (4개 라우트), lorecraft, lorecheck/quick, simulator, account/delete, checkout, webhooks/polar
+    - 페이지: (auth)/login, (auth)/signup, mypage (page, account, archive, billing, shop, lorebook, lorebook/[id], note, note/[id])
   - next.config.ts: @cloudflare/next-on-pages 관련 코드 제거됨 (wrangler 의존성 빌드 실패 문제로)
   - wrangler.toml: name + compatibility_date + nodejs_compat + [vars] NEXT_PUBLIC_APP_URL만 유지 (간소화)
   - @cloudflare/next-on-pages: devDependencies에서 완전 제거

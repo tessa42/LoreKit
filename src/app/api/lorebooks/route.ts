@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { createClient } from '@/lib/supabase/server';
 
 // GET /api/lorebooks — 내 로어북 목록

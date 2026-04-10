@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { createClient } from '@/lib/supabase/server';
 import type { NoteBlockType } from '@/types/note';
 import { defaultContent } from '@/types/note';

@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import NoteListClient from '@/components/mypage/note/NoteListClient';
