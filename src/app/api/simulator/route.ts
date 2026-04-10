@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/utils/api';
 import { validateInput, normalizeInput } from '@/lib/ai/pipeline/simulator/normalize';

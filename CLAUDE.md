@@ -44,7 +44,7 @@
 - 테스트 프레임워크: Vitest (예정)
 - 테스트 작성: tester 에이전트 담당
 
-## 현재 진행 상황 (2026-04-09 기준)
+## 현재 진행 상황 (2026-04-10 기준, Edge Runtime 적용 완료)
 ### 완료
 - 인증 (Google OAuth)
 - Simulator 파이프라인 + UI
@@ -80,14 +80,36 @@
   - src/components/mypage/note/NoteBlockList.tsx — @dnd-kit 드래그 앤 드롭 블록 재배치
   - src/components/mypage/note/NoteBlockEditor.tsx — 타입 뱃지, 드래그 핸들, blur 시 자동 저장
   - 블록 6종: TextBlock / WorldOverviewBlock / SettingBlock / CharacterBlock / TimelineBlock / PlotBlock
+  - 블록 본문(body, description 등) 표시 시 LorcraftMarkdown 컴포넌트로 렌더링 (TextBlock, WorldOverviewBlock, SettingBlock, CharacterBlock, TimelineBlock)
   - Lorecraft 아카이브 섹션 → world_overview 블록 일괄 변환 지원
+  - 로어북으로 발행 버튼 활성화 (로어북 선택 모달 → 블록 → 섹션 변환 후 이동)
+- 로어북 UI — 섹션 기반 뷰어 시스템 (편집 기능 없음 — 작가 노트에서 담당)
+  - src/app/(app)/mypage/lorebook/page.tsx — 로어북 목록 (서버 컴포넌트)
+  - src/app/(app)/mypage/lorebook/[id]/page.tsx — 로어북 뷰어 페이지 (서버 컴포넌트, 섹션 조회)
+  - src/components/mypage/lorebook/LorebookListClient.tsx — 목록 클라이언트 (생성/삭제)
+  - src/components/mypage/lorebook/LorebookCard.tsx — 로어북 카드 (공개 뱃지, 섹션 수, 삭제)
+  - src/components/mypage/lorebook/LorebookViewerClient.tsx — 뷰어 전용 UI
+    - max-w-2xl 중앙 정렬, 제목 text-3xl font-bold
+    - 우상단: 전체 공개/비공개 토글 버튼 + '작가 노트에서 편집' 링크(/mypage/note)
+    - 섹션: 제목 text-xl font-semibold mb-3, 내용 LorcraftMarkdown 컴포넌트로 렌더링
+    - is_public=false 섹션에 비공개 뱃지, 섹션 사이 border-b 구분선, py-8 여백
+    - 섹션 편집/추가/삭제/드래그 기능 없음 (읽기 전용)
+  - src/components/mypage/lorebook/LorebookEditorClient.tsx — 미사용 (향후 제거 예정)
+  - src/components/mypage/lorebook/LorebookSectionList.tsx — 미사용 (향후 제거 예정)
+  - API routes: GET/POST /api/lorebooks, GET/PUT/DELETE /api/lorebooks/[id], GET/POST /api/lorebooks/[id]/sections, PUT/DELETE /api/lorebooks/[id]/sections/[sectionId]
+- Cloudflare Pages Edge Runtime 적용 — Lorecraft 타임아웃 우회
+  - `export const runtime = 'edge'` 전체 API 라우트에 적용 (lorecraft, lorecheck/quick, simulator, account/delete, checkout, webhooks/polar)
+  - next.config.ts: @cloudflare/next-on-pages 관련 코드 제거됨 (wrangler 의존성 빌드 실패 문제로)
+  - wrangler.toml: pages_build_output_dir + nodejs_compat 설정
+  - @cloudflare/next-on-pages ^1.13.16 설치 완료
+  - 스텁 파일 모듈화: /api/credits, /api/lorecheck/deep, /(app)/lorecheck/result-deep/page.tsx
 
 ### 진행중
 - (없음)
 
 ### 다음
 - 씨앗 단가 확정 (토큰 비용 측정 후)
-- Lorecraft 속도 최적화 (현재 2.6분 → 목표 30초 이내)
+- Lorecraft 속도 최적화 (현재 2.6분 → 목표 30초 이내, Edge Runtime으로 타임아웃은 해결됨)
 
 ## 에이전트 구조 (Layer 1 조율 지침)
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import LorcraftMarkdown from '@/components/lorecraft/LorcraftMarkdown';
 import type { TimelineContent, TimelineEvent } from '@/types/note';
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 
 export default function TimelineBlock({ content, onSave }: Props) {
   const [events, setEvents] = useState<TimelineEvent[]>(content.events);
+  const [editingDescIndex, setEditingDescIndex] = useState<number | null>(null);
 
   function updateEvent(index: number, field: keyof TimelineEvent, value: string) {
     const next = events.map((e, i) => (i === index ? { ...e, [field]: value } : e));
@@ -48,14 +50,28 @@ export default function TimelineBlock({ content, onSave }: Props) {
               onChange={(e) => updateEvent(index, 'date', e.target.value)}
               onBlur={() => saveEvents(events)}
             />
-            <input
-              type="text"
-              className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-              placeholder="사건 설명"
-              value={event.description}
-              onChange={(e) => updateEvent(index, 'description', e.target.value)}
-              onBlur={() => saveEvents(events)}
-            />
+            {editingDescIndex === index ? (
+              <input
+                autoFocus
+                type="text"
+                className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                placeholder="사건 설명"
+                value={event.description}
+                onChange={(e) => updateEvent(index, 'description', e.target.value)}
+                onBlur={() => { saveEvents(events); setEditingDescIndex(null); }}
+              />
+            ) : (
+              <div
+                onClick={() => setEditingDescIndex(index)}
+                className="min-h-[32px] cursor-text rounded-[var(--radius-md)] border border-transparent px-3 py-1.5 hover:border-[var(--border)] hover:bg-[var(--surface)]"
+              >
+                {event.description ? (
+                  <LorcraftMarkdown text={event.description} />
+                ) : (
+                  <p className="text-sm text-[var(--muted)]">사건 설명</p>
+                )}
+              </div>
+            )}
           </div>
           <button
             type="button"

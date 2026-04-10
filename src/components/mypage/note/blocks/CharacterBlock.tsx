@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, KeyboardEvent } from 'react';
+import LorcraftMarkdown from '@/components/lorecraft/LorcraftMarkdown';
 import type { CharacterContent } from '@/types/note';
 
 interface Props {
@@ -14,8 +15,14 @@ export default function CharacterBlock({ content, onSave }: Props) {
   const [description, setDescription] = useState(content.description);
   const [traits, setTraits] = useState<string[]>(content.traits);
   const [traitInput, setTraitInput] = useState('');
+  const [isDescEditing, setIsDescEditing] = useState(false);
 
   const save = () => onSave({ name, role, description, traits });
+
+  function handleDescBlur() {
+    onSave({ name, role, description, traits });
+    setIsDescEditing(false);
+  }
 
   function addTrait() {
     const trimmed = traitInput.trim();
@@ -56,14 +63,28 @@ export default function CharacterBlock({ content, onSave }: Props) {
           onBlur={save}
         />
       </div>
-      <textarea
-        className="w-full resize-none rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-        rows={3}
-        placeholder="인물 설명..."
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        onBlur={save}
-      />
+      {isDescEditing ? (
+        <textarea
+          autoFocus
+          className="w-full resize-none rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+          rows={3}
+          placeholder="인물 설명..."
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          onBlur={handleDescBlur}
+        />
+      ) : (
+        <div
+          onClick={() => setIsDescEditing(true)}
+          className="min-h-[56px] cursor-text rounded-[var(--radius-md)] border border-transparent px-3 py-2.5 hover:border-[var(--border)] hover:bg-[var(--surface)]"
+        >
+          {description ? (
+            <LorcraftMarkdown text={description} />
+          ) : (
+            <p className="text-sm text-[var(--muted)]">인물 설명...</p>
+          )}
+        </div>
+      )}
       {/* 특징 태그 */}
       <div>
         <div className="mb-1.5 flex flex-wrap gap-1.5">

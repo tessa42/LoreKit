@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextRequest } from 'next/server';
 import { normalizeLorecraft } from '@/lib/ai/pipeline/lorecraft/normalize';
 import { analyzeLorecraft } from '@/lib/ai/pipeline/lorecraft/analyze';

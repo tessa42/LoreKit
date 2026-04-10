@@ -1,4 +1,5 @@
-import { createHmac, timingSafeEqual } from 'crypto';
+export const runtime = 'edge';
+
 import { addCredits } from '@/lib/credits/transaction';
 
 const SEEDS_BY_PRODUCT: Record<string, number> = {
@@ -7,28 +8,37 @@ const SEEDS_BY_PRODUCT: Record<string, number> = {
   'ece78c7b-fb38-4c50-9338-2926a8ab2f8f': 30,
 };
 
-function verifySignature(
+async function verifySignature(
   rawBody: string,
   msgId: string,
   msgTimestamp: string,
   msgSignature: string,
   secret: string,
-): boolean {
+): Promise<boolean> {
   // Standard Webhooks: signed content = "{msgId}.{msgTimestamp}.{body}"
   const signedContent = `${msgId}.${msgTimestamp}.${rawBody}`;
-  // Secret is base64-encoded
-  const secretBytes = Buffer.from(secret.replace(/^whsec_/, ''), 'base64');
-  const computed = createHmac('sha256', secretBytes).update(signedContent).digest('base64');
+
+  // Secret is base64-encoded (strip "whsec_" prefix if present)
+  const secretBase64 = secret.replace(/^whsec_/, '');
+  const secretBytes = Uint8Array.from(atob(secretBase64), (c) => c.charCodeAt(0));
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    secretBytes,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+
+  const msgBytes = new TextEncoder().encode(signedContent);
+  const sigBuffer = await crypto.subtle.sign('HMAC', key, msgBytes);
+  const computed = btoa(String.fromCharCode(...new Uint8Array(sigBuffer)));
 
   // webhook-signature may contain multiple space-separated "v1,<sig>" entries
   return msgSignature.split(' ').some((entry) => {
     const [, sig] = entry.split(',');
     if (!sig) return false;
-    try {
-      return timingSafeEqual(Buffer.from(computed), Buffer.from(sig));
-    } catch {
-      return false;
-    }
+    return computed === sig;
   });
 }
 
@@ -44,7 +54,7 @@ export async function POST(req: Request) {
     return new Response('Missing webhook headers or secret', { status: 400 });
   }
 
-  const valid = verifySignature(rawBody, msgId, msgTimestamp, msgSignature, secret);
+  const valid = await verifySignature(rawBody, msgId, msgTimestamp, msgSignature, secret);
   if (!valid) {
     return new Response('Invalid signature', { status: 400 });
   }
