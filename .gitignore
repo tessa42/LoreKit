@@ -37,3 +37,4 @@ out/
 
 # Wrangler cache
 .wrangler/
+.vercel
