@@ -47,7 +47,7 @@
 - 테스트 프레임워크: Vitest (예정)
 - 테스트 작성: tester 에이전트 담당
 
-## 현재 진행 상황 (2026-04-10 기준)
+## 현재 진행 상황 (2026-04-11 기준)
 ### 완료
 - 인증 (Google OAuth)
 - Simulator 파이프라인 + UI
@@ -128,6 +128,12 @@
     - Lorecraft: `lorecraft_draft` 키 (background, genre, existingSetting, areas)
     - Lorecheck: `lorecheck_draft` 키 (text, genre, existingSetting)
   - 컴포넌트 마운트 시 해당 draft 키 있으면 복원 후 삭제
+- LorcraftForm 리팩토링 — src/components/lorecraft/ 폴더 분리 완료
+  - LorcraftForm.tsx — 루트 폼 컴포넌트 (98줄)
+  - LorcraftInputFields.tsx — 입력 필드 UI 컴포넌트 (93줄)
+  - LorcraftStreamingPreview.tsx — 스트리밍 진행 미리보기 컴포넌트 (36줄)
+  - lorcraftFormConstants.ts — 상수/타입 (DRAFT_KEY, AREAS, STEP_LABELS, SseEvent 등) (40줄)
+  - useLorcraftForm.ts — 폼 상태·API·SSE 스트림 처리 훅 (194줄)
 
 ### 진행중
 - (없음)
