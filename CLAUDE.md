@@ -134,6 +134,12 @@
   - LorcraftStreamingPreview.tsx — 스트리밍 진행 미리보기 컴포넌트 (36줄)
   - lorcraftFormConstants.ts — 상수/타입 (DRAFT_KEY, AREAS, STEP_LABELS, SseEvent 등) (40줄)
   - useLorcraftForm.ts — 폼 상태·API·SSE 스트림 처리 훅 (194줄)
+- LorcheckForm 리팩토링 — src/components/lorecheck/ 폴더 분리 완료
+  - LorcheckForm.tsx — 루트 폼 컴포넌트 (76줄)
+  - LorcheckInputFields.tsx — 입력 필드 UI 컴포넌트 (69줄)
+  - LorcheckProgressView.tsx — 진행 상태 뷰 컴포넌트 (15줄)
+  - lorcheckFormConstants.ts — 상수/타입 (DRAFT_KEY, STEP_LABELS, Status, SseEvent 등) (25줄)
+  - useLorcheckForm.ts — 폼 상태·API·SSE 스트림 처리 훅 (148줄)
 
 ### 진행중
 - (없음)
