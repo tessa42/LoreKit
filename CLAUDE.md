@@ -99,7 +99,11 @@
     - is_public=false 섹션에 비공개 뱃지, 섹션 사이 border-b 구분선, py-8 여백
     - 섹션 편집/추가/삭제/드래그 기능 없음 (읽기 전용)
   - src/components/mypage/lorebook/LorebookEditorClient.tsx — 미사용 (향후 제거 예정)
-  - src/components/mypage/lorebook/LorebookSectionList.tsx — 미사용 (향후 제거 예정)
+  - src/components/mypage/lorebook/LorebookSectionList.tsx — 섹션 목록 진입점, DnD 컨텍스트 래핑 (90줄)
+  - src/components/mypage/lorebook/SectionItem.tsx — 개별 섹션 카드 (드래그 핸들, 인라인 제목/내용 편집, 공개/AI 토글, 삭제) (139줄)
+  - src/components/mypage/lorebook/ImportModal.tsx — 작가 노트 블록 가져오기 모달 (75줄)
+  - src/components/mypage/lorebook/useLorebookSections.ts — 섹션 목록 상태·API 훅 (119줄)
+  - src/components/mypage/lorebook/lorebookSectionUtils.ts — 블록→섹션 변환 유틸 (blockToSection, blockPreview) (57줄)
   - API routes: GET/POST /api/lorebooks, GET/PUT/DELETE /api/lorebooks/[id], GET/POST /api/lorebooks/[id]/sections, PUT/DELETE /api/lorebooks/[id]/sections/[sectionId]
 - Edge Runtime 제거 — Vercel Node.js Runtime으로 전환 완료
   - Anthropic SDK Edge Runtime 비호환 문제로 `export const runtime = 'edge'` 전체 라우트에서 제거
