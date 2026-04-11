@@ -29,6 +29,8 @@
 - 2026-04-06: Codespace 재시작 시 포트 3000 충돌 → kill [PID] 후 npm run dev
 - 2026-04-06: Supabase Redirect URL은 Codespace URL 변경 시 반드시 업데이트
 - 2026-04-10: Edge Runtime에서 Anthropic SDK `getDefaultAgent is not a function` 오류 → `getAnthropicClient()`에 `fetch: fetch` 명시 필수, 싱글턴 캐싱 금지
+- 2026-04-11: ArchiveCard LoreCheckContent — issues 배열이 렌더링 안 되던 버그 수정. `payload.issues ?? []` 패턴 필수. type별 border/badge 스타일은 ISSUE_BORDER_CLASS, ISSUE_TYPE_BADGE_CLASS, ISSUE_SEVERITY_BADGE_CLASS 상수로 분리 관리.
+- 2026-04-11: LoreCheckPayload 타입 확정 — `{ text, genre, issues, checked_at, existingSetting }`. `LorcheckIssue`는 src/types/lorecheck.ts에서 import. severity 뱃지는 intentional 타입 제외.
 
 ## 검증 원칙
 - 코드 작성 후 반드시 실행: npx tsc --noEmit
@@ -54,6 +56,7 @@
 - Lorecraft 결과 페이지 디자인 (마크다운 렌더링)
 - Lorecheck Quick 파이프라인 (normalize → analyze → research → check → format + API route)
 - Lorecheck Quick UI (입력 페이지 + 결과 페이지 — LorcheckForm, LorcheckResult 컴포넌트)
+- ArchiveCard LoreCheckContent issues 렌더링 수정 (type별 border/badge 스타일, severity 뱃지, description/suggestion 표시, 빈 상태 메시지)
 - 계정 페이지 (계정 정보 표시, 로그아웃, 회원 탈퇴 + POST /api/account/delete)
 - 씨앗 구매 페이지 (/mypage/shop — ShopSection + POST /api/checkout)
   - 3종 패키지 (5씨앗 $4.99 / 12씨앗 $9.99 / 30씨앗 $23.99), Polar 체크아웃 연동

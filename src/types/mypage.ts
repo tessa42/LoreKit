@@ -1,4 +1,5 @@
 import type { SimulatorResult } from '@/types/simulator';
+import type { LorcheckIssue } from '@/types/lorecheck';
 
 export type ArchiveItemType =
   | 'lorecraft'
@@ -45,7 +46,9 @@ export interface LoreCraftPayload {
 }
 
 export interface LoreCheckPayload {
-  issues?: unknown[];
-  score?: number;
-  [key: string]: unknown;
+  text: string;
+  genre: string;
+  issues: LorcheckIssue[];
+  checked_at: string;
+  existingSetting: string;
 }
