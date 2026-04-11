@@ -80,7 +80,14 @@
   - src/app/(app)/mypage/note/page.tsx — 노트 목록 (생성/삭제/이동)
   - src/app/(app)/mypage/note/[id]/page.tsx — 노트 편집 페이지 (서버 컴포넌트)
   - src/components/mypage/note/NoteListClient.tsx — 노트 카드 목록 클라이언트
-  - src/components/mypage/note/NoteEditorClient.tsx — 제목 인라인 편집, 블록 추가 드롭다운, 아카이브 불러오기 모달
+  - src/components/mypage/note/NoteEditorClient.tsx — 편집 루트 컴포넌트 (74줄)
+  - src/components/mypage/note/useNoteEditor.ts — 편집 상태·API 훅 (156줄)
+  - src/components/mypage/note/noteEditorUtils.ts — blockToSectionTitle/Content 유틸 + ArchiveItem 타입 (45줄)
+  - src/components/mypage/note/NoteEditorHeader.tsx — 제목 인라인 편집 + 뒤로가기 (42줄)
+  - src/components/mypage/note/NoteEditorActionBar.tsx — 블록 추가/아카이브/발행 액션 바 (54줄)
+  - src/components/mypage/note/AddBlockMenu.tsx — 블록 타입 선택 드롭다운 메뉴 (51줄)
+  - src/components/mypage/note/PublishLorebookModal.tsx — 로어북 선택 발행 모달 (77줄)
+  - src/components/mypage/note/ImportArchiveModal.tsx — 아카이브 불러오기 모달 (49줄)
   - src/components/mypage/note/NoteBlockList.tsx — @dnd-kit 드래그 앤 드롭 블록 재배치
   - src/components/mypage/note/NoteBlockEditor.tsx — 타입 뱃지, 드래그 핸들, blur 시 자동 저장
   - 블록 6종: TextBlock / WorldOverviewBlock / SettingBlock / CharacterBlock / TimelineBlock / PlotBlock
