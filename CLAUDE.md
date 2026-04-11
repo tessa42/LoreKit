@@ -45,7 +45,7 @@
 - 테스트 프레임워크: Vitest (예정)
 - 테스트 작성: tester 에이전트 담당
 
-## 현재 진행 상황 (2026-04-10 기준, Edge Runtime 적용 완료)
+## 현재 진행 상황 (2026-04-10 기준)
 ### 완료
 - 인증 (Google OAuth)
 - Simulator 파이프라인 + UI
@@ -98,21 +98,17 @@
   - src/components/mypage/lorebook/LorebookEditorClient.tsx — 미사용 (향후 제거 예정)
   - src/components/mypage/lorebook/LorebookSectionList.tsx — 미사용 (향후 제거 예정)
   - API routes: GET/POST /api/lorebooks, GET/PUT/DELETE /api/lorebooks/[id], GET/POST /api/lorebooks/[id]/sections, PUT/DELETE /api/lorebooks/[id]/sections/[sectionId]
-- Cloudflare Pages Edge Runtime 적용 — 전체 라우트 확장 완료
-  - `export const runtime = 'edge'` 전체 API 라우트 + 페이지 파일에 적용
-    - API: auth/callback, auth/signin, lorebooks (4개 라우트), notes (4개 라우트), lorecraft, lorecheck/quick, simulator, account/delete, checkout, webhooks/polar
-    - 페이지: (auth)/login, (auth)/signup, mypage (page, account, archive, billing, shop, lorebook, lorebook/[id], note, note/[id])
-  - next.config.ts: @cloudflare/next-on-pages 관련 코드 제거됨 (wrangler 의존성 빌드 실패 문제로)
-  - wrangler.toml: name + compatibility_date + nodejs_compat + [vars] NEXT_PUBLIC_APP_URL만 유지 (간소화)
-  - @cloudflare/next-on-pages: devDependencies에서 완전 제거
-  - 스텁 파일 모듈화: /api/credits, /api/lorecheck/deep, /(app)/lorecheck/result-deep/page.tsx
+- Edge Runtime 제거 — Vercel Node.js Runtime으로 전환 완료
+  - Anthropic SDK Edge Runtime 비호환 문제로 `export const runtime = 'edge'` 전체 라우트에서 제거
+  - Vercel Node.js Runtime은 타임아웃 제한 없음 (300s 기본) → Edge Runtime 불필요
+  - 스텁 파일 유지: /api/credits, /api/lorecheck/deep, /(app)/lorecheck/result-deep/page.tsx
 
 ### 진행중
 - (없음)
 
 ### 다음
 - 씨앗 단가 확정 (토큰 비용 측정 후)
-- Lorecraft 속도 최적화 (현재 2.6분 → 목표 30초 이내, Edge Runtime으로 타임아웃은 해결됨)
+- Lorecraft 속도 최적화 (현재 2.6분 → 목표 30초 이내)
 
 ## 에이전트 구조 (Layer 1 조율 지침)
 

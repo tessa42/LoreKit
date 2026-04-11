@@ -1,4 +1,3 @@
-export const runtime = 'edge';
 
 import { NextRequest } from 'next/server';
 import { normalizeLorcheckQuick } from '@/lib/ai/pipeline/lorecheck/quick/normalize';

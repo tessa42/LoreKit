@@ -1,4 +1,3 @@
-export const runtime = 'edge';
 
 import { addCredits } from '@/lib/credits/transaction';
 
