@@ -67,7 +67,7 @@ export async function POST(req: Request) {
 
   const event = payload.type as string;
 
-  if (event === 'order.completed') {
+  if (event === 'order.paid') {
     const order = payload.data as Record<string, unknown>;
     const metadata = (order.metadata ?? {}) as Record<string, string>;
     const userId = metadata.user_id;
