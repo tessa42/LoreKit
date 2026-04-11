@@ -14,7 +14,7 @@ export async function POST() {
   // service role 클라이언트로 계정 삭제
   const adminClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    process.env.SUPABASE_SERVICE_KEY!,
   );
 
   const { error } = await adminClient.auth.admin.deleteUser(user.id);
