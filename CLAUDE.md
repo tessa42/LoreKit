@@ -105,6 +105,18 @@
   - Anthropic SDK Edge Runtime 비호환 문제로 `export const runtime = 'edge'` 전체 라우트에서 제거
   - Vercel Node.js Runtime은 타임아웃 제한 없음 (300s 기본) → Edge Runtime 불필요
   - 스텁 파일 유지: /api/credits, /api/lorecheck/deep, /(app)/lorecheck/result-deep/page.tsx
+- 씨앗 소모량 표시 + 씨앗 차감 로직 연결
+  - Lorecraft 실행 버튼: `설정집 생성 🌱 5` 표시, 5씨앗 차감 (canSpendCredits → spendCredits)
+  - Lorecheck Quick 실행 버튼: `고증 검토 실행 🌱 1` 표시, 1씨앗 차감 (canSpendCredits → spendCredits)
+  - 두 API 라우트 모두 로그인 필수 확인 (401), 씨앗 부족 시 `insufficient_credits` 반환 (402)
+  - 두 폼 컴포넌트 모두 `insufficient_credits` 응답 시 `/mypage/shop`으로 라우터 이동
+- 씨앗 부족 모달 + 입력 내용 저장/복원
+  - SeedShortageModal (src/components/common/SeedShortageModal.tsx) — 현재 잔액/필요 씨앗/부족 씨앗 표시, 확인/취소 버튼
+  - `insufficient_credits` 응답 시 바로 이동 대신 SeedShortageModal 표시
+  - 확인 버튼 누르면 입력 내용을 sessionStorage에 저장 후 /mypage/shop 이동
+    - Lorecraft: `lorecraft_draft` 키 (background, genre, existingSetting, areas)
+    - Lorecheck: `lorecheck_draft` 키 (text, genre, existingSetting)
+  - 컴포넌트 마운트 시 해당 draft 키 있으면 복원 후 삭제
 
 ### 진행중
 - (없음)

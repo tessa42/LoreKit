@@ -5,13 +5,41 @@ import { analyzeLorcheckQuick } from '@/lib/ai/pipeline/lorecheck/quick/analyze'
 import { researchLorcheckQuick } from '@/lib/ai/pipeline/lorecheck/quick/research';
 import { checkLorcheckQuick } from '@/lib/ai/pipeline/lorecheck/quick/check';
 import { formatLorcheckQuick } from '@/lib/ai/pipeline/lorecheck/quick/format';
+import { createClient } from '@/lib/supabase/server';
+import { getCreditBalance, spendCredits } from '@/lib/credits/transaction';
 import type { LorcheckQuickInput } from '@/types/lorecheck';
+
+const LORECHECK_QUICK_COST = 1;
 
 function sseEvent(type: string, data: unknown): string {
   return `data: ${JSON.stringify({ type, ...(typeof data === 'object' ? data : { value: data }) })}\n\n`;
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return new Response(
+      JSON.stringify({ ok: false, error: '로그인이 필요합니다.', code: 'unauthorized' }),
+      { status: 401, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
+  const currentBalance = await getCreditBalance(user.id);
+  if (currentBalance < LORECHECK_QUICK_COST) {
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        error: '씨앗이 부족합니다',
+        code: 'insufficient_credits',
+        currentBalance,
+        requiredAmount: LORECHECK_QUICK_COST,
+      }),
+      { status: 402, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
   let body: LorcheckQuickInput;
 
   try {
@@ -53,6 +81,7 @@ export async function POST(request: NextRequest) {
 
         // 4. format
         const payload = formatLorcheckQuick(normalized, checkResult);
+        await spendCredits(user.id, LORECHECK_QUICK_COST, 'lorecheck_quick');
         send('done', { step: 'format', payload });
 
         controller.close();

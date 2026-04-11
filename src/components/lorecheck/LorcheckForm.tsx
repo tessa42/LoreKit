@@ -1,13 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import LoginPromptModal from '@/components/common/LoginPromptModal';
+import SeedShortageModal from '@/components/common/SeedShortageModal';
 import type { LorcheckQuickInput, LorcheckQuickPayload } from '@/types/lorecheck';
+
+const DRAFT_KEY = 'lorecheck_draft';
+
+interface LorcheckDraft {
+  text: string;
+  genre: string;
+  existingSetting: string;
+}
 
 const STEP_LABELS: Record<string, string> = {
   normalize: '입력값 검증 중...',
@@ -51,6 +60,22 @@ export default function LorcheckForm() {
   const [progressMessage, setProgressMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [seedModal, setSeedModal] = useState<{ currentBalance: number; requiredAmount: number } | null>(null);
+
+  // draft 복원
+  useEffect(() => {
+    const raw = sessionStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    try {
+      const draft: LorcheckDraft = JSON.parse(raw);
+      setText(draft.text ?? '');
+      setGenre(draft.genre ?? '');
+      setExistingSetting(draft.existingSetting ?? '');
+    } catch {
+      // 파싱 실패 시 무시
+    }
+    sessionStorage.removeItem(DRAFT_KEY);
+  }, []);
 
   const isValid = text.trim().length > 0;
   const isRunning = status === 'running';
@@ -81,7 +106,25 @@ export default function LorcheckForm() {
         body: JSON.stringify(input),
       });
 
-      if (!res.ok || !res.body) {
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({})) as {
+          error?: string;
+          code?: string;
+          currentBalance?: number;
+          requiredAmount?: number;
+        };
+        if (data.code === 'insufficient_credits') {
+          setStatus('idle');
+          setSeedModal({
+            currentBalance: data.currentBalance ?? 0,
+            requiredAmount: data.requiredAmount ?? 1,
+          });
+          return;
+        }
+        throw new Error(data.error ?? '서버 요청에 실패했습니다.');
+      }
+
+      if (!res.body) {
         throw new Error('서버 요청에 실패했습니다.');
       }
 
@@ -202,11 +245,27 @@ export default function LorcheckForm() {
         disabled={!isValid}
         className="w-full"
       >
-        {isRunning ? '검토 중…' : '고증 검토 실행'}
+        {isRunning ? '검토 중…' : (
+          <>고증 검토 실행 <span className="text-xs opacity-70 ml-1">🌱 1</span></>
+        )}
       </Button>
 
       {showLoginModal && (
         <LoginPromptModal onClose={() => setShowLoginModal(false)} next="/lorecheck" />
+      )}
+
+      {seedModal && (
+        <SeedShortageModal
+          isOpen
+          currentBalance={seedModal.currentBalance}
+          requiredAmount={seedModal.requiredAmount}
+          onClose={() => setSeedModal(null)}
+          onConfirm={() => {
+            const draft: LorcheckDraft = { text, genre, existingSetting };
+            sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+            router.push('/mypage/shop');
+          }}
+        />
       )}
     </form>
   );

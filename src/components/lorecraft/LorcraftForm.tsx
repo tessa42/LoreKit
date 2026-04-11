@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
@@ -8,8 +8,18 @@ import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import TagButton from '@/components/ui/TagButton';
 import LoginPromptModal from '@/components/common/LoginPromptModal';
+import SeedShortageModal from '@/components/common/SeedShortageModal';
 import LorcraftMarkdown from '@/components/lorecraft/LorcraftMarkdown';
 import type { LorcraftArea, LorcraftInput } from '@/types/lorecraft';
+
+const DRAFT_KEY = 'lorecraft_draft';
+
+interface LorcraftDraft {
+  background: string;
+  genre: string;
+  existingSetting: string;
+  areas: LorcraftArea[];
+}
 
 const STEP_LABELS: Record<string, string> = {
   analyze: '분석 중...',
@@ -84,6 +94,23 @@ export default function LorcraftForm() {
   const [streamedText, setStreamedText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [seedModal, setSeedModal] = useState<{ currentBalance: number; requiredAmount: number } | null>(null);
+
+  // draft 복원
+  useEffect(() => {
+    const raw = sessionStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    try {
+      const draft: LorcraftDraft = JSON.parse(raw);
+      setBackground(draft.background ?? '');
+      setGenre(draft.genre ?? '');
+      setExistingSetting(draft.existingSetting ?? '');
+      setAreas(draft.areas ?? []);
+    } catch {
+      // 파싱 실패 시 무시
+    }
+    sessionStorage.removeItem(DRAFT_KEY);
+  }, []);
 
   const isValid =
     background.trim().length > 0 && genre.trim().length > 0 && areas.length > 0;
@@ -123,7 +150,25 @@ export default function LorcraftForm() {
         body: JSON.stringify(input),
       });
 
-      if (!res.ok || !res.body) {
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({})) as {
+          error?: string;
+          code?: string;
+          currentBalance?: number;
+          requiredAmount?: number;
+        };
+        if (data.code === 'insufficient_credits') {
+          setStatus('idle');
+          setSeedModal({
+            currentBalance: data.currentBalance ?? 0,
+            requiredAmount: data.requiredAmount ?? 5,
+          });
+          return;
+        }
+        throw new Error(data.error ?? '서버 요청에 실패했습니다.');
+      }
+
+      if (!res.body) {
         throw new Error('서버 요청에 실패했습니다.');
       }
 
@@ -268,13 +313,29 @@ export default function LorcraftForm() {
         disabled={!isValid}
         className="w-full"
       >
-        {isRunning ? '설정집 생성 중…' : '설정집 생성'}
+        {isRunning ? '설정집 생성 중…' : (
+          <>설정집 생성 <span className="text-xs opacity-70 ml-1">🌱 5</span></>
+        )}
       </Button>
 
       {showLoginModal && (
         <LoginPromptModal
           onClose={() => setShowLoginModal(false)}
           next="/lorecraft"
+        />
+      )}
+
+      {seedModal && (
+        <SeedShortageModal
+          isOpen
+          currentBalance={seedModal.currentBalance}
+          requiredAmount={seedModal.requiredAmount}
+          onClose={() => setSeedModal(null)}
+          onConfirm={() => {
+            const draft: LorcraftDraft = { background, genre, existingSetting, areas };
+            sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+            router.push('/mypage/shop');
+          }}
         />
       )}
     </form>

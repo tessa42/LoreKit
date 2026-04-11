@@ -7,13 +7,41 @@ import { researchLorecraft } from '@/lib/ai/pipeline/lorecraft/research';
 import { synthesizeLorecraft } from '@/lib/ai/pipeline/lorecraft/synthesize';
 import { reviewLorecraft } from '@/lib/ai/pipeline/lorecraft/review';
 import { generateLorecraft } from '@/lib/ai/pipeline/lorecraft/generate';
+import { createClient } from '@/lib/supabase/server';
+import { getCreditBalance, spendCredits } from '@/lib/credits/transaction';
 import type { LorcraftInput } from '@/types/lorecraft';
+
+const LORECRAFT_COST = 5;
 
 function sseEvent(type: string, data: unknown): string {
   return `data: ${JSON.stringify({ type, ...( typeof data === 'object' ? data : { value: data }) })}\n\n`;
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return new Response(
+      JSON.stringify({ ok: false, error: '로그인이 필요합니다.', code: 'unauthorized' }),
+      { status: 401, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
+  const currentBalance = await getCreditBalance(user.id);
+  if (currentBalance < LORECRAFT_COST) {
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        error: '씨앗이 부족합니다',
+        code: 'insufficient_credits',
+        currentBalance,
+        requiredAmount: LORECRAFT_COST,
+      }),
+      { status: 402, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
   let body: LorcraftInput;
 
   try {
@@ -75,6 +103,7 @@ export async function POST(request: NextRequest) {
           send('chunk', { text: decoder.decode(value) });
         }
 
+        await spendCredits(user.id, LORECRAFT_COST, 'lorecraft');
         send('done', { step: 'generate', message: '생성 완료' });
         controller.close();
       } catch (err) {
