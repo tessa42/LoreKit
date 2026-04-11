@@ -140,6 +140,13 @@
   - LorcheckProgressView.tsx — 진행 상태 뷰 컴포넌트 (15줄)
   - lorcheckFormConstants.ts — 상수/타입 (DRAFT_KEY, STEP_LABELS, Status, SseEvent 등) (25줄)
   - useLorcheckForm.ts — 폼 상태·API·SSE 스트림 처리 훅 (148줄)
+- ArchiveCard 리팩토링 — src/components/mypage/archive/ 폴더 분리 완료
+  - ArchiveCard.tsx — 루트 카드 컴포넌트 (31줄)
+  - archive/ArchiveCardHeader.tsx — 타입 뱃지 + 날짜 + 삭제 버튼 헤더 (49줄)
+  - archive/SimulatorContent.tsx — Simulator 아카이브 콘텐츠 (36줄)
+  - archive/LoreCraftContent.tsx — Lorecraft 아카이브 콘텐츠, 섹션 토글 포함 (79줄)
+  - archive/LoreCheckContent.tsx — Lorecheck 아카이브 콘텐츠, issue 목록 렌더링 (73줄)
+  - archive/archiveCardUtils.ts — TYPE_LABEL, TYPE_BADGE_VARIANT, formatDate 유틸 (23줄)
 
 ### 진행중
 - (없음)
