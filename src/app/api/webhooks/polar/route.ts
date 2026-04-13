@@ -17,8 +17,8 @@ async function verifySignature(
   // Standard Webhooks: signed content = "{msgId}.{msgTimestamp}.{body}"
   const signedContent = `${msgId}.${msgTimestamp}.${rawBody}`;
 
-  // Secret is base64-encoded (strip "whsec_" prefix if present)
-  const secretBase64 = secret.replace(/^whsec_/, '');
+  // Secret is base64-encoded (strip "whsec_" or "polar_whs_" prefix if present)
+  const secretBase64 = secret.replace(/^(whsec_|polar_whs_)/, '');
   const secretBytes = Uint8Array.from(atob(secretBase64), (c) => c.charCodeAt(0));
 
   const key = await crypto.subtle.importKey(
