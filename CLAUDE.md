@@ -60,7 +60,8 @@
 - 계정 페이지 (계정 정보 표시, 로그아웃, 회원 탈퇴 + POST /api/account/delete)
 - 씨앗 구매 페이지 (/mypage/shop — ShopSection + POST /api/checkout)
   - 3종 패키지 (5씨앗 $4.99 / 12씨앗 $9.99 / 30씨앗 $23.99), Polar 체크아웃 연동
-  - 웹훅 서명 검증 + addCredits 호출 (POST /api/webhooks/polar)
+  - 웹훅 서명 검증 + addCreditsAdmin 호출 (POST /api/webhooks/polar)
+  - 웹훅은 유저 세션 없음 → service role 클라이언트로 RLS 우회 (addCreditsAdmin in transaction.ts)
 - 결제 내역 페이지 (/mypage/billing — BillingSection, 거래 이력 목록)
 - Header 씨앗 버튼 → /mypage/shop 이동
 - MypageNav: 씨앗 구매(/mypage/shop) + 결제 내역(/mypage/billing) 분리
