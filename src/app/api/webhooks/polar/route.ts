@@ -36,14 +36,15 @@ async function verifySignature(
 
   const msgBytes = new TextEncoder().encode(signedContent);
   const sigBuffer = await crypto.subtle.sign('HMAC', key, msgBytes);
-  const computed = btoa(String.fromCharCode(...new Uint8Array(sigBuffer)));
+  const computed = Buffer.from(new Uint8Array(sigBuffer)).toString('base64');
   console.log('[webhook] computed sig:', computed?.substring(0, 20));
 
   // webhook-signature may contain multiple space-separated "v1,<sig>" entries
+  const normalize = (s: string) => s.replace(/=+$/, '');
   return msgSignature.split(' ').some((entry) => {
     const [, sig] = entry.split(',');
     if (!sig) return false;
-    return computed === sig;
+    return normalize(computed) === normalize(sig);
   });
 }
 
