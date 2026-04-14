@@ -6,7 +6,7 @@ import { researchLorcheckQuick } from '@/lib/ai/pipeline/lorecheck/quick/researc
 import { checkLorcheckQuick } from '@/lib/ai/pipeline/lorecheck/quick/check';
 import { formatLorcheckQuick } from '@/lib/ai/pipeline/lorecheck/quick/format';
 import { createClient } from '@/lib/supabase/server';
-import { getCreditBalance, spendCredits } from '@/lib/credits/transaction';
+import { canSpendCredits, spendCredits } from '@/lib/credits/transaction';
 import type { LorcheckQuickInput } from '@/types/lorecheck';
 
 const LORECHECK_QUICK_COST = 1;
@@ -26,15 +26,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const currentBalance = await getCreditBalance(user.id);
-  if (currentBalance < LORECHECK_QUICK_COST) {
+  const hasCredits = await canSpendCredits(user.id, LORECHECK_QUICK_COST);
+  if (!hasCredits) {
     return new Response(
       JSON.stringify({
         ok: false,
         error: '씨앗이 부족합니다',
         code: 'insufficient_credits',
-        currentBalance,
-        requiredAmount: LORECHECK_QUICK_COST,
       }),
       { status: 402, headers: { 'Content-Type': 'application/json' } },
     );

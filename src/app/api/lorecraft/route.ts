@@ -8,7 +8,7 @@ import { synthesizeLorecraft } from '@/lib/ai/pipeline/lorecraft/synthesize';
 import { reviewLorecraft } from '@/lib/ai/pipeline/lorecraft/review';
 import { generateLorecraft } from '@/lib/ai/pipeline/lorecraft/generate';
 import { createClient } from '@/lib/supabase/server';
-import { getCreditBalance, spendCredits } from '@/lib/credits/transaction';
+import { canSpendCredits, spendCredits } from '@/lib/credits/transaction';
 import type { LorcraftInput } from '@/types/lorecraft';
 
 const LORECRAFT_COST = 5;
@@ -28,15 +28,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const currentBalance = await getCreditBalance(user.id);
-  if (currentBalance < LORECRAFT_COST) {
+  const hasCredits = await canSpendCredits(user.id, LORECRAFT_COST);
+  if (!hasCredits) {
     return new Response(
       JSON.stringify({
         ok: false,
         error: '씨앗이 부족합니다',
         code: 'insufficient_credits',
-        currentBalance,
-        requiredAmount: LORECRAFT_COST,
       }),
       { status: 402, headers: { 'Content-Type': 'application/json' } },
     );
