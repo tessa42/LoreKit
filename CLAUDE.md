@@ -122,6 +122,11 @@
   - Lorecheck Quick 실행 버튼: `고증 검토 실행 🌱 1` 표시, 1씨앗 차감 (canSpendCredits → spendCredits)
   - 두 API 라우트 모두 로그인 필수 확인 (401), 씨앗 부족 시 `insufficient_credits` 반환 (402)
   - 두 폼 컴포넌트 모두 `insufficient_credits` 응답 시 `/mypage/shop`으로 라우터 이동
+- Lorecraft/Lorecheck API 씨앗 사전 검증 통일
+  - `canSpendCredits(user.id, COST)`로 AI 파이프라인 실행 전 잔액 확인 (로그인 확인 직후)
+  - 잔액 부족 시 파이프라인 진입 없이 즉시 402 반환 (`insufficient_credits`)
+  - 실제 차감(`spendCredits`)은 파이프라인 완료 후에만 실행 — 실패 시 차감 없음
+  - lorecraft: LORECRAFT_COST = 5, lorecheck/quick: LORECHECK_QUICK_COST = 1
 - 씨앗 부족 모달 + 입력 내용 저장/복원
   - SeedShortageModal (src/components/common/SeedShortageModal.tsx) — 현재 잔액/필요 씨앗/부족 씨앗 표시, 확인/취소 버튼
   - `insufficient_credits` 응답 시 바로 이동 대신 SeedShortageModal 표시
