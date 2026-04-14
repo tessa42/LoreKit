@@ -1,4 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
+
+function getServiceClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!
+  return createServiceClient(url, key)
+}
 
 export interface CreditTransaction {
   id: string;
@@ -54,6 +61,30 @@ export async function spendCredits(
   await supabase.from('credit_transactions').insert({
     user_id: userId,
     amount: -amount,
+    balance_after: newBalance,
+    reason,
+    reference_id: referenceId ?? null,
+  })
+}
+
+export async function addCreditsAdmin(
+  userId: string,
+  amount: number,
+  reason: string,
+  referenceId?: string
+): Promise<void> {
+  const supabase = getServiceClient()
+  const { data: wallet, error: walletReadError } = await supabase
+    .from('credit_wallets')
+    .select('balance')
+    .eq('user_id', userId)
+    .single()
+  if (walletReadError) throw new Error(`잔액 조회 실패: ${walletReadError.message}`)
+  const newBalance = wallet.balance + amount
+  await supabase.from('credit_wallets').update({ balance: newBalance }).eq('user_id', userId)
+  await supabase.from('credit_transactions').insert({
+    user_id: userId,
+    amount,
     balance_after: newBalance,
     reason,
     reference_id: referenceId ?? null,

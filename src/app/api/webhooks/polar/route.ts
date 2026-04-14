@@ -1,6 +1,6 @@
 
 import { validateEvent, WebhookVerificationError } from '@polar-sh/sdk/webhooks';
-import { addCredits } from '@/lib/credits/transaction';
+import { addCreditsAdmin } from '@/lib/credits/transaction';
 
 const SEEDS_BY_PRODUCT: Record<string, number> = {
   'b297051d-b196-4c47-8d1d-438b2f625d58': 5,
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     }
 
     try {
-      await addCredits(userId, seeds, `purchase:${productId}`, order.id as string);
+      await addCreditsAdmin(userId, seeds, `purchase:${productId}`, order.id as string);
     } catch (err) {
       console.error('[webhook/polar] addCredits failed:', err);
       return new Response('Internal error', { status: 500 });
