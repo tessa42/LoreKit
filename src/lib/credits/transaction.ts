@@ -4,8 +4,6 @@ import { createClient as createServiceClient } from '@supabase/supabase-js'
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const key = process.env.SUPABASE_SERVICE_KEY!
-  console.log('[admin] url:', url)
-  console.log('[admin] key:', key)
   return createServiceClient(url, key)
 }
 
