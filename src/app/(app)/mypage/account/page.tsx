@@ -11,11 +11,18 @@ export default async function AccountPage() {
 
   const balance = await getCreditBalance(user.id);
 
+  const { data: profileData } = await supabase
+    .from('profiles')
+    .select('nickname')
+    .eq('id', user.id)
+    .single();
+
   return (
     <AccountSection
       email={user.email ?? ''}
       createdAt={user.created_at}
       balance={balance}
+      nickname={profileData?.nickname ?? null}
     />
   );
 }

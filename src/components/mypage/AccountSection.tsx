@@ -6,18 +6,53 @@ import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 
+const NICKNAME_REGEX = /^[가-힣a-zA-Z0-9]{2,16}$/;
+
 interface AccountSectionProps {
   email: string;
   createdAt: string;
   balance: number;
+  nickname: string | null;
 }
 
-export default function AccountSection({ email, createdAt, balance }: AccountSectionProps) {
+export default function AccountSection({ email, createdAt, balance, nickname }: AccountSectionProps) {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+
+  // 닉네임 편집 상태
+  const [nicknameInput, setNicknameInput] = useState(nickname ?? '');
+  const [nicknameEditing, setNicknameEditing] = useState(false);
+  const [nicknameSaving, setNicknameSaving] = useState(false);
+  const [nicknameError, setNicknameError] = useState('');
+  const [nicknameSuccess, setNicknameSuccess] = useState(false);
+
+  async function handleNicknameSave() {
+    setNicknameError('');
+    setNicknameSuccess(false);
+    if (!NICKNAME_REGEX.test(nicknameInput)) {
+      setNicknameError('2~16자, 한글/영문/숫자만 사용할 수 있습니다.');
+      return;
+    }
+    setNicknameSaving(true);
+    try {
+      const res = await fetch('/api/profile/nickname', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname: nicknameInput }),
+      });
+      const json = await res.json() as { ok?: boolean; error?: string };
+      if (!json.ok) throw new Error(json.error ?? '저장에 실패했습니다.');
+      setNicknameEditing(false);
+      setNicknameSuccess(true);
+    } catch (err) {
+      setNicknameError(err instanceof Error ? err.message : '저장에 실패했습니다.');
+    } finally {
+      setNicknameSaving(false);
+    }
+  }
 
   const formattedDate = new Date(createdAt).toLocaleDateString('ko-KR', {
     year: 'numeric',
@@ -59,6 +94,58 @@ export default function AccountSection({ email, createdAt, balance }: AccountSec
             <InfoRow label="이메일" value={email} />
             <InfoRow label="가입일" value={formattedDate} />
             <InfoRow label="씨앗 잔액" value={`${balance.toLocaleString()} 씨앗`} />
+          </div>
+        </Card>
+
+        {/* 닉네임 편집 */}
+        <Card>
+          <div className="p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-[var(--foreground)]">닉네임</p>
+                <p className="mt-0.5 text-xs text-[var(--muted)]">헤더에 표시되는 이름입니다.</p>
+              </div>
+              {!nicknameEditing && (
+                <Button variant="secondary" size="sm" onClick={() => { setNicknameEditing(true); setNicknameSuccess(false); }}>
+                  편집
+                </Button>
+              )}
+            </div>
+            {nicknameEditing ? (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={nicknameInput}
+                  onChange={(e) => setNicknameInput(e.target.value)}
+                  maxLength={16}
+                  placeholder="2~16자, 한글/영문/숫자"
+                  className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                />
+                {nicknameError && (
+                  <p className="text-xs text-[var(--error,#ef4444)]">{nicknameError}</p>
+                )}
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={nicknameSaving}
+                    onClick={() => { setNicknameEditing(false); setNicknameInput(nickname ?? ''); setNicknameError(''); }}
+                  >
+                    취소
+                  </Button>
+                  <Button size="sm" loading={nicknameSaving} onClick={handleNicknameSave}>
+                    저장
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-[var(--foreground)]">
+                {nicknameInput || <span className="text-[var(--muted)]">닉네임 없음</span>}
+              </p>
+            )}
+            {nicknameSuccess && !nicknameEditing && (
+              <p className="text-xs text-green-500">닉네임이 저장되었습니다.</p>
+            )}
           </div>
         </Card>
 

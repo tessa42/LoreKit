@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useCredits } from '@/hooks/useCredits';
+import { useProfile } from '@/hooks/useProfile';
 
 const NAV_ITEMS = [
   { label: 'Lorecraft', href: '/lorecraft' },
@@ -16,6 +17,8 @@ export default function Header() {
   const pathname = usePathname();
   const { user, loading: authLoading } = useAuth();
   const { balance } = useCredits();
+  const { profile } = useProfile();
+  const myPageLabel = profile?.nickname ?? profile?.display_name ?? 'My Page';
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-sm">
@@ -77,7 +80,7 @@ export default function Header() {
                 href="/mypage"
                 className="hidden sm:inline-flex items-center gap-1.5 rounded-[var(--radius-md)] px-3 py-1.5 text-sm text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-2)] transition-colors"
               >
-                My Page
+                {myPageLabel}
               </Link>
             ) : (
               <Link

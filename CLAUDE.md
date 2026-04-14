@@ -47,7 +47,7 @@
 - 테스트 프레임워크: Vitest (예정)
 - 테스트 작성: tester 에이전트 담당
 
-## 현재 진행 상황 (2026-04-11 기준)
+## 현재 진행 상황 (2026-04-14 기준)
 ### 완료
 - 인증 (Google OAuth)
 - Simulator 파이프라인 + UI
@@ -153,6 +153,13 @@
   - archive/LoreCraftContent.tsx — Lorecraft 아카이브 콘텐츠, 섹션 토글 포함 (79줄)
   - archive/LoreCheckContent.tsx — Lorecheck 아카이브 콘텐츠, issue 목록 렌더링 (73줄)
   - archive/archiveCardUtils.ts — TYPE_LABEL, TYPE_BADGE_VARIANT, formatDate 유틸 (23줄)
+- 닉네임 기능 — 프로필 닉네임 자동 부여 + 편집 + 헤더 표시
+  - src/lib/supabase/migrations/003_nickname.sql — profiles.nickname 컬럼 추가, 랜덤 닉네임 생성 함수, 신규 가입 트리거, 기존 계정 일괄 부여
+  - src/hooks/useProfile.ts — 로그인 유저 프로필(nickname, display_name, avatar_url) 실시간 구독 훅
+  - src/components/layout/Header.tsx — nickname → display_name → 'My Page' 폴백 순서로 표시
+  - src/components/mypage/AccountSection.tsx — 닉네임 인라인 편집 UI (2~16자, 한글/영문/숫자 유효성 검사)
+  - src/app/(app)/mypage/account/page.tsx — 서버에서 nickname 조회 후 AccountSection에 전달
+  - src/app/api/profile/nickname/route.ts — PUT /api/profile/nickname (로그인 필수, 유효성 검사, profiles 업데이트)
 
 ### 진행중
 - (없음)
