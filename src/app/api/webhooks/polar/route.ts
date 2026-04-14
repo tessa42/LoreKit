@@ -14,11 +14,16 @@ async function verifySignature(
   msgSignature: string,
   secret: string,
 ): Promise<boolean> {
+  console.log('[webhook] secret length:', secret.length);
   // Standard Webhooks: signed content = "{msgId}.{msgTimestamp}.{body}"
   const signedContent = `${msgId}.${msgTimestamp}.${rawBody}`;
 
   // Secret is base64-encoded (strip "whsec_" or "polar_whs_" prefix if present)
   const secretBase64 = secret.replace(/^(whsec_|polar_whs_)/, '');
+  console.log('[webhook] secretBase64 length:', secretBase64.length);
+  console.log('[webhook] msgId:', msgId);
+  console.log('[webhook] msgTimestamp:', msgTimestamp);
+  console.log('[webhook] msgSignature:', msgSignature?.substring(0, 30));
   const secretBytes = Uint8Array.from(atob(secretBase64), (c) => c.charCodeAt(0));
 
   const key = await crypto.subtle.importKey(
@@ -32,6 +37,7 @@ async function verifySignature(
   const msgBytes = new TextEncoder().encode(signedContent);
   const sigBuffer = await crypto.subtle.sign('HMAC', key, msgBytes);
   const computed = btoa(String.fromCharCode(...new Uint8Array(sigBuffer)));
+  console.log('[webhook] computed sig:', computed?.substring(0, 20));
 
   // webhook-signature may contain multiple space-separated "v1,<sig>" entries
   return msgSignature.split(' ').some((entry) => {
