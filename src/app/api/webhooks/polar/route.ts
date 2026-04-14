@@ -49,6 +49,7 @@ async function verifySignature(
 
 export async function POST(req: Request) {
   const rawBody = await req.text();
+  console.log('[webhook] all headers:', JSON.stringify(Object.fromEntries(req.headers.entries())));
 
   const msgId = req.headers.get('webhook-id') ?? '';
   const msgTimestamp = req.headers.get('webhook-timestamp') ?? '';
