@@ -60,6 +60,28 @@ Lorecheck는 단순 오류 탐지가 아니라 독자 몰입 관점에서 판단
 
 ---
 
+## 추후 기능: 유저 캐릭터 선택
+
+### 개요
+- 가입 또는 마이페이지에서 마녀/마법사 중 선택 가능하게
+- profiles 테이블에 `character_type text default 'wizard'` 컬럼 추가 예정
+- 대시보드/헤더에 선택한 캐릭터 아이콘 표시
+
+### 서비스 컨셉 (디자인 전반 반영 예정)
+- 유저 = 마녀/마법사
+- LoreKit = 유능한 도구(Kit)이자 조수 고양이(Kitty)
+- 씨앗 = 세계수 씨앗
+- 모토: 창작자들을 위한 세계관 놀이터
+
+### 구현 계획
+1. migration 추가: `profiles.character_type text check(character_type in ('wizard', 'witch')) default 'wizard'`
+2. AccountSection에 캐릭터 선택 UI 추가
+3. `/api/profile/character` PUT 라우트 추가
+4. 대시보드 인삿말: wizard → '마법사님', witch → '마녀님'
+5. Header에 캐릭터 아이콘 표시
+
+---
+
 ## 작가 노트 + 로어북 설계
 
 ### 전체 데이터 흐름
