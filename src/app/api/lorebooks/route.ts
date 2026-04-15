@@ -1,8 +1,8 @@
 
 import { createClient } from '@/lib/supabase/server';
 
-// GET /api/lorebooks — 내 로어북 목록
-export async function GET() {
+// GET /api/lorebooks — 내 로어북 목록 (?source_note_id=xxx 필터 지원)
+export async function GET(request: Request) {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -10,11 +10,20 @@ export async function GET() {
     return Response.json({ ok: false, error: '로그인이 필요합니다.' }, { status: 401 });
   }
 
-  const { data, error } = await supabase
+  const { searchParams } = new URL(request.url);
+  const sourceNoteId = searchParams.get('source_note_id');
+
+  let query = supabase
     .from('lorebooks')
     .select('id, user_id, title, cover_image, is_public, source_note_id, created_at, updated_at, lorebook_sections(count)')
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false });
+
+  if (sourceNoteId) {
+    query = query.eq('source_note_id', sourceNoteId);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('[lorebooks] fetch error:', error);

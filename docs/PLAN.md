@@ -145,3 +145,23 @@ Lorecheck는 단순 오류 탐지가 아니라 독자 몰입 관점에서 판단
 - `timeline`, `plot`, `org_chart`, `scenario` 블록 타입 추가
 - 공개 로어북 퍼블릭 URL
 - 활용 요청 기능 (`is_usable` 연동)
+
+---
+
+## 추후 기능: 로어북 표지 업로드
+
+### 개요
+- 로어북 뷰어/목록에서 jpg, png 표지 이미지 업로드
+- 없으면 lorebook id 기반 해시 컬러로 대체 (현재 대시보드에 이미 구현됨)
+
+### 저장소
+- Supabase Storage 사용 (profiles 테이블 아닌 별도 버킷)
+- 버킷명: `lorebook-covers` (public)
+- 경로: `{user_id}/{lorebook_id}.{ext}`
+
+### 구현 계획
+1. Supabase Storage 버킷 생성 + RLS 정책 설정
+2. `lorebooks.cover_image` 컬럼에 Storage URL 저장 (컬럼 이미 존재)
+3. LorebookViewerClient 상단 또는 LorebookCard에 표지 이미지 UI 추가
+4. POST /api/lorebooks/[id]/cover — multipart/form-data 업로드 라우트
+5. 표지 없을 때 lorebook id 해시 → 배경 컬러 폴백 (대시보드 로직 재사용)

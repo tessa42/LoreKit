@@ -15,7 +15,6 @@ export default function LorebookViewerClient({ lorebook, sections: initialSectio
   const router = useRouter();
   const [isPublic, setIsPublic] = useState(lorebook.is_public);
   const [savingPublic, setSavingPublic] = useState(false);
-  const [title, setTitle] = useState(lorebook.title);
   const [sections, setSections] = useState(initialSections);
   const [publishing, setPublishing] = useState(false);
 
@@ -35,25 +34,12 @@ export default function LorebookViewerClient({ lorebook, sections: initialSectio
     }
   }
 
-  async function handleTitleBlur() {
-    const trimmed = title.trim() || '제목 없음';
-    if (trimmed === lorebook.title) return;
-    await fetch(`/api/lorebooks/${lorebook.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: trimmed }),
-    });
-    setTitle(trimmed);
-  }
-
   async function handlePublish() {
-    if (!lorebook.source_note_id) return;
     setPublishing(true);
     try {
       const res = await fetch(`/api/lorebooks/${lorebook.id}/publish`, { method: 'POST' });
       const json = await res.json();
       if (json.ok) {
-        // 발행된 섹션 다시 조회
         const secRes = await fetch(`/api/lorebooks/${lorebook.id}/sections`);
         const secJson = await secRes.json();
         if (secJson.ok) setSections(secJson.sections);
@@ -75,14 +61,7 @@ export default function LorebookViewerClient({ lorebook, sections: initialSectio
           >
             ← 로어북 목록
           </button>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onBlur={handleTitleBlur}
-            className="w-full bg-transparent text-3xl font-bold text-[var(--foreground)] outline-none placeholder:text-[var(--muted)]"
-            placeholder="제목 없음"
-          />
+          <h1 className="text-3xl font-bold text-[var(--foreground)]">{lorebook.title}</h1>
         </div>
 
         <div className="flex shrink-0 flex-col items-end gap-2 mt-7">
@@ -95,19 +74,17 @@ export default function LorebookViewerClient({ lorebook, sections: initialSectio
             {isPublic ? '공개 중' : '비공개'}
           </Button>
           {lorebook.source_note_id && (
-            <button
-              type="button"
+            <Button
+              size="sm"
+              variant="ghost"
               onClick={() => router.push(`/mypage/note/${lorebook.source_note_id}`)}
-              className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] underline underline-offset-2"
             >
-              수정
-            </button>
-          )}
-          {lorebook.source_note_id && (
-            <Button size="sm" variant="ghost" loading={publishing} onClick={handlePublish}>
-              발행
+              수정하기
             </Button>
           )}
+          <Button size="sm" variant="ghost" loading={publishing} onClick={handlePublish}>
+            발행하기
+          </Button>
         </div>
       </div>
 

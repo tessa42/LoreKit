@@ -67,26 +67,39 @@ export function useNoteEditor(note: Note, initialBlocks: NoteBlock[], linkedLore
     });
   }
 
-  // 연결된 로어북이 있으면 직접 발행, 없으면 모달 열기
+  // 연결된 로어북 찾기: linkedLorebookId → source_note_id 조회 → 없으면 자동 생성
   async function handleOpenPublishModal() {
-    if (linkedLorebookId) {
-      setDirectPublishing(true);
-      try {
-        await fetch(`/api/lorebooks/${linkedLorebookId}/publish`, { method: 'POST' });
-        router.push(`/mypage/lorebook/${linkedLorebookId}`);
-      } finally {
-        setDirectPublishing(false);
-      }
-      return;
-    }
-    setLoadingLorebooks(true);
-    setShowPublishModal(true);
+    setDirectPublishing(true);
     try {
-      const res = await fetch('/api/lorebooks');
-      const json = await res.json();
-      if (json.ok) setLorebooks(json.lorebooks as Lorebook[]);
+      // 1. 이미 알고 있는 연결 로어북
+      let lorebookId = linkedLorebookId;
+
+      if (!lorebookId) {
+        // 2. source_note_id로 연결된 로어북 조회
+        const searchRes = await fetch(`/api/lorebooks?source_note_id=${note.id}`);
+        const searchJson = await searchRes.json();
+        if (searchJson.ok && searchJson.lorebooks?.length > 0) {
+          lorebookId = searchJson.lorebooks[0].id as string;
+        }
+      }
+
+      if (!lorebookId) {
+        // 3. 연결된 로어북 없으면 자동 생성 (노트 제목 사용)
+        const createRes = await fetch('/api/lorebooks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: title.trim() || '제목 없음' }),
+        });
+        const createJson = await createRes.json();
+        if (!createJson.ok) return;
+        lorebookId = createJson.lorebook.id as string;
+      }
+
+      // 4. 발행
+      await fetch(`/api/lorebooks/${lorebookId}/publish`, { method: 'POST' });
+      router.push(`/mypage/lorebook/${lorebookId}`);
     } finally {
-      setLoadingLorebooks(false);
+      setDirectPublishing(false);
     }
   }
 
