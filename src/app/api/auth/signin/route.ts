@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
   const { origin, searchParams } = new URL(request.url);
-  const next = searchParams.get('next') ?? '/';
+  const next = searchParams.get('next') ?? '/dashboard';
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
