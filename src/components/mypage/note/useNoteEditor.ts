@@ -88,7 +88,7 @@ export function useNoteEditor(note: Note, initialBlocks: NoteBlock[], linkedLore
         const createRes = await fetch('/api/lorebooks', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: title.trim() || '제목 없음' }),
+          body: JSON.stringify({ title: title.trim() || '제목 없음', source_note_id: note.id }),
         });
         const createJson = await createRes.json();
         if (!createJson.ok) return;

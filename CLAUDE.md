@@ -47,7 +47,7 @@
 - 테스트 프레임워크: Vitest (예정)
 - 테스트 작성: tester 에이전트 담당
 
-## 현재 진행 상황 (2026-04-15 기준)
+## 현재 진행 상황 (2026-04-15 기준, 2차 개선 완료)
 ### 완료
 - 인증 (Google OAuth)
 - Simulator 파이프라인 + UI
@@ -172,6 +172,18 @@
   - src/components/mypage/AccountSection.tsx — 닉네임 인라인 편집 UI (2~16자, 한글/영문/숫자 유효성 검사)
   - src/app/(app)/mypage/account/page.tsx — 서버에서 nickname 조회 후 AccountSection에 전달
   - src/app/api/profile/nickname/route.ts — PUT /api/profile/nickname (로그인 필수, 유효성 검사, profiles 업데이트)
+- 로어북 저장/수정 플로우 2차 개선 (2026-04-15)
+  - GET /api/lorebooks: ?source_note_id={noteId} 쿼리 파라미터 필터 지원
+  - 작가 노트 '로어북으로 발행' 버튼 개선 (useNoteEditor.handleOpenPublishModal)
+    - source_note_id로 연결된 로어북 자동 탐색 → 없으면 자동 생성 → 발행 → 뷰어 이동
+    - 연결된 로어북이 있을 때는 모달 없이 바로 발행
+  - 로어북 목록 카드(LorebookCard): source_note_id 있으면 '수정' 버튼 표시 → /mypage/note/[source_note_id] 이동
+  - 로어북 뷰어(LorebookViewerClient): 제목 인라인 편집 제거(읽기 전용), '수정하기' + '발행하기' 버튼 상단 고정
+  - docs/PLAN.md에 '추후 기능: 로어북 표지 업로드' 섹션 추가 (Supabase Storage 버킷 lorebook-covers)
+- 작가노트 제목 변경 시 연결된 로어북 제목 자동 동기화 (2026-04-15)
+  - PUT /api/notes/[id]: title 업데이트 후 source_note_id로 연결된 lorebook 조회 → lorebook.title 동기화
+  - 서버사이드 처리 (API route) — 클라이언트 추가 호출 불필요
+  - 로어북 제목 수정(PUT /api/lorebooks/[id])도 동일하게 source_note 제목 동기화 기존 구현과 대칭 구조
 
 ### 진행중
 - (없음)
@@ -179,6 +191,7 @@
 ### 다음
 - 씨앗 단가 확정 (토큰 비용 측정 후)
 - Lorecraft 속도 최적화 (현재 2.6분 → 목표 30초 이내)
+- 로어북 표지 업로드 (docs/PLAN.md 참조)
 
 ## 에이전트 구조 (Layer 1 조율 지침)
 

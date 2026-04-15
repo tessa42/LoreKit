@@ -56,29 +56,33 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: '로그인이 필요합니다.' }, { status: 401 });
   }
 
-  let body: { title?: string } = {};
+  let body: { title?: string; source_note_id?: string } = {};
   try {
     body = await request.json();
   } catch { /* body optional */ }
 
   const title = body.title ?? '제목 없음';
+  let sourceNoteId = body.source_note_id ?? null;
 
-  // 1. 작가노트 먼저 생성
-  const { data: note, error: noteError } = await supabase
-    .from('notes')
-    .insert({ user_id: user.id, title })
-    .select('id')
-    .single();
+  // source_note_id가 없을 때만 작가노트 자동 생성
+  if (!sourceNoteId) {
+    const { data: note, error: noteError } = await supabase
+      .from('notes')
+      .insert({ user_id: user.id, title })
+      .select('id')
+      .single();
 
-  if (noteError || !note) {
-    console.error('[lorebooks] note create error:', noteError);
-    return Response.json({ ok: false, error: '작가노트 생성에 실패했습니다.' }, { status: 500 });
+    if (noteError || !note) {
+      console.error('[lorebooks] note create error:', noteError);
+      return Response.json({ ok: false, error: '작가노트 생성에 실패했습니다.' }, { status: 500 });
+    }
+    sourceNoteId = note.id as string;
   }
 
-  // 2. 로어북 생성 (source_note_id 연결)
+  // 로어북 생성 (source_note_id 연결)
   const { data: lorebook, error } = await supabase
     .from('lorebooks')
-    .insert({ user_id: user.id, title, is_public: false, source_note_id: note.id })
+    .insert({ user_id: user.id, title, is_public: false, source_note_id: sourceNoteId })
     .select('id, user_id, title, cover_image, is_public, source_note_id, created_at, updated_at')
     .single();
 
