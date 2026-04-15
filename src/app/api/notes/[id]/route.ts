@@ -63,6 +63,21 @@ export async function PUT(request: Request, { params }: RouteContext) {
     return Response.json({ ok: false, error: '노트 수정에 실패했습니다.' }, { status: 500 });
   }
 
+  // 연결된 로어북 제목 동기화
+  const { data: lorebook } = await supabase
+    .from('lorebooks')
+    .select('id')
+    .eq('source_note_id', id)
+    .eq('user_id', user.id)
+    .single();
+
+  if (lorebook) {
+    await supabase
+      .from('lorebooks')
+      .update({ title: body.title })
+      .eq('id', lorebook.id);
+  }
+
   return Response.json({ ok: true, note });
 }
 
