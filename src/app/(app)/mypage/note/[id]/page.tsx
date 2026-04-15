@@ -42,6 +42,14 @@ export default async function NoteEditPage({ params }: PageProps) {
     .eq('type', 'lorecraft')
     .order('created_at', { ascending: false });
 
+  // 이 노트와 연결된 로어북 조회 (source_note_id = note.id)
+  const { data: linkedLorebook } = await supabase
+    .from('lorebooks')
+    .select('id')
+    .eq('source_note_id', id)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
   const note = noteRow as Note;
   const blocks = (blocksData ?? []) as NoteBlock[];
   const lorearchiveItems = (archiveData ?? []).map((item) => ({
@@ -55,6 +63,7 @@ export default async function NoteEditPage({ params }: PageProps) {
       note={note}
       initialBlocks={blocks}
       lorearchiveItems={lorearchiveItems}
+      linkedLorebookId={linkedLorebook?.id ?? null}
     />
   );
 }

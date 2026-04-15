@@ -12,7 +12,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('lorebooks')
-    .select('id, user_id, title, cover_image, is_public, created_at, updated_at, lorebook_sections(count)')
+    .select('id, user_id, title, cover_image, is_public, source_note_id, created_at, updated_at, lorebook_sections(count)')
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false });
 
@@ -27,6 +27,7 @@ export async function GET() {
     title: row.title,
     cover_image: row.cover_image,
     is_public: row.is_public,
+    source_note_id: row.source_note_id,
     created_at: row.created_at,
     updated_at: row.updated_at,
     section_count: Array.isArray(row.lorebook_sections)
@@ -37,7 +38,7 @@ export async function GET() {
   return Response.json({ ok: true, lorebooks });
 }
 
-// POST /api/lorebooks — 새 로어북 생성
+// POST /api/lorebooks — 새 로어북 생성 (동시에 같은 제목의 작가노트도 자동 생성)
 export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -53,10 +54,23 @@ export async function POST(request: Request) {
 
   const title = body.title ?? '제목 없음';
 
+  // 1. 작가노트 먼저 생성
+  const { data: note, error: noteError } = await supabase
+    .from('notes')
+    .insert({ user_id: user.id, title })
+    .select('id')
+    .single();
+
+  if (noteError || !note) {
+    console.error('[lorebooks] note create error:', noteError);
+    return Response.json({ ok: false, error: '작가노트 생성에 실패했습니다.' }, { status: 500 });
+  }
+
+  // 2. 로어북 생성 (source_note_id 연결)
   const { data: lorebook, error } = await supabase
     .from('lorebooks')
-    .insert({ user_id: user.id, title, is_public: false })
-    .select('id, user_id, title, cover_image, is_public, created_at, updated_at')
+    .insert({ user_id: user.id, title, is_public: false, source_note_id: note.id })
+    .select('id, user_id, title, cover_image, is_public, source_note_id, created_at, updated_at')
     .single();
 
   if (error || !lorebook) {

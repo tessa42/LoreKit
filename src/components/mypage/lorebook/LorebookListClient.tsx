@@ -26,7 +26,9 @@ export default function LorebookListClient({ initialLorebooks }: Props) {
       });
       const json = await res.json();
       if (json.ok) {
-        router.push(`/mypage/lorebook/${json.lorebook.id}`);
+        // 생성된 로어북에 연결된 작가노트 편집 페이지로 이동
+        const noteId = json.lorebook.source_note_id;
+        router.push(noteId ? `/mypage/note/${noteId}` : `/mypage/lorebook/${json.lorebook.id}`);
       }
     } finally {
       setCreating(false);

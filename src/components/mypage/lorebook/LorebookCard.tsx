@@ -41,17 +41,31 @@ export default function LorebookCard({ lorebook, onDelete, deleting }: Props) {
         </p>
       </div>
 
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete(lorebook.id);
-        }}
-        disabled={deleting}
-        className="shrink-0 rounded-[var(--radius-sm)] px-2 py-1 text-xs text-[var(--muted)] opacity-0 transition-opacity hover:bg-[var(--surface-3)] hover:text-red-400 group-hover:opacity-100 disabled:opacity-40"
-      >
-        {deleting ? '삭제 중...' : '삭제'}
-      </button>
+      <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+        {lorebook.source_note_id && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/mypage/note/${lorebook.source_note_id}`);
+            }}
+            className="rounded-[var(--radius-sm)] px-2 py-1 text-xs text-[var(--muted)] hover:bg-[var(--surface-3)] hover:text-[var(--foreground)]"
+          >
+            수정
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(lorebook.id);
+          }}
+          disabled={deleting}
+          className="rounded-[var(--radius-sm)] px-2 py-1 text-xs text-[var(--muted)] hover:bg-[var(--surface-3)] hover:text-red-400 disabled:opacity-40"
+        >
+          {deleting ? '삭제 중...' : '삭제'}
+        </button>
+      </div>
     </div>
   );
 }

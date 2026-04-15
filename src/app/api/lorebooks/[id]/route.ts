@@ -17,7 +17,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
 
   const { data: lorebook, error } = await supabase
     .from('lorebooks')
-    .select('id, user_id, title, cover_image, is_public, created_at, updated_at')
+    .select('id, user_id, title, cover_image, is_public, source_note_id, created_at, updated_at')
     .eq('id', id)
     .eq('user_id', user.id)
     .single();
@@ -60,12 +60,21 @@ export async function PUT(request: Request, { params }: RouteContext) {
     .update(updates)
     .eq('id', id)
     .eq('user_id', user.id)
-    .select('id, user_id, title, cover_image, is_public, created_at, updated_at')
+    .select('id, user_id, title, cover_image, is_public, source_note_id, created_at, updated_at')
     .single();
 
   if (error || !lorebook) {
     console.error('[lorebooks/id] update error:', error);
     return Response.json({ ok: false, error: '로어북 수정에 실패했습니다.' }, { status: 500 });
+  }
+
+  // 제목 변경 시 연결된 작가노트 제목도 동기화
+  if (body.title !== undefined && lorebook.source_note_id) {
+    await supabase
+      .from('notes')
+      .update({ title: body.title })
+      .eq('id', lorebook.source_note_id)
+      .eq('user_id', user.id);
   }
 
   return Response.json({ ok: true, lorebook });

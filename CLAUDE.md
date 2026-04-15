@@ -47,7 +47,7 @@
 - 테스트 프레임워크: Vitest (예정)
 - 테스트 작성: tester 에이전트 담당
 
-## 현재 진행 상황 (2026-04-14 기준)
+## 현재 진행 상황 (2026-04-15 기준)
 ### 완료
 - 인증 (Google OAuth)
 - Simulator 파이프라인 + UI
@@ -94,15 +94,27 @@
   - 블록 6종: TextBlock / WorldOverviewBlock / SettingBlock / CharacterBlock / TimelineBlock / PlotBlock
   - 블록 본문(body, description 등) 표시 시 LorcraftMarkdown 컴포넌트로 렌더링 (TextBlock, WorldOverviewBlock, SettingBlock, CharacterBlock, TimelineBlock)
   - Lorecraft 아카이브 섹션 → world_overview 블록 일괄 변환 지원
-  - 로어북으로 발행 버튼 활성화 (로어북 선택 모달 → 블록 → 섹션 변환 후 이동)
+  - 로어북으로 발행 버튼: 연결된 lorebook 있으면 POST /api/lorebooks/[id]/publish 직접 호출 후 뷰어로 이동
+  - 연결된 lorebook 없으면 기존 로어북 선택 모달 표시 (PublishLorebookModal)
+  - NoteEditorClient: linkedLorebookId prop 수신 → useNoteEditor에 전달 → handleOpenPublishModal에서 분기
+- 로어북 저장/수정 플로우 개선 — 노트:로어북 1:1 구조 (Postype 스타일)
+  - src/lib/supabase/migrations/004_lorebook_note_link.sql — lorebooks.source_note_id 컬럼 추가, 인덱스, 블록 없는 노트 정리
+  - lorebooks.source_note_id: 연결된 작가노트 uuid (ON DELETE SET NULL)
+  - 새 로어북 생성 시 같은 제목의 작가노트를 자동 생성 → source_note_id 연결
+  - 새 로어북 생성 후 바로 연결된 작가노트 편집 페이지로 이동 (LorebookListClient)
+  - 로어북 제목 수정 시 연결된 작가노트 제목도 동기화 (PUT /api/lorebooks/[id])
+  - POST /api/lorebooks/[id]/publish — source_note_id 노트의 블록 전체를 섹션으로 덮어쓰기 발행
+    - 기존 lorebook_sections 전부 DELETE 후 블록 → 섹션 새로 INSERT (note_block_id 연결)
+    - 덮어쓰기 방식 (누적 아님)
 - 로어북 UI — 섹션 기반 뷰어 시스템 (편집 기능 없음 — 작가 노트에서 담당)
   - src/app/(app)/mypage/lorebook/page.tsx — 로어북 목록 (서버 컴포넌트)
   - src/app/(app)/mypage/lorebook/[id]/page.tsx — 로어북 뷰어 페이지 (서버 컴포넌트, 섹션 조회)
-  - src/components/mypage/lorebook/LorebookListClient.tsx — 목록 클라이언트 (생성/삭제)
-  - src/components/mypage/lorebook/LorebookCard.tsx — 로어북 카드 (공개 뱃지, 섹션 수, 삭제)
+  - src/components/mypage/lorebook/LorebookListClient.tsx — 목록 클라이언트 (생성/삭제, 생성 후 연결된 노트로 이동)
+  - src/components/mypage/lorebook/LorebookCard.tsx — 로어북 카드 (공개 뱃지, 섹션 수, 수정 버튼, 삭제)
+    - source_note_id 있으면 '수정' 버튼 → /mypage/note/[source_note_id]로 이동
   - src/components/mypage/lorebook/LorebookViewerClient.tsx — 뷰어 전용 UI
-    - max-w-2xl 중앙 정렬, 제목 text-3xl font-bold
-    - 우상단: 전체 공개/비공개 토글 버튼 + '작가 노트에서 편집' 링크(/mypage/note)
+    - max-w-2xl 중앙 정렬, 제목 인라인 편집 (blur 시 PUT /api/lorebooks/[id])
+    - 우상단: 공개/비공개 토글, '수정' 링크(연결된 노트), '발행' 버튼 (POST /api/lorebooks/[id]/publish)
     - 섹션: 제목 text-xl font-semibold mb-3, 내용 LorcraftMarkdown 컴포넌트로 렌더링
     - is_public=false 섹션에 비공개 뱃지, 섹션 사이 border-b 구분선, py-8 여백
     - 섹션 편집/추가/삭제/드래그 기능 없음 (읽기 전용)
@@ -112,7 +124,7 @@
   - src/components/mypage/lorebook/ImportModal.tsx — 작가 노트 블록 가져오기 모달 (75줄)
   - src/components/mypage/lorebook/useLorebookSections.ts — 섹션 목록 상태·API 훅 (119줄)
   - src/components/mypage/lorebook/lorebookSectionUtils.ts — 블록→섹션 변환 유틸 (blockToSection, blockPreview) (57줄)
-  - API routes: GET/POST /api/lorebooks, GET/PUT/DELETE /api/lorebooks/[id], GET/POST /api/lorebooks/[id]/sections, PUT/DELETE /api/lorebooks/[id]/sections/[sectionId]
+  - API routes: GET/POST /api/lorebooks, GET/PUT/DELETE /api/lorebooks/[id], POST /api/lorebooks/[id]/publish, GET/POST /api/lorebooks/[id]/sections, PUT/DELETE /api/lorebooks/[id]/sections/[sectionId]
 - Edge Runtime 제거 — Vercel Node.js Runtime으로 전환 완료
   - Anthropic SDK Edge Runtime 비호환 문제로 `export const runtime = 'edge'` 전체 라우트에서 제거
   - Vercel Node.js Runtime은 타임아웃 제한 없음 (300s 기본) → Edge Runtime 불필요

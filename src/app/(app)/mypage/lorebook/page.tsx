@@ -12,7 +12,7 @@ export default async function LorebookListPage() {
 
   const { data } = await supabase
     .from('lorebooks')
-    .select('id, user_id, title, cover_image, is_public, created_at, updated_at, lorebook_sections(count)')
+    .select('id, user_id, title, cover_image, is_public, source_note_id, created_at, updated_at, lorebook_sections(count)')
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false });
 
@@ -22,6 +22,7 @@ export default async function LorebookListPage() {
     title: row.title,
     cover_image: row.cover_image,
     is_public: row.is_public,
+    source_note_id: row.source_note_id,
     created_at: row.created_at,
     updated_at: row.updated_at,
     section_count: Array.isArray(row.lorebook_sections)

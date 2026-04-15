@@ -18,7 +18,7 @@ export default async function LorebookViewPage({ params }: PageProps) {
   // 로어북 조회
   const { data: lorebookRow, error: lorebookError } = await supabase
     .from('lorebooks')
-    .select('id, user_id, title, cover_image, is_public, created_at, updated_at')
+    .select('id, user_id, title, cover_image, is_public, source_note_id, created_at, updated_at')
     .eq('id', id)
     .eq('user_id', user.id)
     .single();

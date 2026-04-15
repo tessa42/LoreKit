@@ -4,6 +4,7 @@ export interface Lorebook {
   title: string;
   cover_image: string | null;
   is_public: boolean;
+  source_note_id: string | null;
   created_at: string;
   updated_at: string;
 }

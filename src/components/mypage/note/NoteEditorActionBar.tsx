@@ -9,6 +9,7 @@ interface Props {
   showBlockMenu: boolean;
   hasArchiveItems: boolean;
   blocksEmpty: boolean;
+  directPublishing: boolean;
   onToggleMenu: () => void;
   onAddBlock: (type: NoteBlockType) => void;
   onOpenArchiveModal: () => void;
@@ -20,6 +21,7 @@ export default function NoteEditorActionBar({
   showBlockMenu,
   hasArchiveItems,
   blocksEmpty,
+  directPublishing,
   onToggleMenu,
   onAddBlock,
   onOpenArchiveModal,
@@ -44,6 +46,7 @@ export default function NoteEditorActionBar({
         size="sm"
         variant="ghost"
         disabled={blocksEmpty}
+        loading={directPublishing}
         onClick={onOpenPublishModal}
         className="ml-auto"
       >

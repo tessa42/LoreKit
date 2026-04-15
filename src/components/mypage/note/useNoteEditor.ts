@@ -7,7 +7,7 @@ import type { ArchiveItem } from './noteEditorUtils';
 import type { Note, NoteBlock, NoteBlockType, NoteBlockContent } from '@/types/note';
 import type { Lorebook } from '@/types/lorebook';
 
-export function useNoteEditor(note: Note, initialBlocks: NoteBlock[]) {
+export function useNoteEditor(note: Note, initialBlocks: NoteBlock[], linkedLorebookId: string | null = null) {
   const router = useRouter();
   const [title, setTitle] = useState(note.title);
   const [blocks, setBlocks] = useState<NoteBlock[]>(initialBlocks);
@@ -19,6 +19,7 @@ export function useNoteEditor(note: Note, initialBlocks: NoteBlock[]) {
   const [lorebooks, setLorebooks] = useState<Lorebook[]>([]);
   const [loadingLorebooks, setLoadingLorebooks] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
+  const [directPublishing, setDirectPublishing] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
 
   async function handleTitleBlur() {
@@ -66,7 +67,18 @@ export function useNoteEditor(note: Note, initialBlocks: NoteBlock[]) {
     });
   }
 
+  // 연결된 로어북이 있으면 직접 발행, 없으면 모달 열기
   async function handleOpenPublishModal() {
+    if (linkedLorebookId) {
+      setDirectPublishing(true);
+      try {
+        await fetch(`/api/lorebooks/${linkedLorebookId}/publish`, { method: 'POST' });
+        router.push(`/mypage/lorebook/${linkedLorebookId}`);
+      } finally {
+        setDirectPublishing(false);
+      }
+      return;
+    }
     setLoadingLorebooks(true);
     setShowPublishModal(true);
     try {
@@ -140,6 +152,8 @@ export function useNoteEditor(note: Note, initialBlocks: NoteBlock[]) {
     lorebooks,
     loadingLorebooks,
     publishingId,
+    directPublishing,
+    linkedLorebookId,
     handleTitleBlur,
     handleAddBlock,
     handleDeleteBlock,

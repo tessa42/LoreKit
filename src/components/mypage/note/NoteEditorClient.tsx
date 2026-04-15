@@ -15,10 +15,11 @@ interface Props {
   note: Note;
   initialBlocks: NoteBlock[];
   lorearchiveItems: ArchiveItem[];
+  linkedLorebookId: string | null;
 }
 
-export default function NoteEditorClient({ note, initialBlocks, lorearchiveItems }: Props) {
-  const editor = useNoteEditor(note, initialBlocks);
+export default function NoteEditorClient({ note, initialBlocks, lorearchiveItems, linkedLorebookId }: Props) {
+  const editor = useNoteEditor(note, initialBlocks, linkedLorebookId);
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
@@ -43,6 +44,7 @@ export default function NoteEditorClient({ note, initialBlocks, lorearchiveItems
         showBlockMenu={editor.showBlockMenu}
         hasArchiveItems={lorearchiveItems.length > 0}
         blocksEmpty={editor.blocks.length === 0}
+        directPublishing={editor.directPublishing}
         onToggleMenu={() => editor.setShowBlockMenu((v) => !v)}
         onAddBlock={editor.handleAddBlock}
         onOpenArchiveModal={() => editor.setShowArchiveModal(true)}
