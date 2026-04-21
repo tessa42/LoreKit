@@ -188,6 +188,8 @@
   - src/app/api/lorecraft/route.ts — request.signal 수신, 각 파이프라인 단계 전 signal.aborted 체크, AbortError 조용히 종료
   - src/app/api/lorecheck/quick/route.ts — 동일 패턴 적용
   - send() 함수 내부 try-catch로 스트림 write 실패 시 조용히 무시 (연결 끊김 방어)
+- 로그인 상태에서 메인 페이지(/) 접속 시 /dashboard로 리다이렉트 (2026-04-21)
+  - src/app/(app)/page.tsx — 서버 컴포넌트에서 supabase.auth.getUser() 확인 후 user 있으면 redirect('/dashboard')
 
 ### 진행중
 - (없음)
