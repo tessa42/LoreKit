@@ -184,6 +184,10 @@
   - PUT /api/notes/[id]: title 업데이트 후 source_note_id로 연결된 lorebook 조회 → lorebook.title 동기화
   - 서버사이드 처리 (API route) — 클라이언트 추가 호출 불필요
   - 로어북 제목 수정(PUT /api/lorebooks/[id])도 동일하게 source_note 제목 동기화 기존 구현과 대칭 구조
+- 클라이언트 연결 끊김 처리 (2026-04-21)
+  - src/app/api/lorecraft/route.ts — request.signal 수신, 각 파이프라인 단계 전 signal.aborted 체크, AbortError 조용히 종료
+  - src/app/api/lorecheck/quick/route.ts — 동일 패턴 적용
+  - send() 함수 내부 try-catch로 스트림 write 실패 시 조용히 무시 (연결 끊김 방어)
 
 ### 진행중
 - (없음)
