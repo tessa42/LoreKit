@@ -51,10 +51,16 @@ export async function POST(request: NextRequest) {
 
   const encoder = new TextEncoder();
 
+  const signal = request.signal;
+
   const stream = new ReadableStream({
     async start(controller) {
       const send = (type: string, data: unknown) => {
-        controller.enqueue(encoder.encode(sseEvent(type, data)));
+        try {
+          controller.enqueue(encoder.encode(sseEvent(type, data)));
+        } catch {
+          // 연결 끊긴 경우 조용히 무시
+        }
       };
 
       try {
@@ -63,27 +69,32 @@ export async function POST(request: NextRequest) {
         send('progress', { step: 'normalize', message: '입력값 검증 완료' });
 
         // 2. analyze
+        if (signal.aborted) return;
         send('progress', { step: 'analyze', message: '텍스트 분석 중...' });
         const analysis = await analyzeLorcheckQuick(normalized);
         send('progress', { step: 'analyze', message: '텍스트 분석 완료' });
 
         // 3. research
+        if (signal.aborted) return;
         send('progress', { step: 'research', message: '내부자 맥락 분석 중...' });
         const research = await researchLorcheckQuick(normalized, analysis);
         send('progress', { step: 'research', message: '내부자 맥락 분석 완료' });
 
         // 4. check
+        if (signal.aborted) return;
         send('progress', { step: 'check', message: '고증 검토 중...' });
         const checkResult = await checkLorcheckQuick(normalized, analysis, research);
         send('progress', { step: 'check', message: '고증 검토 완료' });
 
-        // 4. format
+        // 5. format
+        if (signal.aborted) return;
         const payload = formatLorcheckQuick(normalized, checkResult);
         await spendCredits(user.id, LORECHECK_QUICK_COST, 'lorecheck_quick');
         send('done', { step: 'format', payload });
 
         controller.close();
       } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
         console.error('[lorecheck/quick] pipeline failed:', err);
         const message = err instanceof Error ? err.message : '고증 검토에 실패했습니다.';
         send('error', { message });

@@ -53,10 +53,16 @@ export async function POST(request: NextRequest) {
 
   const encoder = new TextEncoder();
 
+  const signal = request.signal;
+
   const stream = new ReadableStream({
     async start(controller) {
       const send = (type: string, data: unknown) => {
-        controller.enqueue(encoder.encode(sseEvent(type, data)));
+        try {
+          controller.enqueue(encoder.encode(sseEvent(type, data)));
+        } catch {
+          // 연결 끊긴 경우 조용히 무시
+        }
       };
 
       try {
@@ -65,37 +71,44 @@ export async function POST(request: NextRequest) {
         send('progress', { step: 'normalize', message: '입력값 검증 완료' });
 
         // 2. analyze
+        if (signal.aborted) return;
         send('progress', { step: 'analyze', message: '세계관 분석 중...' });
         const analysis = await analyzeLorecraft(normalized);
         send('progress', { step: 'analyze', message: '세계관 분석 완료' });
 
         // 3. plan
+        if (signal.aborted) return;
         send('progress', { step: 'plan', message: '생성 계획 수립 중...' });
         const plan = await planLorecraft(normalized, analysis);
         send('progress', { step: 'plan', message: '생성 계획 완료' });
 
         // 4. research
+        if (signal.aborted) return;
         send('progress', { step: 'research', message: '배경 리서치 중...' });
         const research = await researchLorecraft(normalized, analysis, plan);
         send('progress', { step: 'research', message: '배경 리서치 완료' });
 
         // 5. synthesize
+        if (signal.aborted) return;
         send('progress', { step: 'synthesize', message: '자료 합성 중...' });
         const synthesized = await synthesizeLorecraft(plan, research);
         send('progress', { step: 'synthesize', message: '자료 합성 완료' });
 
         // 6. review
+        if (signal.aborted) return;
         send('progress', { step: 'review', message: '설정 검토 중...' });
         const reviewed = await reviewLorecraft(normalized, synthesized);
         send('progress', { step: 'review', message: '설정 검토 완료' });
 
         // 7. generate (streaming)
+        if (signal.aborted) return;
         send('progress', { step: 'generate', message: '설정집 생성 중...' });
         const generateStream = await generateLorecraft(normalized, reviewed);
         const reader = generateStream.getReader();
 
         const decoder = new TextDecoder();
         while (true) {
+          if (signal.aborted) return;
           const { done, value } = await reader.read();
           if (done) break;
           send('chunk', { text: decoder.decode(value) });
@@ -105,6 +118,7 @@ export async function POST(request: NextRequest) {
         send('done', { step: 'generate', message: '생성 완료' });
         controller.close();
       } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
         console.error('[lorecraft] pipeline failed:', err);
         const message = err instanceof Error ? err.message : '설정집 생성에 실패했습니다.';
         send('error', { message });
