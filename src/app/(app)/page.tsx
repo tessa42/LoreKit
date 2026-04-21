@@ -1,6 +1,13 @@
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) redirect('/dashboard');
   return (
     <div className="mx-auto max-w-4xl px-4 py-24 text-center">
       {/* Hero */}
