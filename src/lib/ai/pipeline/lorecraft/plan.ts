@@ -36,7 +36,7 @@ async function callPlan(input: NormalizedLorcraftInput, analysis: AnalyzeResult)
 
   const message = await client.messages.create({
     model: MODELS.haiku,
-    max_tokens: 4096,
+    max_tokens: 8192,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userContent }],
   });
