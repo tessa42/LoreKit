@@ -24,7 +24,7 @@
 
 ## ❌ 반복 실수 기록 (세션마다 확인)
 - 2026-04-06: AI 응답 JSON 파싱 시 ```json 블록 포함될 수 있음 → 항상 extractJson() 사용 (src/lib/ai/pipeline/lorecraft/utils.ts)
-- 2026-04-06: max_tokens 부족으로 JSON 잘림 → research 4096, synthesize/review/plan 4096 유지
+- 2026-04-06: max_tokens 부족으로 JSON 잘림 → research 4096, synthesize/review 4096 유지, plan 8192로 증가 (2026-04-24)
 - 2026-04-06: useState(initialItems)는 props 변경 시 자동 갱신 안 됨 → useEffect로 동기화 필요
 - 2026-04-06: Codespace 재시작 시 포트 3000 충돌 → kill [PID] 후 npm run dev
 - 2026-04-06: Supabase Redirect URL은 Codespace URL 변경 시 반드시 업데이트
