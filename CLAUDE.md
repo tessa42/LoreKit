@@ -190,6 +190,10 @@
   - send() 함수 내부 try-catch로 스트림 write 실패 시 조용히 무시 (연결 끊김 방어)
 - 로그인 상태에서 메인 페이지(/) 접속 시 /dashboard로 리다이렉트 (2026-04-21)
   - src/app/(app)/page.tsx — 서버 컴포넌트에서 supabase.auth.getUser() 확인 후 user 있으면 redirect('/dashboard')
+- 씨앗 관련 함수 전체 service role client 적용 (2026-04-24)
+  - src/lib/credits/transaction.ts — spendCredits/getCreditBalance/canSpendCredits/refundCredits 모두 getServiceClient() 사용
+  - RLS 우회로 웹훅/서버사이드 컨텍스트에서도 안정적으로 동작
+  - addCreditsAdmin은 기존부터 service role 사용 중 (변경 없음)
 
 ### 진행중
 - (없음)
