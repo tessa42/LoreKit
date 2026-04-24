@@ -89,7 +89,12 @@ export async function POST(request: NextRequest) {
         // 5. format
         if (signal.aborted) return;
         const payload = formatLorcheckQuick(normalized, checkResult);
-        await spendCredits(user.id, LORECHECK_QUICK_COST, 'lorecheck_quick');
+        try {
+          await spendCredits(user.id, LORECHECK_QUICK_COST, 'lorecheck_quick');
+          console.log('[lorecheck] credits spent:', user.id, LORECHECK_QUICK_COST);
+        } catch (creditErr) {
+          console.error('[lorecheck] spendCredits failed:', creditErr);
+        }
         send('done', { step: 'format', payload });
 
         controller.close();

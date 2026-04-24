@@ -114,7 +114,12 @@ export async function POST(request: NextRequest) {
           send('chunk', { text: decoder.decode(value) });
         }
 
-        await spendCredits(user.id, LORECRAFT_COST, 'lorecraft');
+        try {
+          await spendCredits(user.id, LORECRAFT_COST, 'lorecraft');
+          console.log('[lorecraft] credits spent:', user.id, LORECRAFT_COST);
+        } catch (creditErr) {
+          console.error('[lorecraft] spendCredits failed:', creditErr);
+        }
         send('done', { step: 'generate', message: '생성 완료' });
         controller.close();
       } catch (err) {
