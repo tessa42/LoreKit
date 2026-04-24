@@ -28,7 +28,7 @@ export async function getCreditTransactions(userId: string): Promise<CreditTrans
 }
 
 export async function getCreditBalance(userId: string): Promise<number> {
-  const supabase = await createClient()
+  const supabase = getServiceClient()
   const { data, error } = await supabase
     .from('credit_wallets')
     .select('balance')
@@ -49,7 +49,7 @@ export async function spendCredits(
   reason: string,
   referenceId?: string
 ): Promise<void> {
-  const supabase = await createClient()
+  const supabase = getServiceClient()
   const balance = await getCreditBalance(userId)
   if (balance < amount) throw new Error('씨앗이 부족합니다')
   const newBalance = balance - amount
@@ -115,7 +115,7 @@ export async function refundCredits(
   amount: number,
   reason: string
 ): Promise<void> {
-  const supabase = await createClient()
+  const supabase = getServiceClient()
   const balance = await getCreditBalance(userId)
   const newBalance = balance + amount
   await supabase.from('credit_wallets').update({ balance: newBalance }).eq('user_id', userId)
