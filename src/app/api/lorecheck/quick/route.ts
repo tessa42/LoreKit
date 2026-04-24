@@ -6,7 +6,7 @@ import { researchLorcheckQuick } from '@/lib/ai/pipeline/lorecheck/quick/researc
 import { checkLorcheckQuick } from '@/lib/ai/pipeline/lorecheck/quick/check';
 import { formatLorcheckQuick } from '@/lib/ai/pipeline/lorecheck/quick/format';
 import { createClient } from '@/lib/supabase/server';
-import { canSpendCredits, spendCredits } from '@/lib/credits/transaction';
+import { canSpendCredits, spendCredits, refundCredits } from '@/lib/credits/transaction';
 import type { LorcheckQuickInput } from '@/types/lorecheck';
 
 const LORECHECK_QUICK_COST = 1;
@@ -46,6 +46,17 @@ export async function POST(request: NextRequest) {
     return new Response(
       JSON.stringify({ ok: false, error: '잘못된 요청입니다.', code: 'invalid_json' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
+  try {
+    await spendCredits(user.id, LORECHECK_QUICK_COST, 'lorecheck_quick');
+    console.log('[lorecheck] credits spent:', user.id, LORECHECK_QUICK_COST);
+  } catch (err) {
+    console.error('[lorecheck] spendCredits failed:', err);
+    return new Response(
+      JSON.stringify({ ok: false, error: '씨앗 차감에 실패했습니다.', code: 'credit_error' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } },
     );
   }
 
@@ -89,18 +100,18 @@ export async function POST(request: NextRequest) {
         // 5. format
         if (signal.aborted) return;
         const payload = formatLorcheckQuick(normalized, checkResult);
-        try {
-          await spendCredits(user.id, LORECHECK_QUICK_COST, 'lorecheck_quick');
-          console.log('[lorecheck] credits spent:', user.id, LORECHECK_QUICK_COST);
-        } catch (creditErr) {
-          console.error('[lorecheck] spendCredits failed:', creditErr);
-        }
         send('done', { step: 'format', payload });
 
         controller.close();
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') return;
         console.error('[lorecheck/quick] pipeline failed:', err);
+        try {
+          await refundCredits(user.id, LORECHECK_QUICK_COST, 'lorecheck_quick');
+          console.log('[lorecheck] credits refunded:', user.id, LORECHECK_QUICK_COST);
+        } catch (refundErr) {
+          console.error('[lorecheck] refundCredits failed:', refundErr);
+        }
         const message = err instanceof Error ? err.message : '고증 검토에 실패했습니다.';
         send('error', { message });
         controller.close();

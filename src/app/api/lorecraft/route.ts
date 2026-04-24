@@ -8,7 +8,7 @@ import { synthesizeLorecraft } from '@/lib/ai/pipeline/lorecraft/synthesize';
 import { reviewLorecraft } from '@/lib/ai/pipeline/lorecraft/review';
 import { generateLorecraft } from '@/lib/ai/pipeline/lorecraft/generate';
 import { createClient } from '@/lib/supabase/server';
-import { canSpendCredits, spendCredits } from '@/lib/credits/transaction';
+import { canSpendCredits, spendCredits, refundCredits } from '@/lib/credits/transaction';
 import type { LorcraftInput } from '@/types/lorecraft';
 
 const LORECRAFT_COST = 5;
@@ -48,6 +48,17 @@ export async function POST(request: NextRequest) {
     return new Response(
       JSON.stringify({ ok: false, error: '잘못된 요청입니다.', code: 'invalid_json' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
+  try {
+    await spendCredits(user.id, LORECRAFT_COST, 'lorecraft');
+    console.log('[lorecraft] credits spent:', user.id, LORECRAFT_COST);
+  } catch (err) {
+    console.error('[lorecraft] spendCredits failed:', err);
+    return new Response(
+      JSON.stringify({ ok: false, error: '씨앗 차감에 실패했습니다.', code: 'credit_error' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } },
     );
   }
 
@@ -114,17 +125,17 @@ export async function POST(request: NextRequest) {
           send('chunk', { text: decoder.decode(value) });
         }
 
-        try {
-          await spendCredits(user.id, LORECRAFT_COST, 'lorecraft');
-          console.log('[lorecraft] credits spent:', user.id, LORECRAFT_COST);
-        } catch (creditErr) {
-          console.error('[lorecraft] spendCredits failed:', creditErr);
-        }
         send('done', { step: 'generate', message: '생성 완료' });
         controller.close();
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') return;
         console.error('[lorecraft] pipeline failed:', err);
+        try {
+          await refundCredits(user.id, LORECRAFT_COST, 'lorecraft');
+          console.log('[lorecraft] credits refunded:', user.id, LORECRAFT_COST);
+        } catch (refundErr) {
+          console.error('[lorecraft] refundCredits failed:', refundErr);
+        }
         const message = err instanceof Error ? err.message : '설정집 생성에 실패했습니다.';
         send('error', { message });
         controller.close();
