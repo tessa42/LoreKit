@@ -137,7 +137,7 @@
 - Lorecraft/Lorecheck API 씨앗 사전 검증 통일
   - `canSpendCredits(user.id, COST)`로 AI 파이프라인 실행 전 잔액 확인 (로그인 확인 직후)
   - 잔액 부족 시 파이프라인 진입 없이 즉시 402 반환 (`insufficient_credits`)
-  - 실제 차감(`spendCredits`)은 파이프라인 완료 후에만 실행 — 실패 시 차감 없음
+  - 실제 차감(`spendCredits`)은 파이프라인 실행 직전에 호출 — 실패 시 `refundCredits`로 환불
   - lorecraft: LORECRAFT_COST = 5, lorecheck/quick: LORECHECK_QUICK_COST = 1
 - 씨앗 부족 모달 + 입력 내용 저장/복원
   - SeedShortageModal (src/components/common/SeedShortageModal.tsx) — 현재 잔액/필요 씨앗/부족 씨앗 표시, 확인/취소 버튼
@@ -194,6 +194,10 @@
   - src/lib/credits/transaction.ts — spendCredits/getCreditBalance/canSpendCredits/refundCredits 모두 getServiceClient() 사용
   - RLS 우회로 웹훅/서버사이드 컨텍스트에서도 안정적으로 동작
   - addCreditsAdmin은 기존부터 service role 사용 중 (변경 없음)
+- 씨앗 차감 시점 변경 — 파이프라인 실행 직전으로 (2026-04-24)
+  - lorecraft/route.ts, lorecheck/quick/route.ts — spendCredits를 스트림 시작 전(파이프라인 진입 전)에 호출
+  - 파이프라인 실패(AbortError 제외) 시 refundCredits로 자동 환불
+  - 흐름: canSpendCredits → spendCredits → 파이프라인 실행 → (실패 시 refundCredits)
 
 ### 진행중
 - (없음)
